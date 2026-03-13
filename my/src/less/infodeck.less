@@ -1,0 +1,195 @@
+#deck-info {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, .75);
+    opacity: 0;
+    transition: all .1s;
+    z-index: -1;
+    user-select: none;
+
+    &.show  {
+        opacity: 1;
+        top: 0;
+        z-index: 200;
+    }
+
+    .deck-info-content {
+        position: absolute;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        width: 100%;
+        max-width: 1200px;
+        height: 800px;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        background: #eee url(~/src/assets/img/field.png);
+        background-size: 250px 250px;
+        padding: 0 30px;
+        border-radius: 20px;
+        border: 3px solid #fff;
+        box-shadow: 0 0 10px rgba(0,0,0,.75);
+        overflow-y: auto;
+
+        h2 {
+            position: relative;
+            width: 30%;
+            background: #fff;
+            border-radius: 0 10em;
+            border: 2px solid @main-color;
+            color: @main-color;
+            padding: .2em 2em;
+            margin: 10px 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,.75);
+            font-size: 3em;
+
+            .cards-length {
+                padding: 0 10px;
+                margin-left: 10px;
+                background-color: @buff-color;
+                border-radius: 10px;
+                border: 3px solid #fff;
+                font-size: .7em;
+                color: #fff;
+
+                &:after { 
+                    content: ' шт.';
+                }
+            }
+        }
+
+        .card-types {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            height: 450px;
+            overflow-y: auto;
+            padding: 50px 10px;
+
+            .card-type {
+                position: relative;
+                width: 100px;
+                height: 150px;
+                background: @red-color;
+                background: linear-gradient(180deg, @black-color 0%, @red-color 100%);
+                padding: 10px;
+                border-radius: 15px;
+                border: 1px solid #fff;
+                box-shadow: 0 7px 10px rgba(0,0,0,.5);
+                transition: all .2s ease;
+
+                &:hover {
+                    transform: rotate(-3deg) !important;
+                    box-shadow: 0 0 5px rgba(0,0,0,.75); 
+                    z-index: 3;
+    
+                    .card-type-image {
+                        transform: scale(1.05);
+                    }
+    
+                    .card-type-desciption {
+                        opacity: 1;
+                        top: 100%;
+                        z-index: 1;
+                    }
+                }
+
+                &.disabled {
+                    opacity: .5;
+                    filter: grayscale(1);
+                }
+
+                .card-type-name,
+                .card-type-value,
+                .card-type-cnt {
+                    bottom: 10px;
+                    left: 10px;
+                    position: absolute;
+                    color: #fff;                    
+                }
+                .card-type-name { 
+                    bottom: 0;
+                    left: 0;
+                    width: 100%;
+                    background-color: @black-color;
+                    border-radius: 0 0 10px 10px;
+                    height: 30px;
+                    display: flex;
+                    padding: 15px 0 10px 0;
+                    justify-content: space-around;
+                    align-items: center; 
+                    font-size: .9em;
+                }
+                .card-type-value { 
+                    bottom: 40px;
+                    left: auto;
+                    right: -5px;
+                    padding: 3px 15px;
+                    border-radius: 10px 0 0 10px;
+                    border: 1px solid #fff;
+                    background-color: @main-color; 
+                    font-size: 1.2em;
+                }
+                .card-type-cnt {
+                    bottom: 40px; 
+                    left: -5px;
+                    width: 60px;
+                    height: 30px;
+                    border-radius: 0 10px 10px 0;
+                    border: 1px solid #fff;
+                    text-align: center;
+                    line-height: 30px;
+                    background-color: @buff-color; 
+                    font-size: .9em;
+                    
+                    &:after {
+                        content: ' шт.';
+                    }
+                }
+
+                .card-type-image {
+                    position: relative;
+                    transition: all .2s ease;
+
+                    img {
+                        position: absolute;
+                        top: -40px;
+                        height: 150px;
+                    }
+                }
+
+                .card-type-desciption {
+                    position: absolute;
+                    top: 100%;
+                    left: 0;
+                    width: 100%;
+                    padding: 5px;
+                    background-color: #fff;
+                    border-radius: 3px;
+                    box-shadow: 0 5px 15px rgba(0,0,0,.25);
+                    line-height: 90%;
+                    font-weight: normal;
+                    font-size: .8em;
+                    transition: all .2s ease;
+                    z-index: -1;
+                    opacity: 0;
+    
+                    b {
+                        font-weight: bold;
+                        color: @red-color;
+                    }
+    
+                    h1 {
+                        font-size: 1.2em;
+                        color: @red-color;
+                    }
+                }
+            }
+        }
+    }
+}

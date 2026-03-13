@@ -1,0 +1,39 @@
+#app {
+    .messages {
+        position: fixed;
+        left: 0;
+        bottom: 100px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start;
+        justify-content: flex-start;
+        z-index: 999;
+
+        .message {
+            position: relative;
+            margin-left: -100%;
+            padding: 10px 20px;
+            border-radius: 0 10px 10px 0;
+            background: @main-color;
+            color: #fff;
+            transition: all .1s;
+
+            &.info {
+                background: @main-color;
+            }
+
+            &.error {
+                background: @red-color;
+            }
+
+            &.warning {
+                background: @buff-color;
+            }
+
+            &.show {
+                margin-left: 0;
+            }
+        }
+    }
+}

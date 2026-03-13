@@ -1,0 +1,1 @@
+export const messagesTemplate = `<div id="messages" class="messages"></div>`

@@ -1,0 +1,354 @@
+@import url('https://fonts.googleapis.com/css2?family=Monomakh&display=swap');
+
+@import "variables.less";
+@import "infodeck.less"; 
+@import "messages.less";
+@import "card.less";
+@import "screen.less";
+@import "map.less";
+
+* {
+	font-family: "Monomakh", serif;
+	font-weight: 400;
+	font-style: normal;
+}
+
+html, body {
+	padding: 0;
+	margin: 0;
+	position: relative;
+	font-size: 16px;
+}
+.button {
+	line-height: 3em;
+	padding: 0 2em;
+	border-radius: 0 3em;
+	background: @main-color;
+	border-color: #fff;
+	color: #fff;
+	box-shadow: 0 5px 15px rgba(0,0,0,.75);
+	cursor: pointer;
+	transition: all .1s;
+	user-select: none;
+	font-size: 1.2em;
+
+	&.alert {
+		background: @red-color;
+	}
+
+	&:hover {
+		transform: scale(1.05);
+	}
+} 
+.wrapper {
+	position: relative;
+	width: 100%;
+	min-height: 100vh;
+	background: transparent;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	overflow: hidden;
+
+	&:before {
+		content: '';
+		position: absolute;
+		left: 50%;
+		top: 50%;
+		transform: translate(-50%, -50%);
+		width: 100%;
+		height: 100%;
+		background: #3d3d3d url(~/src/assets/img/bg_full.jpg) center center no-repeat;
+		background-size: cover;
+		overflow: hidden;
+		transition: all .5s;
+		z-index: -1;
+	}
+
+	&.bg {
+		&:before {
+			width: 120%;
+			height: 120%;
+			filter: blur(10px) brightness(.8);
+		}
+	}
+
+	.user-info {
+		position: absolute;
+		right: 0;
+		top: 0;
+		display: flex;
+		gap: 15px;
+		padding: 5px 20px;
+		background: @black-color;
+		border-radius: 0 0 0 10px;
+		color: #fff;
+		font-size: .9em;
+		user-select: none;
+		z-index: 10;
+
+		.user-points {
+			&:before {
+				content: 'Очки: ';
+			}
+		}
+	}
+
+	.battle {
+		background: #eee url(~/src/assets/img/field.png);
+		background-size: 250px 250px;
+
+		display: grid;
+		grid-template-rows: 2fr 1fr .5fr;
+		gap: 0;
+		z-index: 30;
+
+		.enemy-block { 
+			position: relative;
+			padding: 30px;
+			font-weight: bold;
+			font-size: 2em;
+			color: @red-color;
+			text-shadow: 2px 0 #fff, -2px 0 #fff, 0 2px #fff, 0 -2px #fff,
+				1px 1px #fff, -1px -1px #fff, 1px -1px #fff, -1px 1px #fff;
+			background: transparent url(~/src/assets/img/battle_bg/bg2.png) center bottom no-repeat;
+			background-size: cover;
+			border-bottom: 3px solid #fff;
+			box-shadow: 0 0 25px rgba(0,0,0,.5);
+
+			.enemy {
+				position: absolute;
+				bottom: 0;
+				right: 0;
+				height: 100%;
+				width: 40%;
+				overflow: hidden;
+
+				.health {
+					position: absolute;
+					right: 0;
+					bottom: 15%;
+					padding: .2em 1em;
+					background-color: @black-color;
+					border: 1px solid #fff;
+					border-radius: 10px 0 0 10px;
+					color: #fff;
+					text-shadow: none;	
+					font-size: .6em;
+					z-index: 2;
+				}
+				
+				img {
+					position: absolute;
+					left: 50%;
+					transform: translateX(-50%);
+					bottom: -10%;
+					width: 100%;
+					height: 100%;
+					object-fit: contain;
+				}
+			}
+
+			.need {
+				position: absolute;
+				left: 20%;
+				top: 40%; 
+				padding: .1em 1em;
+				font-size: 1em;
+				user-select: none;
+				color: #fff;
+				border-radius: 0 10em;
+				text-shadow: none;
+				text-transform: none;
+				background: @red-color;
+				box-shadow: 0 5px 15px rgba(0,0,0,.75);
+				border: 2px solid #fff;
+
+				&:before {
+					content: 'Здоровье ';
+				}
+			}
+
+			.result {
+				position: absolute;
+				left: 20%;
+				bottom: 30%;
+				padding: .2em 2em;
+				font-size: 1em;
+				user-select: none;
+				background: #fff;
+				border-radius: 0 10em;
+				border: 2px solid @main-color;
+				color: @main-color;
+				box-shadow: 0 5px 15px rgba(0,0,0,.75);
+				
+				&.bang {
+					animation: bang-hand .3s 1;
+				}
+
+				&#result:before {
+					content: 'Удар ';
+				}
+			}
+		}
+		.field {
+			position: relative;
+			display: grid;
+			padding: 0 2em;
+
+			.hand {
+				position: absolute;
+				padding: 0 1em;
+				top: -30px;
+				display: grid;
+				grid-auto-flow: column;
+				gap: .2em;
+				justify-content: flex-start;
+			}
+
+			.deck-block {
+				display: flex;
+				justify-content: flex-end;
+			}
+		}
+		
+		.tools {
+			display: flex;
+			justify-content: space-around;
+			align-items: center;
+			gap: 30px;
+			z-index: 5;
+
+			#play {
+				padding: 30px;
+				font-size: 2em;
+			}
+
+			.result {
+				padding: .2em 2em;
+				font-size: 2em;
+				user-select: none;
+				background: #fff;
+				border-radius: 0 10em;
+				color: @main-color;
+				box-shadow: 0 5px 15px rgba(0,0,0,.75);
+
+				&#result:before {
+					content: 'Рука ';
+				}
+				&#steps,
+				&#resets {
+					font-size: 1.5em;
+					color: @red-color;
+				}
+				&#steps:before {
+					content: 'Ходов ';
+				}
+				&#resets:before {
+					content: 'Сбросов ';
+				}
+			}
+		}
+
+		.deck {
+			position: relative;
+			margin: 25px 0;
+			background-image: url(~/src/assets/img/card_back.png);
+			overflow: visible;
+
+			span {
+				z-index: 3;
+
+				&.card-name {
+					left: 1em;
+				}
+				&.card-value {
+					right: -.5em;
+				}
+			}
+
+			&:after {
+				position: absolute;
+				left: 5px;
+				top: -5px;
+				content: '';
+				width: 100%;
+				height: 100%;
+				background-image: url(~/src/assets/img/card_back.png);
+				background-size: cover;
+				background-repeat: no-repeat;
+				background-position: center center;
+				z-index: 1;
+			}
+			&:before {
+				position: absolute;
+				left: 10px;
+				top: -10px;
+				content: '';
+				width: 100%;
+				height: 100%;
+				background-image: url(~/src/assets/img/card_back.png);
+				background-size: cover;
+				background-repeat: no-repeat;
+				background-position: center center;
+				z-index: 2;
+			}
+		}
+
+		.message {
+			position: fixed;
+			left: 0;
+			top: 0;
+			width: 100%;
+			height: 100%;
+			z-index: 10;
+			background: rgba(0, 0, 0, .75);
+			transition: .3s all;
+			transform: scale(0);
+			opacity: 0;
+
+			&.show {
+				transform: scale(1);
+				opacity: 1;
+			}
+
+			.message-content {
+				position: absolute;
+				left: 50%;
+				top: 50%;
+				max-width: 640px;
+				width: 100%;
+				transform: translate(-50%, -50%);
+				text-align: center;
+				border-radius: 0 5em 0 5em;
+				background: @main-color;
+				color: #fff;
+				box-shadow:  0 0 15px #000;
+				cursor: pointer;
+
+				&.fail {
+					background: @red-color;
+				}
+
+				img {
+					border-radius: 0 5em 0 0;
+					display: block;
+					width: 100%;
+				}
+			}
+		}
+	}
+}
+
+@keyframes rotate-card {
+	0% { transform: translateY(0); }
+	25% { transform: translateY(-3px); }
+	50% { transform: translateY(0); }
+	75% { transform: translateY(3px); }
+	100% { transform: translateY(0); }
+}
+@keyframes bang-hand {
+	0% { transform: translateY(0); }
+	20% { transform: translateY(-50px); }
+	100% { transform: translateY(0); }
+}
