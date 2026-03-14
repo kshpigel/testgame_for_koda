@@ -198,7 +198,7 @@ export class Battle extends EventEmitter {
       if (berserkCount === 3 && this.selectedCards.length === 3) {
         this.selectedCards.forEach(c => {
           if (c.cardData.type === 4) {
-            card.setBuff(this.cntSteps === 4 ? 25 : 20)
+            c.setBuff(this.cntSteps === 4 ? 25 : 20)
           }
         })
       }

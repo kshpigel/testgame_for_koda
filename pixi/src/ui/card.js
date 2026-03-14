@@ -126,14 +126,32 @@ export class Card extends PIXI.Container {
   drawBg(color) {
     this.bg.clear()
     const c = CARD_CONFIG.colors
-    const borderColor = this.isSelected ? c.borderSelected : (this.isDisabled ? c.border : c.borderHover)
-    const bgColor = this.isDisabled ? c.disabled : (this.isSelected ? c.selected : color)
     
-    // Рисуем относительно центра (так как pivot по центру)
-    this.bg.lineStyle(2, borderColor)
-    this.bg.beginFill(bgColor)
-    this.bg.drawRoundedRect(-this.cardWidth/2, -this.cardHeight/2, this.cardWidth, this.cardHeight, CARD_CONFIG.cornerRadius)
-    this.bg.endFill()
+    const borderWidth = 3
+    const offset = 2
+    
+    if (this.isSelected) {
+      // Белая обводка когда выбрана
+      this.bg.lineStyle(borderWidth, 0xffffff)
+      this.bg.drawRoundedRect(
+        -this.cardWidth/2 - offset, 
+        -this.cardHeight/2 - offset, 
+        this.cardWidth + offset*2, 
+        this.cardHeight + offset*2, 
+        CARD_CONFIG.cornerRadius + offset
+      )
+    } else if (this.isDisabled) {
+      // Серая обводка для недоступных
+      this.bg.lineStyle(borderWidth, 0x444444)
+      this.bg.drawRoundedRect(
+        -this.cardWidth/2 - offset, 
+        -this.cardHeight/2 - offset, 
+        this.cardWidth + offset*2, 
+        this.cardHeight + offset*2, 
+        CARD_CONFIG.cornerRadius + offset
+      )
+    }
+    // Если не выбрана и не disabled - не рисуем бордер (прозрачная)
   }
 
   // Загрузить фоновое изображение (image_bg)
