@@ -80,10 +80,11 @@ export class Game {
     this.hideCurrentScreen()
     soundManager.playMusic('mapBg')
     
-    // Переиспользуем существующую карту или создаём новую
+    // Переиспользуем существующую карту или создаём новую со случайной картой
     let mapScreen = this.screens['map']
     if (!mapScreen) {
-      mapScreen = new MapScreen(this.app, maps[0], enemies, this)
+      const randomMap = maps[Math.floor(Math.random() * maps.length)]
+      mapScreen = new MapScreen(this.app, randomMap, enemies, this)
       mapScreen.on('enemy_click', (enemyData) => this.initBattle(enemyData))
       this.screens['map'] = mapScreen
     }
