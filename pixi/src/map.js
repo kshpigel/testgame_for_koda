@@ -3,6 +3,7 @@ import { ColorMatrixFilter } from 'pixi.js'
 import { EventEmitter } from 'events'
 import { mapConfig, hexToPixi } from './data/map_config.js'
 import { colors } from './data/colors.js'
+import { config } from './data/config.js'
 
 export class MapScreen extends EventEmitter {
   constructor(app, mapData, enemies, game) {
@@ -140,6 +141,8 @@ export class MapScreen extends EventEmitter {
   }
 
   renderGrid() {
+    if (!config.debug) return
+    
     const segments = this.mapData.segments
     const cellW = (this.app.screen.width - 100) / segments
     const cellH = (this.app.screen.height - 150) / segments
