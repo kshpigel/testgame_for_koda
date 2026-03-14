@@ -1,6 +1,7 @@
 import * as PIXI from 'pixi.js'
 import { Battle } from './battle.js'
 import { MapScreen } from './map.js'
+import { StartScreen } from './start_screen.js'
 import { card_types } from './data/card_types.js'
 import { deck } from './data/deck.js'
 import { enemies } from './data/enemies.js'
@@ -26,6 +27,10 @@ export class Game {
 
     this.messageContainer = new PIXI.Container()
     this.app.stage.addChild(this.messageContainer)
+    
+    // Инициализация стартового экрана
+    this.startScreen = new StartScreen(this.app, () => this.showMap())
+    this.app.stage.addChild(this.startScreen.container)
     
     // Загрузка главного фона
     this.loadMainBg()
@@ -58,10 +63,14 @@ export class Game {
     }
   }
 
-  start() {
+  async start() {
     console.log('Game starting...', this.app.screen)
-    this.showMap()
-    console.log('Map shown, container children:', this.screenContainer.children.length)
+    
+    // Показать стартовый экран
+    await this.startScreen.init()
+    this.startScreen.show()
+    
+    console.log('Start screen shown')
   }
 
   showMap() {
@@ -200,6 +209,9 @@ export class Game {
 
   resize(width, height) {
     this.renderMainBg()
+    if (this.startScreen && this.startScreen.resize) {
+      this.startScreen.resize(width, height)
+    }
     if (this.currentScreen && this.currentScreen.resize) {
       this.currentScreen.resize(width, height)
     }
