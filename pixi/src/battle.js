@@ -104,6 +104,10 @@ export class Battle extends EventEmitter {
         const cardData = this.currentDeck.pop()
         if (cardData) {
           this.addCard(cardData)
+          // После добавления всех карт - пересчитываем позиции
+          if (i === cardsToDeal - 1) {
+            setTimeout(() => this.layoutCards(), cardsToDeal * 100 + 300)
+          }
           this.updateUI()
         }
       }, i * 100)
@@ -128,21 +132,22 @@ export class Battle extends EventEmitter {
     }
     
     card.on('pointerdown', () => this.onCardClick(card))
-    this.cards.push(card)
     this.container.addChild(card)
     
-    // Позиция колоды (откуда вылетает карта)
-    const deckX = this.app.screen.width - CARD_CONFIG.width - 30
-    const deckY = this.app.screen.height - CARD_CONFIG.height - 40
+    // Позиция колоды (откуда вылетает карта) - по центру колоды
+    const deckX = this.app.screen.width - CARD_CONFIG.width / 2 - 30
+    const deckY = this.app.screen.height - CARD_CONFIG.height / 2 - 40
     
     // Начальная позиция - из колоды
-    card.x = deckX + CARD_CONFIG.width / 2
-    card.y = deckY + CARD_CONFIG.height / 2
-    card.scale.set(0.5)
+    card.x = deckX
+    card.y = deckY
+    card.scale.set(0.1)
     
+    // Добавляем в массив и рассчитываем позицию
+    this.cards.push(card)
     this.layoutCards()
     
-    // Анимация появления карты
+    // Анимация появления карты - летит из колоды в руку
     this.animateCardIn(card)
   }
   
@@ -154,19 +159,18 @@ export class Battle extends EventEmitter {
     
     let progress = 0
     const animate = () => {
-      progress += 0.05
+      progress += 0.04
       if (progress >= 1) {
         card.x = targetX
         card.y = targetY
         card.scale.set(1)
       } else {
-        // Плавная интерполяция с эффектом overshoot
-        const t = progress
-        const ease = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2
+        // Ease out cubic
+        const t = 1 - Math.pow(1 - progress, 3)
         
-        card.x = startX + (targetX - startX) * ease
-        card.y = startY + (targetY - startY) * ease
-        card.scale.set(0.5 + 0.5 * ease)
+        card.x = startX + (targetX - startX) * t
+        card.y = startY + (targetY - startY) * t
+        card.scale.set(0.1 + 0.9 * t)
         requestAnimationFrame(animate)
       }
     }
@@ -176,22 +180,23 @@ export class Battle extends EventEmitter {
   animateCardOut(card, onComplete) {
     const startX = card.x
     const startY = card.y
-    const targetY = this.app.screen.height + 200
+    const targetY = this.app.screen.height + 300
     
     let progress = 0
     const animate = () => {
-      progress += 0.04
+      progress += 0.03
       if (progress >= 1) {
         card.y = targetY
-        card.scale.set(0.3)
+        card.scale.set(0.2)
         if (onComplete) onComplete()
       } else {
+        // Ускорение вниз
         const t = progress
-        const ease = t * t * t // Ускорение
+        const ease = t * t * t
         
         card.x = startX
         card.y = startY + (targetY - startY) * ease
-        card.scale.set(1 - 0.7 * ease)
+        card.scale.set(1 - 0.8 * ease)
         requestAnimationFrame(animate)
       }
     }
@@ -202,15 +207,13 @@ export class Battle extends EventEmitter {
     const handAreaY = this.app.screen.height - 15
     const cardWidth = CARD_CONFIG.width
     const cardHeight = CARD_CONFIG.height
-    const spacing = -5
+    const spacing = -10
     const totalWidth = this.cards.length * (cardWidth + spacing) - spacing
     const startX = (this.app.screen.width - totalWidth) / 2
 
     this.cards.forEach((card, index) => {
       card.targetX = startX + index * (cardWidth + spacing)
       card.targetY = handAreaY
-      card.x = card.targetX
-      card.y = card.targetY
     })
   }
 
@@ -907,8 +910,18 @@ export class Battle extends EventEmitter {
   }
 
   gameLoop() {
-    // Обновляем все карты
-    this.cards.forEach(card => card.update())
+    // Обновляем все карты (включая позиции)
+    this.cards.forEach(card => {
+      card.update()
+      
+      // Плавное перемещение к целевой позиции
+      if (card.targetX !== undefined && Math.abs(card.x - card.targetX) > 0.5) {
+        card.x += (card.targetX - card.x) * 0.15
+      }
+      if (card.targetY !== undefined && Math.abs(card.y - card.targetY) > 0.5) {
+        card.y += (card.targetY - card.y) * 0.15
+      }
+    })
     
     // Анимация scale для колоды
     if (this.deckContainer && this.deckContainer.targetScale !== undefined) {
