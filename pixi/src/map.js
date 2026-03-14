@@ -1,5 +1,7 @@
 import * as PIXI from 'pixi.js'
 import { EventEmitter } from 'events'
+import { mapConfig, hexToPixi } from './data/map_config.js'
+import { colors } from './data/colors.js'
 
 export class MapScreen extends EventEmitter {
   constructor(app, mapData, enemies, game) {
@@ -13,20 +15,57 @@ export class MapScreen extends EventEmitter {
     this.currentEnemyIndex = 0
     
     this.cellSize = Math.min(app.screen.width, app.screen.height) / 20
+    
+    this.loadAssets()
   }
 
-  show() {
-    console.log('MapScreen show(), enemies:', this.enemies.length, 'mapData:', this.mapData.name)
-    console.log('container:', this.container, 'stage:', this.app.stage)
-    console.log('container position:', this.container.x, this.container.y, 'alpha:', this.container.alpha)
+  async loadAssets() {
+    const urls = new Set()
+    
+    if (this.mapData.image) urls.add(this.mapData.image)
+    
+    this.enemies.forEach((enemy, index) => {
+      if (enemy.image) urls.add(enemy.image)
+    })
+    
+    await PIXI.Assets.load(Array.from(urls))
+    
+    this.assets = {}
+    if (this.mapData.image) {
+      this.assets.mapBg = { texture: PIXI.Assets.get(this.mapData.image) }
+    }
+    
+    this.enemies.forEach((enemy, index) => {
+      if (enemy.image) {
+        this.assets[`enemy_${index}`] = { texture: PIXI.Assets.get(enemy.image) }
+      }
+    })
+    
+    this.onAssetsLoaded()
+  }
+
+  onAssetsLoaded() {
     this.render()
-    console.log('After render, container children:', this.container.children.length, 'first child:', this.container.children[0])
     this.app.stage.addChild(this.container)
     this.container.alpha = 0
     this.fadeIn()
   }
 
+  show() {
+    if (this.assets) {
+      console.log('Map show, currentEnemyIndex:', this.currentEnemyIndex)
+      this.render()
+      this.app.stage.addChild(this.container)
+      this.container.alpha = 0
+      this.fadeIn()
+    }
+  }
+
   hide() {
+    // Останавливаем тикер анимации
+    if (this.tickerCallback) {
+      this.app.ticker.remove(this.tickerCallback)
+    }
     this.fadeOut(() => {
       this.app.stage.removeChild(this.container)
       this.cleanup()
@@ -56,41 +95,47 @@ export class MapScreen extends EventEmitter {
   }
 
   render() {
-    try {
-      console.log('MapScreen render() called')
-      this.container.removeChildren()
-      console.log('MapScreen render(), container children after remove:', this.container.children.length)
-      
-      // Заголовок карты
-      const title = new PIXI.Text(this.mapData.name, {
-        fontFamily: 'Arial',
-        fontSize: 32,
-        fontWeight: 'bold',
-        fill: '#ffffff'
-      })
-      title.x = 20
-      title.y = 20
-      this.container.addChild(title)
-      console.log('title added, children:', this.container.children.length)
-
-      // Задний фон карты
-      const bgGraphics = new PIXI.Graphics()
-      bgGraphics.beginFill(0x2d4a3e)
-      bgGraphics.drawRect(0, 0, this.app.screen.width, this.app.screen.height)
-      bgGraphics.endFill()
-      this.container.addChild(bgGraphics)
-      console.log('bg added, children:', this.container.children.length)
-
-      // Сетка карты
-      this.renderGrid()
-      
-      // Враги
-      this.renderEnemies()
-      
-      console.log('render complete, children:', this.container.children.length)
-    } catch (e) {
-      console.error('render error:', e)
+    this.container.removeChildren()
+    
+    // Задний фон карты (cover)
+    if (this.assets && this.assets.mapBg && this.assets.mapBg.texture) {
+      const bg = new PIXI.Sprite(this.assets.mapBg.texture)
+      this.scaleToCover(bg, this.app.screen.width, this.app.screen.height)
+      this.container.addChild(bg)
+    } else if (this.mapData.image) {
+      const bg = PIXI.Sprite.from(this.mapData.image)
+      this.scaleToCover(bg, this.app.screen.width, this.app.screen.height)
+      this.container.addChild(bg)
+    } else {
+      const bg = new PIXI.Graphics()
+      bg.beginFill(0x2d4a3e)
+      bg.drawRect(0, 0, this.app.screen.width, this.app.screen.height)
+      bg.endFill()
+      this.container.addChild(bg)
     }
+    
+    // Заголовок карты с фоном
+    const titleBg = new PIXI.Graphics()
+    titleBg.beginFill(0x282424, 0.8)
+    titleBg.drawRoundedRect(10, 10, 350, 50, 15)
+    titleBg.endFill()
+    this.container.addChild(titleBg)
+    
+    const title = new PIXI.Text(this.mapData.name, {
+      fontFamily: 'Arial',
+      fontSize: 32,
+      fontWeight: 'bold',
+      fill: '#ffffff'
+    })
+    title.x = 25
+    title.y = 20
+    this.container.addChild(title)
+    
+    // Сетка карты
+    this.renderGrid()
+    
+    // Враги
+    this.renderEnemies()
   }
 
   renderGrid() {
@@ -100,15 +145,12 @@ export class MapScreen extends EventEmitter {
     const startX = 50
     const startY = 80
 
-    // Сетка
     const grid = new PIXI.Graphics()
-    grid.lineStyle(1, 0x4a6b5c, 0.5)
+    grid.lineStyle(2, 0x4a6b5c, 0.5)
     
     for (let i = 0; i <= segments; i++) {
-      // Вертикальные линии
       grid.moveTo(startX + i * cellW, startY)
       grid.lineTo(startX + i * cellW, startY + segments * cellH)
-      // Горизонтальные линии
       grid.moveTo(startX, startY + i * cellH)
       grid.lineTo(startX + segments * cellW, startY + i * cellH)
     }
@@ -116,12 +158,26 @@ export class MapScreen extends EventEmitter {
   }
 
   renderEnemies() {
-    console.log('renderEnemies called, enemies:', this.enemies)
+    // Очищаем тикер от предыдущих вызовов
+    if (this.tickerCallback) {
+      this.app.ticker.remove(this.tickerCallback)
+    }
+    
+    const cfg = mapConfig ? mapConfig.enemy : {
+      maxHeight: 90, offsetY: 30, spriteOffsetY: 20,
+      platform: { radius: 45, offsetY: 30, colors: { defeated: 0x333333, active: 0x39751b, default: 0x282424 } },
+      bossRing: { radius: 50, offsetY: 0, color: '#8c1300', lineWidth: 3 },
+      name: { offsetY: -55 }, health: { bg: { width: 50, height: 20, offsetY: 60 }, text: { offsetY: 70 } },
+      defeated: { offsetY: 90 }
+    }
     const segments = this.mapData.segments
     const cellW = (this.app.screen.width - 100) / segments
     const cellH = (this.app.screen.height - 150) / segments
     const startX = 50
     const startY = 80
+    
+    // Массив для анимации
+    this.animatableEnemies = []
 
     this.enemies.forEach((enemy, index) => {
       const cellId = this.mapData.places[index]
@@ -137,61 +193,167 @@ export class MapScreen extends EventEmitter {
       const enemyContainer = new PIXI.Container()
       enemyContainer.x = x
       enemyContainer.y = y
+      enemyContainer.baseScale = 1
+      enemyContainer.targetScale = 1
 
-      // Индикатор врага
-      const indicator = new PIXI.Graphics()
       const isActive = index === this.currentEnemyIndex
       const isDefeated = index < this.currentEnemyIndex
+      const isBoss = index === this.enemies.length - 1
       
+      // Кольцо вокруг врага (задний план)
+      let ringColor, ringAlpha
       if (isDefeated) {
-        indicator.beginFill(0x666666)
+        ringColor = colors.enemy.ring.defeated
+        ringAlpha = 0.3
+      } else if (isBoss) {
+        ringColor = colors.enemy.ring.boss
+        ringAlpha = 1
       } else if (isActive) {
-        indicator.beginFill(0x00ff00)
+        ringColor = colors.enemy.ring.active
+        ringAlpha = 1
       } else {
-        indicator.beginFill(0xff6600)
+        ringColor = colors.enemy.ring.default
+        ringAlpha = 0.6
       }
       
-      indicator.drawCircle(0, 0, 25)
-      indicator.endFill()
-      enemyContainer.addChild(indicator)
+      const ring = new PIXI.Graphics()
+      ring.lineStyle(3, hexToPixi(ringColor), ringAlpha)
+      ring.drawCircle(0, cfg.platform.offsetY + cfg.offsetY, cfg.platform.radius + 8)
+      enemyContainer.addChild(ring)
+      
+      // Круг под врагом (платформа) - средний план
+      const platform = new PIXI.Graphics()
+      let platformColor, platformAlpha
+      if (isDefeated) {
+        platformColor = hexToPixi(cfg.platform.colors.defeated)
+        platformAlpha = 0.5
+      } else if (isActive) {
+        platformColor = hexToPixi(cfg.platform.colors.active)
+        platformAlpha = 0.8
+      } else {
+        platformColor = hexToPixi(cfg.platform.colors.default)
+        platformAlpha = 0.7
+      }
+      platform.beginFill(platformColor, platformAlpha)
+      platform.drawCircle(0, cfg.platform.offsetY + cfg.offsetY, cfg.platform.radius)
+      platform.endFill()
+      enemyContainer.addChild(platform)
+
+      // Изображение врага (передний план)
+      const spriteY = cfg.offsetY + cfg.spriteOffsetY
+      if (this.assets && this.assets[`enemy_${index}`] && this.assets[`enemy_${index}`].texture) {
+        const enemySprite = new PIXI.Sprite(this.assets[`enemy_${index}`].texture)
+        enemySprite.anchor.set(0.5, 1)
+        const scale = Math.min(1, cfg.maxHeight / enemySprite.texture.height)
+        enemySprite.scale.set(scale)
+        enemySprite.y = spriteY
+        enemyContainer.addChild(enemySprite)
+      } else if (enemy.image) {
+        const enemySprite = PIXI.Sprite.from(enemy.image)
+        enemySprite.anchor.set(0.5, 1)
+        const scale = Math.min(1, cfg.maxHeight / enemySprite.texture.height)
+        enemySprite.scale.set(scale)
+        enemySprite.y = spriteY
+        enemyContainer.addChild(enemySprite)
+      } else {
+        // Заглушка
+        const placeholder = new PIXI.Graphics()
+        if (isDefeated) placeholder.beginFill(0x666666)
+        else if (isActive) placeholder.beginFill(0x00ff00)
+        else placeholder.beginFill(0xff6600)
+        placeholder.drawCircle(0, spriteY - 20, 30)
+        placeholder.endFill()
+        enemyContainer.addChild(placeholder)
+      }
 
       // Имя врага
       const nameStyle = new PIXI.TextStyle({
         fontFamily: 'Arial',
         fontSize: 14,
+        fontWeight: 'bold',
         fill: isDefeated ? '#666666' : '#ffffff'
       })
       const name = new PIXI.Text(enemy.name, nameStyle)
       name.anchor.set(0.5, 1)
-      name.y = -30
+      name.y = spriteY + cfg.name.offsetY
       enemyContainer.addChild(name)
 
       // Здоровье
+      const healthBg = new PIXI.Graphics()
+      healthBg.beginFill(0x000000, 0.6)
+      healthBg.drawRoundedRect(-cfg.health.bg.width/2, spriteY + cfg.health.bg.offsetY, cfg.health.bg.width, cfg.health.bg.height, 5)
+      healthBg.endFill()
+      enemyContainer.addChild(healthBg)
+      
       const healthStyle = new PIXI.TextStyle({
         fontFamily: 'Arial',
         fontSize: 12,
-        fill: '#ff6666'
+        fill: isDefeated ? '#666666' : '#ff6666'
       })
       const health = new PIXI.Text('~' + enemy.health, healthStyle)
-      health.anchor.set(0.5, 0)
-      health.y = 30
+      health.anchor.set(0.5)
+      health.y = spriteY + cfg.health.text.offsetY
       enemyContainer.addChild(health)
+      
+      // Статус "Побежден"
+      if (isDefeated) {
+        const defeatedText = new PIXI.Text('Побежден', {
+          fontFamily: 'Arial',
+          fontSize: 16,
+          fontWeight: 'bold',
+          fill: '#666666'
+        })
+        defeatedText.anchor.set(0.5)
+        defeatedText.y = spriteY + cfg.defeated.offsetY
+        enemyContainer.addChild(defeatedText)
+      }
 
-      // Делаем активным для клика
+      // Интерактивность
       if (!isDefeated) {
         enemyContainer.eventMode = 'static'
         enemyContainer.cursor = 'pointer'
+        
+        enemyContainer.on('pointerover', () => {
+          enemyContainer.targetScale = 1.1
+          if (isActive) platform.alpha = 1
+        })
+        
+        enemyContainer.on('pointerout', () => {
+          enemyContainer.targetScale = 1
+          platform.alpha = isActive ? 0.8 : 0.7
+        })
+        
         enemyContainer.on('pointerdown', () => {
           if (index === this.currentEnemyIndex) {
             this.emit('enemy_click', enemy)
           }
         })
+        
+        // Добавляем в массив анимации
+        this.animatableEnemies.push(enemyContainer)
       }
 
       this.container.addChild(enemyContainer)
       this.enemySprites.push(enemyContainer)
     })
-    console.log('renderEnemies done, container children:', this.container.children.length)
+    
+    // Запускаем тикер для плавной анимации
+    this.tickerCallback = () => this.updateEnemies()
+    this.app.ticker.add(this.tickerCallback)
+  }
+  
+  updateEnemies() {
+    if (!this.animatableEnemies) return
+    
+    this.animatableEnemies.forEach(enemy => {
+      // Плавная интерполяция scale
+      const diff = enemy.targetScale - enemy.scale.x
+      if (Math.abs(diff) > 0.001) {
+        enemy.scale.set(enemy.scale.x + diff * 0.15)
+      } else {
+        enemy.scale.set(enemy.targetScale)
+      }
+    })
   }
 
   disableCurrentEnemy() {
@@ -201,6 +363,15 @@ export class MapScreen extends EventEmitter {
   cleanup() {
     this.container.removeChildren()
     this.enemySprites = []
+  }
+
+  scaleToCover(sprite, targetWidth, targetHeight) {
+    const scaleX = targetWidth / sprite.texture.width
+    const scaleY = targetHeight / sprite.texture.height
+    const scale = Math.max(scaleX, scaleY)
+    sprite.scale.set(scale)
+    sprite.x = (targetWidth - sprite.texture.width * scale) / 2
+    sprite.y = (targetHeight - sprite.texture.height * scale) / 2
   }
 
   resize(width, height) {

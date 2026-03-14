@@ -1,6 +1,14 @@
 import * as PIXI from 'pixi.js'
 import { EventEmitter } from 'events'
 
+// Импорт ассетов
+const assets = {
+  cardBack: '/assets/img/card_back.png',
+  battleBg: '/assets/img/battle_bg/bg2.png',
+  victory: '/assets/img/victory.png',
+  fail: '/assets/img/fail.jpg'
+}
+
 export class Battle extends EventEmitter {
   constructor(app, deck, cardTypes, enemyData, game) {
     super()
@@ -25,12 +33,56 @@ export class Battle extends EventEmitter {
   }
 
   start() {
+    // Начинаем загрузку ассетов
+    this.loadAssets()
+  }
+
+  async loadAssets() {
+    // Используем PIXI.Assets для загрузки - он сам кеширует
+    // Сначала загружаем все нужные ассеты
+    const urls = new Set()
+    
+    urls.add(this.enemyData.image_bg || assets.battleBg)
+    urls.add(assets.cardBack)
+    urls.add(assets.victory)
+    urls.add(assets.fail)
+    
+    this.cardTypes.forEach(type => {
+      if (type.image) urls.add(type.image)
+      if (type.image_bg) urls.add(type.image_bg)
+    })
+    
+    if (this.enemyData.image) urls.add(this.enemyData.image)
+    if (this.enemyData.image_bg) urls.add(this.enemyData.image_bg)
+    
+    // Загружаем все уникальные URL
+    await PIXI.Assets.load(Array.from(urls))
+    
+    // Создаем маппинг для удобного доступа
+    this.assets = {
+      battleBg: { texture: PIXI.Assets.get(this.enemyData.image_bg || assets.battleBg) },
+      cardBack: { texture: PIXI.Assets.get(assets.cardBack) },
+      victory: { texture: PIXI.Assets.get(assets.victory) },
+      fail: { texture: PIXI.Assets.get(assets.fail) },
+      enemy: this.enemyData.image ? { texture: PIXI.Assets.get(this.enemyData.image) } : null
+    }
+    
+    this.cardTypes.forEach(type => {
+      if (type.image) this.assets[`card_${type.type}`] = { texture: PIXI.Assets.get(type.image) }
+      if (type.image_bg) this.assets[`card_bg_${type.type}`] = { texture: PIXI.Assets.get(type.image_bg) }
+    })
+    
+    this.onAssetsLoaded()
+  }
+
+  onAssetsLoaded() {
     this.prepareDeck()
     this.render()
     this.app.stage.addChild(this.container)
     this.container.alpha = 0
     this.fadeIn()
     this.dealCards(8)
+    this.emit('ready')
   }
 
   prepareDeck() {
@@ -54,7 +106,7 @@ export class Battle extends EventEmitter {
   }
 
   addCard(cardData) {
-    const card = new CardSprite(this.app, cardData, this.cards.length)
+    const card = new CardSprite(this.app, cardData, this.cards.length, this.assets)
     card.on('click', () => this.onCardClick(card))
     this.cards.push(card)
     this.container.addChild(card.container)
@@ -95,10 +147,8 @@ export class Battle extends EventEmitter {
   }
 
   applyBuffs() {
-    // Сброс всех баффов
     this.cards.forEach(card => card.clearBuffs())
     
-    // Применяем баффы от выбранных карт
     this.selectedCards.forEach(selectedCard => {
       this.applyCardBuffs(selectedCard)
     })
@@ -107,7 +157,6 @@ export class Battle extends EventEmitter {
   applyCardBuffs(selectedCard) {
     const type = selectedCard.cardData.type
     
-    // Копейщица (type 1) - баффает Ополченцев(2), Рыцарей(5), Князя(3)
     if (type === 1) {
       this.cards.forEach(card => {
         if ([2, 3, 5].includes(card.cardData.type) && !card.isSelected) {
@@ -116,7 +165,6 @@ export class Battle extends EventEmitter {
       })
     }
     
-    // Князь (type 3) - баффает все карты на +3
     if (type === 3) {
       this.cards.forEach(card => {
         if (card !== selectedCard && !card.isSelected) {
@@ -125,7 +173,6 @@ export class Battle extends EventEmitter {
       })
     }
     
-    // Берсерк (type 4) - +20 если выбраны 3 берсерка
     if (type === 4) {
       const berserkCount = this.selectedCards.filter(c => c.cardData.type === 4).length
       if (berserkCount === 3 && this.selectedCards.length === 3) {
@@ -137,7 +184,6 @@ export class Battle extends EventEmitter {
       }
     }
     
-    // Доктор (type 7) - баффает все невыбранные карты на +3
     if (type === 7) {
       this.cards.forEach(card => {
         if (!card.isSelected) {
@@ -146,12 +192,10 @@ export class Battle extends EventEmitter {
       })
     }
     
-    // Темный рыцарь (type 8) - сила = кол-во карт в колоде
     if (type === 8 && !selectedCard.isSelected) {
       selectedCard.addBuff(this.currentDeck.length - 1)
     }
     
-    // Священник (type 11) - рандомный бафф 1-5
     if (type === 11 && selectedCard.isSelected) {
       this.cards.forEach(card => {
         if (card !== selectedCard && card.isSelected) {
@@ -175,10 +219,8 @@ export class Battle extends EventEmitter {
     this.enemyHealth -= summ
     this.cntSteps--
     
-    // Анимация удара
     this.showDamage(summ)
     
-    // Проверка победы/поражения
     setTimeout(() => {
       if (this.enemyHealth <= 0) {
         this.enemyHealth = 0
@@ -193,7 +235,6 @@ export class Battle extends EventEmitter {
   }
 
   resetSelectedCards() {
-    // Удаляем выбранные карты
     this.selectedCards.forEach(card => {
       this.cards = this.cards.filter(c => c !== card)
       this.container.removeChild(card.container)
@@ -201,7 +242,6 @@ export class Battle extends EventEmitter {
     this.selectedCards = []
     this.activeCards = 0
     
-    // Добавляем новые карты
     this.dealCards(this.selectedCards.length || 3)
     
     this.updateUI()
@@ -261,26 +301,43 @@ export class Battle extends EventEmitter {
   showVictory() {
     const points = this.enemyData.health + this.cntSteps * 10
     
+    // Затемнение
     const overlay = new PIXI.Graphics()
     overlay.beginFill(0x000000, 0.7)
     overlay.drawRect(0, 0, this.app.screen.width, this.app.screen.height)
     overlay.endFill()
     this.container.addChild(overlay)
     
+    // Изображение победы
+    if (this.assets && this.assets.victory && this.assets.victory.texture) {
+      const victorySprite = new PIXI.Sprite(this.assets.victory.texture)
+      victorySprite.anchor.set(0.5)
+      victorySprite.x = this.app.screen.width / 2
+      victorySprite.y = this.app.screen.height / 2
+      const maxW = this.app.screen.width * 0.8
+      const maxH = this.app.screen.height * 0.8
+      victorySprite.scale.set(Math.min(maxW / victorySprite.texture.width, maxH / victorySprite.texture.height))
+      this.container.addChild(victorySprite)
+    }
+    
+    // Текст победы
     const style = new PIXI.TextStyle({
       fontFamily: 'Arial',
       fontSize: 64,
       fontWeight: 'bold',
-      fill: '#00ff00'
+      fill: '#00ff00',
+      stroke: '#000000',
+      strokeThickness: 4
     })
     const text = new PIXI.Text('ПОБЕДА!', style)
     text.anchor.set(0.5)
     text.x = this.app.screen.width / 2
-    text.y = this.app.screen.height / 2
+    text.y = this.app.screen.height / 2 - 100
     this.container.addChild(text)
     
     setTimeout(() => {
       this.emit('victory', points)
+      this.emit('end')
     }, 2000)
   }
 
@@ -291,31 +348,49 @@ export class Battle extends EventEmitter {
     overlay.endFill()
     this.container.addChild(overlay)
     
+    // Изображение поражения
+    if (this.assets && this.assets.fail && this.assets.fail.texture) {
+      const failSprite = new PIXI.Sprite(this.assets.fail.texture)
+      failSprite.anchor.set(0.5)
+      failSprite.x = this.app.screen.width / 2
+      failSprite.y = this.app.screen.height / 2
+      const maxW = this.app.screen.width * 0.8
+      const maxH = this.app.screen.height * 0.8
+      failSprite.scale.set(Math.min(maxW / failSprite.texture.width, maxH / failSprite.texture.height))
+      this.container.addChild(failSprite)
+    }
+    
     const style = new PIXI.TextStyle({
       fontFamily: 'Arial',
       fontSize: 64,
       fontWeight: 'bold',
-      fill: '#ff0000'
+      fill: '#ff0000',
+      stroke: '#000000',
+      strokeThickness: 4
     })
     const text = new PIXI.Text('ПОРАЖЕНИЕ', style)
     text.anchor.set(0.5)
     text.x = this.app.screen.width / 2
-    text.y = this.app.screen.height / 2
+    text.y = this.app.screen.height / 2 - 100
     this.container.addChild(text)
     
     setTimeout(() => {
       this.emit('defeat')
+      this.emit('end')
     }, 2000)
   }
 
   render() {
     this.container.removeChildren()
     
-    // Фон битвы
-    if (this.enemyData.image_bg) {
+    // Фон боя (cover)
+    if (this.assets && this.assets.battleBg && this.assets.battleBg.texture) {
+      const bg = new PIXI.Sprite(this.assets.battleBg.texture)
+      this.scaleToCover(bg, this.app.screen.width, this.app.screen.height)
+      this.container.addChild(bg)
+    } else if (this.enemyData.image_bg) {
       const bg = PIXI.Sprite.from(this.enemyData.image_bg)
-      bg.width = this.app.screen.width
-      bg.height = this.app.screen.height
+      this.scaleToCover(bg, this.app.screen.width, this.app.screen.height)
       this.container.addChild(bg)
     } else {
       const bg = new PIXI.Graphics()
@@ -325,13 +400,8 @@ export class Battle extends EventEmitter {
       this.container.addChild(bg)
     }
     
-    // Враг
     this.renderEnemy()
-    
-    // Кнопки управления
     this.renderControls()
-    
-    // Информация о колоде
     this.renderDeckInfo()
   }
 
@@ -341,14 +411,35 @@ export class Battle extends EventEmitter {
     enemyContainer.y = 180
     
     // Изображение врага
-    if (this.enemyData.image) {
+    const enemyMaxHeight = 200
+    if (this.assets && this.assets.enemy && this.assets.enemy.texture) {
+      const enemySprite = new PIXI.Sprite(this.assets.enemy.texture)
+      enemySprite.anchor.set(0.5, 1)
+      const scale = Math.min(1, enemyMaxHeight / enemySprite.texture.height)
+      enemySprite.scale.set(scale)
+      enemySprite.y = 0
+      enemyContainer.addChild(enemySprite)
+    } else if (this.enemyData.image) {
       const enemySprite = PIXI.Sprite.from(this.enemyData.image)
-      enemySprite.anchor.set(0.5)
-      enemySprite.scale.set(2)
+      enemySprite.anchor.set(0.5, 1)
+      const scale = Math.min(1, enemyMaxHeight / enemySprite.texture.height)
+      enemySprite.scale.set(scale)
+      enemySprite.y = 0
       enemyContainer.addChild(enemySprite)
     }
     
-    // Имя врага
+    // Имя врага с тенью
+    const nameShadow = new PIXI.Text(this.enemyData.name, {
+      fontFamily: 'Arial',
+      fontSize: 28,
+      fontWeight: 'bold',
+      fill: '#000000'
+    })
+    nameShadow.anchor.set(0.5, 1)
+    nameShadow.x = enemyContainer.x + 2
+    nameShadow.y = 100 + 2
+    this.container.addChild(nameShadow)
+    
     const nameStyle = new PIXI.TextStyle({
       fontFamily: 'Arial',
       fontSize: 28,
@@ -357,35 +448,43 @@ export class Battle extends EventEmitter {
     })
     const name = new PIXI.Text(this.enemyData.name, nameStyle)
     name.anchor.set(0.5, 1)
-    name.y = -80
-    enemyContainer.addChild(name)
+    name.x = enemyContainer.x
+    name.y = 100
+    this.container.addChild(name)
     
     // Здоровье врага
+    const healthBg = new PIXI.Graphics()
+    healthBg.beginFill(0x000000, 0.7)
+    healthBg.drawRoundedRect(enemyContainer.x - 80, 120, 160, 35, 10)
+    healthBg.endFill()
+    this.container.addChild(healthBg)
+    
     const healthStyle = new PIXI.TextStyle({
       fontFamily: 'Arial',
       fontSize: 24,
+      fontWeight: 'bold',
       fill: '#ff6666'
     })
     const health = new PIXI.Text(`HP: ${this.enemyHealth}`, healthStyle)
-    health.anchor.set(0.5, 0)
-    health.y = -50
-    enemyContainer.addChild(health)
+    health.anchor.set(0.5)
+    health.x = enemyContainer.x
+    health.y = 137
+    this.container.addChild(health)
     
     this.enemyHealthText = health
-    this.container.addChild(enemyContainer)
   }
 
   renderControls() {
     const btnY = this.app.screen.height - 280
     
     // Кнопка "Ход"
-    const playBtn = this.createButton('Сделать ход!', 0x4CAF50, () => this.playCards())
+    const playBtn = this.createButton('Сделать ход!', 0x39751b, () => this.playCards())
     playBtn.x = this.app.screen.width / 2 - 100
     playBtn.y = btnY
     this.container.addChild(playBtn)
     
     // Кнопка "Сброс"
-    const resetBtn = this.createButton('Сброс', 0xf44336, () => this.resetCards())
+    const resetBtn = this.createButton('Сброс', 0x8c1300, () => this.resetCards())
     resetBtn.x = this.app.screen.width / 2 + 100
     resetBtn.y = btnY
     this.container.addChild(resetBtn)
@@ -429,10 +528,11 @@ export class Battle extends EventEmitter {
     
     const bg = new PIXI.Graphics()
     bg.beginFill(color)
-    bg.drawRoundedRect(0, 0, 140, 50, 10)
+    bg.drawRoundedRect(0, 0, 140, 50, 25)
     bg.endFill()
     container.addChild(bg)
     
+    // Текст кнопки
     const style = new PIXI.TextStyle({
       fontFamily: 'Arial',
       fontSize: 18,
@@ -447,6 +547,22 @@ export class Battle extends EventEmitter {
     
     container.eventMode = 'static'
     container.cursor = 'pointer'
+    
+    // Эффекты при наведении
+    container.on('pointerover', () => {
+      bg.clear()
+      bg.beginFill(color)
+      bg.drawRoundedRect(-3, -3, 146, 56, 27)
+      bg.endFill()
+    })
+    
+    container.on('pointerout', () => {
+      bg.clear()
+      bg.beginFill(color)
+      bg.drawRoundedRect(0, 0, 140, 50, 25)
+      bg.endFill()
+    })
+    
     container.on('pointerdown', onClick)
     
     return container
@@ -466,7 +582,6 @@ export class Battle extends EventEmitter {
       this.deckText.text = `В колоде: ${this.currentDeck.length}`
     }
     
-    // Обновляем сумму выбранных карт
     this.selectedCards.forEach(card => card.updateValueText())
   }
 
@@ -478,9 +593,20 @@ export class Battle extends EventEmitter {
       }
     }
     animate()
+    
+    // Запускаем игровой цикл для анимаций карт
+    this.app.ticker.add(() => this.gameLoop())
+  }
+
+  gameLoop() {
+    // Обновляем все карты
+    this.cards.forEach(card => card.update())
   }
 
   fadeOut(callback) {
+    // Останавливаем тикер
+    this.app.ticker.remove(() => this.gameLoop())
+    
     const animate = () => {
       this.container.alpha -= 0.05
       if (this.container.alpha <= 0) {
@@ -504,19 +630,29 @@ export class Battle extends EventEmitter {
     this.selectedCards = []
   }
 
+  scaleToCover(sprite, targetWidth, targetHeight) {
+    const scaleX = targetWidth / sprite.texture.width
+    const scaleY = targetHeight / sprite.texture.height
+    const scale = Math.max(scaleX, scaleY)
+    sprite.scale.set(scale)
+    sprite.x = (targetWidth - sprite.texture.width * scale) / 2
+    sprite.y = (targetHeight - sprite.texture.height * scale) / 2
+  }
+
   resize(width, height) {
     this.render()
   }
 }
 
 class CardSprite extends EventEmitter {
-  constructor(app, cardData, index) {
+  constructor(app, cardData, index, assets) {
     super()
     this.app = app
     this.cardData = cardData
     this.index = index
     this.isSelected = false
     this.buffs = []
+    this.assets = assets
     
     this.container = new PIXI.Container()
     this.cardWidth = 120
@@ -526,7 +662,7 @@ class CardSprite extends EventEmitter {
   }
 
   render() {
-    // Карточка
+    // Карточка - фон
     const bg = new PIXI.Graphics()
     bg.lineStyle(3, 0x333333)
     bg.beginFill(0x2a2a4a)
@@ -534,24 +670,29 @@ class CardSprite extends EventEmitter {
     bg.endFill()
     this.container.addChild(bg)
     
-    // Обложка
-    const cardBg = PIXI.Sprite.from(this.cardData.image_bg)
-    cardBg.width = this.cardWidth
-    cardBg.height = this.cardHeight
-    cardBg.alpha = 0.3
-    this.container.addChild(cardBg)
+    // Фон карточки (изображение или цвет)
+    if (this.assets && this.assets[`card_bg_${this.cardData.type}`] && this.assets[`card_bg_${this.cardData.type}`].texture) {
+      const cardBg = new PIXI.Sprite(this.assets[`card_bg_${this.cardData.type}`].texture)
+      cardBg.width = this.cardWidth
+      cardBg.height = this.cardHeight
+      cardBg.alpha = 0.3
+      this.container.addChild(cardBg)
+    }
     
     // Изображение карты
-    if (this.cardData.image) {
-      const img = PIXI.Sprite.from(this.cardData.image)
+    if (this.assets && this.assets[`card_${this.cardData.type}`] && this.assets[`card_${this.cardData.type}`].texture) {
+      const img = new PIXI.Sprite(this.assets[`card_${this.cardData.type}`].texture)
       img.anchor.set(0.5)
       img.x = this.cardWidth / 2
       img.y = this.cardHeight / 2 - 10
-      img.scale.set(0.8)
+      const maxH = this.cardHeight - 40
+      const maxW = this.cardWidth - 20
+      const scale = Math.min(maxW / img.texture.width, maxH / img.texture.height)
+      img.scale.set(scale)
       this.container.addChild(img)
     }
     
-    // Название
+    // Название карты
     const nameStyle = new PIXI.TextStyle({
       fontFamily: 'Arial',
       fontSize: 12,
@@ -563,8 +704,19 @@ class CardSprite extends EventEmitter {
     name.y = 25
     this.container.addChild(name)
     
-    // Значение
-    this.valueText = new PIXI.Text(String(this.cardData.value), nameStyle)
+    // Значение карты в кружочке
+    const valueBg = new PIXI.Graphics()
+    valueBg.beginFill(0x39751b)
+    valueBg.drawCircle(this.cardWidth / 2, 40, 18)
+    valueBg.endFill()
+    this.container.addChild(valueBg)
+    
+    this.valueText = new PIXI.Text(String(this.cardData.value), {
+      fontFamily: 'Arial',
+      fontSize: 16,
+      fontWeight: 'bold',
+      fill: '#ffffff'
+    })
     this.valueText.anchor.set(0.5)
     this.valueText.x = this.cardWidth / 2
     this.valueText.y = 40
@@ -576,16 +728,47 @@ class CardSprite extends EventEmitter {
     this.container.on('pointerdown', () => {
       this.emit('click')
     })
+    
+    // Анимация появления
+    this.container.scale.set(0)
+    this.animateIn()
+  }
+
+  animateIn() {
+    let scale = 0
+    const animate = () => {
+      scale += 0.1
+      if (scale < 1) {
+        this.container.scale.set(scale)
+        requestAnimationFrame(animate)
+      } else {
+        this.container.scale.set(1)
+      }
+    }
+    animate()
   }
 
   setPosition(x, y) {
+    this.baseY = y
+    this.targetY = y
     this.container.x = x
     this.container.y = y
   }
 
+  update() {
+    // Плавная анимация перемещения
+    if (this.container.y !== this.targetY) {
+      const diff = this.targetY - this.container.y
+      this.container.y += diff * 0.2
+      if (Math.abs(diff) < 0.5) {
+        this.container.y = this.targetY
+      }
+    }
+  }
+
   select() {
     this.isSelected = true
-    this.container.y -= 20
+    this.targetY = this.baseY - 20
     
     // Подсветка
     const highlight = new PIXI.Graphics()
@@ -597,7 +780,7 @@ class CardSprite extends EventEmitter {
 
   deselect() {
     this.isSelected = false
-    this.container.y += 20
+    this.targetY = this.baseY
     
     if (this.highlight) {
       this.container.removeChild(this.highlight)
@@ -635,15 +818,6 @@ class CardSprite extends EventEmitter {
   }
 
   applySkill() {
-    // Лучница (type 6) - добавляет ход если 4+ в руке
-    if (this.cardData.type === 6) {
-      const archersCount = this.isSelected ? 1 : 0
-      // Это упрощенная логика, полная реализация в оригинале
-    }
-    
-    // Берсерк (type 4) - сбрасывает всех берсерков из колоды
-    if (this.cardData.type === 4) {
-      // Логика в battle.applyBuffs
-    }
+    // Логика умений карт
   }
 }

@@ -6,18 +6,56 @@ import { deck } from './data/deck.js'
 import { enemies } from './data/enemies.js'
 import { maps } from './data/maps.js'
 
+// Главный фон
+const MAIN_BG = '/assets/img/bg_full.jpg'
+
 export class Game {
   constructor(app) {
     this.app = app
     this.screens = {}
     this.currentScreen = null
     this.user = { points: 0 }
+    this.isBattleActive = false
+
+    // Контейнер для фона
+    this.bgContainer = new PIXI.Container()
+    this.app.stage.addChild(this.bgContainer)
 
     this.screenContainer = new PIXI.Container()
     this.app.stage.addChild(this.screenContainer)
 
     this.messageContainer = new PIXI.Container()
     this.app.stage.addChild(this.messageContainer)
+    
+    // Загрузка главного фона
+    this.loadMainBg()
+  }
+
+  async loadMainBg() {
+    try {
+      this.mainBg = { texture: await PIXI.Assets.load(MAIN_BG) }
+      this.renderMainBg()
+    } catch (e) {
+      console.warn('Failed to load main background:', e)
+      this.renderMainBg()
+    }
+  }
+
+  renderMainBg() {
+    this.bgContainer.removeChildren()
+    
+    if (this.mainBg && this.mainBg.texture) {
+      const bg = new PIXI.Sprite(this.mainBg.texture)
+      this.scaleToCover(bg, this.app.screen.width, this.app.screen.height)
+      this.bgContainer.addChild(bg)
+    } else {
+      // Резервный фон
+      const bg = new PIXI.Graphics()
+      bg.beginFill(0x1a1a2e)
+      bg.drawRect(0, 0, this.app.screen.width, this.app.screen.height)
+      bg.endFill()
+      this.bgContainer.addChild(bg)
+    }
   }
 
   start() {
@@ -27,28 +65,101 @@ export class Game {
   }
 
   showMap() {
+    this.isBattleActive = false
     this.hideCurrentScreen()
-    const mapScreen = new MapScreen(this.app, maps[0], enemies, this)
-    mapScreen.on('enemy_click', (enemyData) => this.initBattle(enemyData))
-    this.screens['map'] = mapScreen
+    
+    // Переиспользуем существующую карту или создаём новую
+    let mapScreen = this.screens['map']
+    if (!mapScreen) {
+      mapScreen = new MapScreen(this.app, maps[0], enemies, this)
+      mapScreen.on('enemy_click', (enemyData) => this.initBattle(enemyData))
+      this.screens['map'] = mapScreen
+    }
+    
     this.currentScreen = mapScreen
     mapScreen.show()
   }
 
   initBattle(enemyData) {
+    this.isBattleActive = true
     this.hideCurrentScreen()
     const battle = new Battle(this.app, deck, card_types, enemyData, this)
-    battle.on('end', () => this.showMap())
+    
+    battle.on('end', () => {
+      this.isBattleActive = false
+      // Обновляем карту после боя
+      if (this.screens['map']) {
+        this.screens['map'].disableCurrentEnemy()
+      }
+      this.showMap()
+    })
+    
     battle.on('victory', (points) => {
       this.user.points += points
       this.showMessage(`Победа! +${points} очков`, 0x00ff00)
     })
+    
     battle.on('defeat', () => {
       this.showMessage('Поражение!', 0xff0000)
     })
+    
     this.screens['battle'] = battle
     this.currentScreen = battle
     battle.start()
+    
+    // Добавляем кнопку выхода после загрузки ассетов
+    battle.on('ready', () => {
+      console.log('Battle ready, adding exit button')
+      this.addExitButton(battle)
+    })
+  }
+
+  addExitButton(battle) {
+    // Кнопка "Сбежать"
+    const exitBtn = new PIXI.Container()
+    
+    const bg = new PIXI.Graphics()
+    bg.beginFill(0x8c1300)
+    bg.drawRoundedRect(0, 0, 120, 40, 20)
+    bg.endFill()
+    exitBtn.addChild(bg)
+    
+    const label = new PIXI.Text('Сбежать', {
+      fontFamily: 'Arial',
+      fontSize: 16,
+      fill: '#ffffff'
+    })
+    label.anchor.set(0.5)
+    label.x = 60
+    label.y = 20
+    exitBtn.addChild(label)
+    
+    exitBtn.x = this.app.screen.width - 140
+    exitBtn.y = 20
+    exitBtn.eventMode = 'static'
+    exitBtn.cursor = 'pointer'
+    
+    exitBtn.on('pointerover', () => {
+      bg.clear()
+      bg.beginFill(0xa52a2a)
+      bg.drawRoundedRect(0, 0, 120, 40, 20)
+      bg.endFill()
+    })
+    
+    exitBtn.on('pointerout', () => {
+      bg.clear()
+      bg.beginFill(0x8c1300)
+      bg.drawRoundedRect(0, 0, 120, 40, 20)
+      bg.endFill()
+    })
+    
+    exitBtn.on('pointerdown', () => {
+      battle.cleanup()
+      this.isBattleActive = false
+      this.showMap()
+    })
+    
+    battle.container.addChild(exitBtn)
   }
 
   hideCurrentScreen() {
@@ -88,8 +199,18 @@ export class Game {
   }
 
   resize(width, height) {
+    this.renderMainBg()
     if (this.currentScreen && this.currentScreen.resize) {
       this.currentScreen.resize(width, height)
     }
+  }
+
+  scaleToCover(sprite, targetWidth, targetHeight) {
+    const scaleX = targetWidth / sprite.texture.width
+    const scaleY = targetHeight / sprite.texture.height
+    const scale = Math.max(scaleX, scaleY)
+    sprite.scale.set(scale)
+    sprite.x = (targetWidth - sprite.texture.width * scale) / 2
+    sprite.y = (targetHeight - sprite.texture.height * scale) / 2
   }
 }
