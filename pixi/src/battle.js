@@ -585,8 +585,8 @@ export class Battle extends EventEmitter {
     
     // Кружочек с количеством карт
     this.deckCountCircle = new Circle({
-      x: cardW - 20,
-      y: 20,
+      x: cardW/2 + 3,
+      y: cardH -10,
       radius: 22,
       bgColor: 0x3a3a3a,
       borderColor: 0x888888,
@@ -605,8 +605,11 @@ export class Battle extends EventEmitter {
     labelText.y = cardH + 20
     deckContainer.addChild(labelText)
     
-    // Hover эффект
+    // Hover эффект с анимацией scale
+    deckContainer.targetScale = 1
+    
     deckContainer.on('pointerover', () => {
+      deckContainer.targetScale = 1.05
       cardBack.clear()
       cardBack.lineStyle(2, 0x4a9c6d)
       cardBack.beginFill(0x3a5a4a)
@@ -615,6 +618,7 @@ export class Battle extends EventEmitter {
     })
     
     deckContainer.on('pointerout', () => {
+      deckContainer.targetScale = 1
       cardBack.clear()
       cardBack.lineStyle(2, 0xffffff)
       cardBack.beginFill(0x282424)
@@ -813,6 +817,14 @@ export class Battle extends EventEmitter {
   gameLoop() {
     // Обновляем все карты
     this.cards.forEach(card => card.update())
+    
+    // Анимация scale для колоды
+    if (this.deckContainer && this.deckContainer.targetScale !== undefined) {
+      const diff = this.deckContainer.targetScale - this.deckContainer.scale.x
+      if (Math.abs(diff) > 0.001) {
+        this.deckContainer.scale.set(this.deckContainer.scale.x + diff * 0.15)
+      }
+    }
   }
 
   fadeOut(callback) {
