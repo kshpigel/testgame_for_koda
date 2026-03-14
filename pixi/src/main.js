@@ -1,6 +1,8 @@
 import { Application } from 'pixi.js'
 import { Game } from './game.js'
 import { soundManager } from './audio/sound_manager.js'
+import { LoadingScreen } from './loading_screen.js'
+import { loadAllAssets } from './asset_loader.js'
 
 let gameInstance = null
 
@@ -19,12 +21,7 @@ async function loadFont() {
 }
 
 async function init() {
-  // Ждём загрузки шрифта
-  await loadFont()
-  
-  // Инициализируем звуки
-  await soundManager.init()
-  
+  // Создаём приложение
   const app = new Application({
     width: window.innerWidth,
     height: window.innerHeight,
@@ -37,16 +34,37 @@ async function init() {
   const container = document.getElementById('game-container') || document.body
   container.appendChild(app.view)
 
-  console.log('PIXI app created, stage:', app.stage, 'view:', app.view)
+  // Показываем экран загрузки
+  const loadingScreen = new LoadingScreen(app)
+  await loadingScreen.show()
+  
+  // Загружаем шрифт
+  loadingScreen.setProgress(10, 'Загрузка шрифта...')
+  await loadFont()
+  
+  // Загружаем звуки
+  loadingScreen.setProgress(30, 'Загрузка звуков...')
+  await soundManager.init()
+  
+  // Загружаем ассеты
+  loadingScreen.setProgress(50, 'Загрузка графики...')
+  await loadAllAssets((percent, msg) => {
+    loadingScreen.setProgress(50 + percent * 0.5, msg)
+  })
+  
+  // Скрываем экран загрузки
+  loadingScreen.hide()
+  
+  console.log('All assets loaded, starting game...')
   
   gameInstance = new Game(app)
   gameInstance.start()
-  
-  console.log('After game.start(), stage children:', app.stage.children.length)
 
   window.addEventListener('resize', () => {
     app.renderer.resize(window.innerWidth, window.innerHeight)
-    gameInstance.resize(window.innerWidth, window.innerHeight)
+    if (gameInstance) {
+      gameInstance.resize(window.innerWidth, window.innerHeight)
+    }
   })
 }
 
