@@ -1,4 +1,5 @@
 import * as PIXI from 'pixi.js'
+import { ColorMatrixFilter } from 'pixi.js'
 import { EventEmitter } from 'events'
 import { mapConfig, hexToPixi } from './data/map_config.js'
 import { colors } from './data/colors.js'
@@ -241,21 +242,32 @@ export class MapScreen extends EventEmitter {
 
       // Изображение врага (передний план)
       const spriteY = cfg.offsetY + cfg.spriteOffsetY
+      let enemySprite = null
+      
       if (this.assets && this.assets[`enemy_${index}`] && this.assets[`enemy_${index}`].texture) {
-        const enemySprite = new PIXI.Sprite(this.assets[`enemy_${index}`].texture)
+        enemySprite = new PIXI.Sprite(this.assets[`enemy_${index}`].texture)
         enemySprite.anchor.set(0.5, 1)
         const scale = Math.min(1, cfg.maxHeight / enemySprite.texture.height)
         enemySprite.scale.set(scale)
         enemySprite.y = spriteY
         enemyContainer.addChild(enemySprite)
       } else if (enemy.image) {
-        const enemySprite = PIXI.Sprite.from(enemy.image)
+        enemySprite = PIXI.Sprite.from(enemy.image)
         enemySprite.anchor.set(0.5, 1)
         const scale = Math.min(1, cfg.maxHeight / enemySprite.texture.height)
         enemySprite.scale.set(scale)
         enemySprite.y = spriteY
         enemyContainer.addChild(enemySprite)
-      } else {
+      }
+      
+      // Применяем grayscale к побеждённым врагам
+      if (isDefeated && enemySprite) {
+        const grayscaleFilter = new ColorMatrixFilter()
+        grayscaleFilter.grayscale()
+        enemySprite.filters = [grayscaleFilter]
+      }
+      
+      if (!enemySprite) {
         // Заглушка
         const placeholder = new PIXI.Graphics()
         if (isDefeated) placeholder.beginFill(0x666666)
@@ -313,14 +325,30 @@ export class MapScreen extends EventEmitter {
         enemyContainer.eventMode = 'static'
         enemyContainer.cursor = 'pointer'
         
+        // Светящийся ореол при наведении
+        const glowFilter = new ColorMatrixFilter()
+        glowFilter.brightness(1.3, false)
+        
+        // Сохраняем grayscale фильтр для побеждённых
+        const grayscaleFilter = new ColorMatrixFilter()
+        grayscaleFilter.grayscale()
+        
         enemyContainer.on('pointerover', () => {
           enemyContainer.targetScale = 1.1
           if (isActive) platform.alpha = 1
+          // Добавляем glow-эффект (кроме побеждённых)
+          if (enemySprite && !isDefeated) {
+            enemySprite.filters = [glowFilter]
+          }
         })
         
         enemyContainer.on('pointerout', () => {
           enemyContainer.targetScale = 1
           platform.alpha = isActive ? 0.8 : 0.7
+          // Убираем glow-эффект, восстанавливаем grayscale если был
+          if (enemySprite) {
+            enemySprite.filters = isDefeated ? [grayscaleFilter] : null
+          }
         })
         
         enemyContainer.on('pointerdown', () => {
