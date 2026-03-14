@@ -3,6 +3,7 @@ import { EventEmitter } from 'events'
 import { FONT } from './data/fonts.js'
 import { soundManager } from './audio/sound_manager.js'
 import { Card, CARD_CONFIG } from './ui/card.js'
+import { Circle } from './ui/circle.js'
 
 // Импорт ассетов
 const assets = {
@@ -103,6 +104,7 @@ export class Battle extends EventEmitter {
         const cardData = this.currentDeck.pop()
         if (cardData) {
           this.addCard(cardData)
+          this.updateUI()
         }
       }, i * 100)
     }
@@ -581,17 +583,16 @@ export class Battle extends EventEmitter {
       deckContainer.addChild(backSprite)
     }
     
-    // Количество карт в колоде
-    const style = new PIXI.TextStyle({
-      fontFamily: FONT,
-      fontSize: 16,
-      fill: '#ffffff'
+    // Кружочек с количеством карт
+    this.deckCountCircle = new Circle({
+      x: cardW - 20,
+      y: 20,
+      radius: 22,
+      bgColor: 0x3a3a3a,
+      borderColor: 0x888888,
+      text: `${this.currentDeck.length}`
     })
-    const countText = new PIXI.Text(`${this.currentDeck.length}`, style)
-    countText.anchor.set(0.5)
-    countText.x = cardW / 2
-    countText.y = cardH / 2
-    deckContainer.addChild(countText)
+    deckContainer.addChild(this.deckCountCircle)
     
     // Подпись "Колода"
     const labelText = new PIXI.Text('Колода', {
@@ -789,8 +790,8 @@ export class Battle extends EventEmitter {
     if (this.resetsText) {
       this.resetsText.text = `Сбросы: ${this.cntReset}`
     }
-    if (this.deckText) {
-      this.deckText.text = `В колоде: ${this.currentDeck.length}`
+    if (this.deckCountCircle) {
+      this.deckCountCircle.setText(`${this.currentDeck.length}`)
     }
     
     this.selectedCards.forEach(card => card.updateValue())

@@ -41,9 +41,43 @@ export class Circle extends PIXI.Container {
     this.bg.endFill()
   }
 
-  setText(text) {
+  setText(text, animate = true) {
+    // Анимация только при изменении значения
+    const shouldAnimate = animate && String(this.text) !== String(text)
+    
     this.text = text
     this.textObj.text = text
+    
+    if (shouldAnimate) {
+      this.animatePulse()
+    }
+  }
+  
+  animatePulse() {
+    const originalScale = 1
+    const targetScale = 1.3
+    let scale = originalScale
+    
+    const animate = () => {
+      if (scale < targetScale) {
+        scale += 0.05
+        this.scale.set(scale)
+        requestAnimationFrame(animate)
+      } else {
+        // Обратная анимация
+        const animateBack = () => {
+          if (scale > originalScale) {
+            scale -= 0.05
+            this.scale.set(scale)
+            requestAnimationFrame(animateBack)
+          } else {
+            this.scale.set(originalScale)
+          }
+        }
+        requestAnimationFrame(animateBack)
+      }
+    }
+    animate()
   }
 
   setBgColor(color) {
