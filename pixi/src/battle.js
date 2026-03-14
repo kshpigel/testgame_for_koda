@@ -1,6 +1,7 @@
 import * as PIXI from 'pixi.js'
 import { EventEmitter } from 'events'
 import { FONT } from './data/fonts.js'
+import { soundManager } from './audio/sound_manager.js'
 
 // Импорт ассетов
 const assets = {
@@ -220,6 +221,7 @@ export class Battle extends EventEmitter {
     this.enemyHealth -= summ
     this.cntSteps--
     
+    soundManager.play('attack')
     this.showDamage(summ)
     
     setTimeout(() => {
@@ -337,12 +339,14 @@ export class Battle extends EventEmitter {
     this.container.addChild(text)
     
     setTimeout(() => {
+      soundManager.play('battleVictory')
       this.emit('victory', points)
       this.emit('end')
     }, 2000)
   }
 
   showDefeat() {
+    soundManager.play('battleFail')
     const overlay = new PIXI.Graphics()
     overlay.beginFill(0x000000, 0.7)
     overlay.drawRect(0, 0, this.app.screen.width, this.app.screen.height)

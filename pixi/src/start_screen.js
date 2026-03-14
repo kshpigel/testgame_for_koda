@@ -1,5 +1,6 @@
 import * as PIXI from 'pixi.js'
 import { Button } from './ui/button.js'
+import { soundManager } from './audio/sound_manager.js'
 
 const START_BG = '/assets/img/bg_full.jpg'
 
@@ -47,6 +48,9 @@ export class StartScreen {
     this.button.x = this.app.screen.width / 2
     this.button.y = this.app.screen.height / 2
     this.button.onClick = () => {
+      // Разогрев AudioContext при первом клике
+      soundManager.audioCtx.resume()
+      soundManager.play('click')
       this.container.visible = false
       if (this.onStart) this.onStart()
     }
@@ -56,6 +60,7 @@ export class StartScreen {
 
   show() {
     this.container.visible = true
+    soundManager.playMusic('musicBg')
   }
 
   scaleToCover(sprite, targetWidth, targetHeight) {

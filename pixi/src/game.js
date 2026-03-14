@@ -7,6 +7,7 @@ import { deck } from './data/deck.js'
 import { enemies } from './data/enemies.js'
 import { maps } from './data/maps.js'
 import { FONT } from './data/fonts.js'
+import { soundManager } from './audio/sound_manager.js'
 
 // Главный фон
 const MAIN_BG = '/assets/img/bg_full.jpg'
@@ -77,6 +78,7 @@ export class Game {
   showMap() {
     this.isBattleActive = false
     this.hideCurrentScreen()
+    soundManager.playMusic('mapBg')
     
     // Переиспользуем существующую карту или создаём новую
     let mapScreen = this.screens['map']
@@ -93,6 +95,8 @@ export class Game {
   initBattle(enemyData) {
     this.isBattleActive = true
     this.hideCurrentScreen()
+    soundManager.play('battleStart')
+    soundManager.stopMusic()
     const battle = new Battle(this.app, deck, card_types, enemyData, this)
     
     battle.on('end', () => {
@@ -102,6 +106,7 @@ export class Game {
         this.screens['map'].disableCurrentEnemy()
       }
       this.showMap()
+      soundManager.playMusic('mapBg')
     })
     
     battle.on('victory', (points) => {

@@ -1,6 +1,7 @@
 import * as PIXI from 'pixi.js'
 import { BlurFilter } from 'pixi.js'
 import { FONT } from '../data/fonts.js'
+import { soundManager } from '../audio/sound_manager.js'
 
 // Цвета из old проекта
 const COLORS = {
@@ -99,6 +100,7 @@ export class Button extends PIXI.Container {
     this.targetScale = 1.05
     this.drawBg(this.color === COLORS.red ? 0xa01500 : COLORS.mainHover, 1.05)
     this.label.style.fontSize = this.fontSize * 1.05
+    soundManager.play('hover')
   }
   
   onOut() {

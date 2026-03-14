@@ -5,6 +5,7 @@ import { mapConfig, hexToPixi } from './data/map_config.js'
 import { colors } from './data/colors.js'
 import { config } from './data/config.js'
 import { FONT } from './data/fonts.js'
+import { soundManager } from './audio/sound_manager.js'
 
 export class MapScreen extends EventEmitter {
   constructor(app, mapData, enemies, game) {
@@ -344,6 +345,7 @@ export class MapScreen extends EventEmitter {
           if (enemySprite && !isDefeated) {
             enemySprite.filters = [glowFilter]
           }
+          soundManager.play('hover')
         })
         
         enemyContainer.on('pointerout', () => {
@@ -357,6 +359,7 @@ export class MapScreen extends EventEmitter {
         
         enemyContainer.on('pointerdown', () => {
           if (index === this.currentEnemyIndex) {
+            soundManager.play('click')
             this.emit('enemy_click', enemy)
           }
         })

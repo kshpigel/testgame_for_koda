@@ -1,5 +1,6 @@
 import { Application } from 'pixi.js'
 import { Game } from './game.js'
+import { soundManager } from './audio/sound_manager.js'
 
 let gameInstance = null
 
@@ -20,6 +21,9 @@ async function loadFont() {
 async function init() {
   // Ждём загрузки шрифта
   await loadFont()
+  
+  // Инициализируем звуки
+  await soundManager.init()
   
   const app = new Application({
     width: window.innerWidth,
