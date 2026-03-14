@@ -130,7 +130,72 @@ export class Battle extends EventEmitter {
     card.on('pointerdown', () => this.onCardClick(card))
     this.cards.push(card)
     this.container.addChild(card)
+    
+    // Позиция колоды (откуда вылетает карта)
+    const deckX = this.app.screen.width - CARD_CONFIG.width - 30
+    const deckY = this.app.screen.height - CARD_CONFIG.height - 40
+    
+    // Начальная позиция - из колоды
+    card.x = deckX + CARD_CONFIG.width / 2
+    card.y = deckY + CARD_CONFIG.height / 2
+    card.scale.set(0.5)
+    
     this.layoutCards()
+    
+    // Анимация появления карты
+    this.animateCardIn(card)
+  }
+  
+  animateCardIn(card) {
+    const targetX = card.targetX
+    const targetY = card.targetY
+    const startX = card.x
+    const startY = card.y
+    
+    let progress = 0
+    const animate = () => {
+      progress += 0.05
+      if (progress >= 1) {
+        card.x = targetX
+        card.y = targetY
+        card.scale.set(1)
+      } else {
+        // Плавная интерполяция с эффектом overshoot
+        const t = progress
+        const ease = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2
+        
+        card.x = startX + (targetX - startX) * ease
+        card.y = startY + (targetY - startY) * ease
+        card.scale.set(0.5 + 0.5 * ease)
+        requestAnimationFrame(animate)
+      }
+    }
+    animate()
+  }
+  
+  animateCardOut(card, onComplete) {
+    const startX = card.x
+    const startY = card.y
+    const targetY = this.app.screen.height + 200
+    
+    let progress = 0
+    const animate = () => {
+      progress += 0.04
+      if (progress >= 1) {
+        card.y = targetY
+        card.scale.set(0.3)
+        if (onComplete) onComplete()
+      } else {
+        const t = progress
+        const ease = t * t * t // Ускорение
+        
+        card.x = startX
+        card.y = startY + (targetY - startY) * ease
+        card.scale.set(1 - 0.7 * ease)
+        requestAnimationFrame(animate)
+      }
+    }
+    animate()
   }
 
   layoutCards() {
@@ -258,22 +323,30 @@ export class Battle extends EventEmitter {
   }
 
   resetSelectedCards() {
-    const cardsPlayed = this.selectedCards.length
+    const cardsToRemove = [...this.selectedCards]
+    let removedCount = 0
     
-    this.selectedCards.forEach(card => {
-      this.cards = this.cards.filter(c => c !== card)
-      this.container.removeChild(card)
+    cardsToRemove.forEach((card, index) => {
+      setTimeout(() => {
+        this.animateCardOut(card, () => {
+          this.cards = this.cards.filter(c => c !== card)
+          this.container.removeChild(card)
+          removedCount++
+          
+          // Когда все карты улетели - добираем новые
+          if (removedCount === cardsToRemove.length) {
+            const cardsNeeded = 8 - this.cards.length
+            if (cardsNeeded > 0) {
+              this.dealCards(cardsNeeded)
+            }
+            this.updateUI()
+          }
+        })
+      }, index * 100)
     })
+    
     this.selectedCards = []
     this.activeCards = 0
-    
-    // Добираем до 8 карт
-    const cardsNeeded = 8 - this.cards.length
-    if (cardsNeeded > 0) {
-      this.dealCards(cardsNeeded)
-    }
-    
-    this.updateUI()
   }
 
   resetCards() {
@@ -281,20 +354,29 @@ export class Battle extends EventEmitter {
     
     this.cntReset--
     
-    this.selectedCards.forEach(card => {
-      this.cards = this.cards.filter(c => c !== card)
-      this.container.removeChild(card)
+    const cardsToRemove = [...this.selectedCards]
+    let removedCount = 0
+    
+    cardsToRemove.forEach((card, index) => {
+      setTimeout(() => {
+        this.animateCardOut(card, () => {
+          this.cards = this.cards.filter(c => c !== card)
+          this.container.removeChild(card)
+          removedCount++
+          
+          if (removedCount === cardsToRemove.length) {
+            const cardsNeeded = 8 - this.cards.length
+            if (cardsNeeded > 0) {
+              this.dealCards(cardsNeeded)
+            }
+            this.updateUI()
+          }
+        })
+      }, index * 100)
     })
+    
     this.selectedCards = []
     this.activeCards = 0
-    
-    // Добираем до 8 карт
-    const cardsNeeded = 8 - this.cards.length
-    if (cardsNeeded > 0) {
-      this.dealCards(cardsNeeded)
-    }
-    
-    this.updateUI()
   }
 
   showDamage(amount) {
