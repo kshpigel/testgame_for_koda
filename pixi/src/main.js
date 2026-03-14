@@ -64,12 +64,13 @@ async function init() {
   gameInstance = new Game(app)
   gameInstance.start()
 
-  window.addEventListener('resize', () => {
-    app.renderer.resize(window.innerWidth, window.innerHeight)
-    if (gameInstance) {
-      gameInstance.resize(window.innerWidth, window.innerHeight)
-    }
-  })
+  // Фиксированный размер - не меняем при resize
+  // window.addEventListener('resize', () => {
+  //   app.renderer.resize(window.innerWidth, window.innerHeight)
+  //   if (gameInstance) {
+  //     gameInstance.resize(window.innerWidth, window.innerHeight)
+  //   }
+  // })
 }
 
 init()

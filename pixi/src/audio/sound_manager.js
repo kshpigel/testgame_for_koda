@@ -23,56 +23,22 @@ class SoundManager {
   async init() {
     this.audioCtx = new (window.AudioContext || window.webkitAudioContext)()
     
-    // Пробуем сразу resume
-    let resumed = false
+    // "Разогрев" AudioContext
     if (this.audioCtx.state === 'suspended') {
+      await this.audioCtx.resume()
+    }
+    
+    // Предзагрузка звуков
+    for (const [name, config] of Object.entries(SOUNDS)) {
       try {
-        await this.audioCtx.resume()
-        resumed = true
-      } catch (e) {}
-    }
-    
-    // Предзагрузка звуков (если удалось resume)
-    if (resumed) {
-      for (const [name, config] of Object.entries(SOUNDS)) {
-        try {
-          const response = await fetch(config.src)
-          const arrayBuffer = await response.arrayBuffer()
-          const audioBuffer = await this.audioCtx.decodeAudioData(arrayBuffer)
-          this.buffers[name] = audioBuffer
-        } catch (e) {
-          console.warn(`Sound ${name} not loaded:`, e)
-        }
+        const response = await fetch(config.src)
+        const arrayBuffer = await response.arrayBuffer()
+        const audioBuffer = await this.audioCtx.decodeAudioData(arrayBuffer)
+        this.buffers[name] = audioBuffer
+      } catch (e) {
+        console.warn(`Sound ${name} not loaded:`, e)
       }
     }
-    
-    // Если звуки не загружены - дозагрузка при первом клике
-    const resumeAudio = async () => {
-      if (this.audioCtx.state === 'suspended') {
-        await this.audioCtx.resume()
-      }
-      
-      // Дозагружаем звуки если ещё не загружены
-      if (Object.keys(this.buffers).length === 0) {
-        console.log('Loading sounds after user interaction...')
-        for (const [name, config] of Object.entries(SOUNDS)) {
-          try {
-            const response = await fetch(config.src)
-            const arrayBuffer = await response.arrayBuffer()
-            const audioBuffer = await this.audioCtx.decodeAudioData(arrayBuffer)
-            this.buffers[name] = audioBuffer
-          } catch (e) {
-            console.warn(`Sound ${name} not loaded:`, e)
-          }
-        }
-        console.log('Sounds loaded!')
-      }
-      
-      document.removeEventListener('pointerdown', resumeAudio)
-      document.removeEventListener('keydown', resumeAudio)
-    }
-    document.addEventListener('pointerdown', resumeAudio)
-    document.addEventListener('keydown', resumeAudio)
   }
 
   play(name) {
