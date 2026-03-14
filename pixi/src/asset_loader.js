@@ -80,7 +80,7 @@ export async function loadAllAssets(onProgress) {
     try {
       await PIXI.Assets.load(assets[i])
     } catch (e) {
-      console.warn(`Failed to load: ${assets[i]}`)
+      // Игнорируем отсутствующие файлы
     }
     
     loaded++

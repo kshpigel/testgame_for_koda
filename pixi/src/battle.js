@@ -115,9 +115,14 @@ export class Battle extends EventEmitter {
       height: CARD_CONFIG.height
     })
     
-    // Загружаем изображение если есть
+    // Загружаем фоновое изображение (image_bg)
+    if (this.assets && this.assets[`card_bg_${cardData.type}`]) {
+      card.loadBgImage(this.assets[`card_bg_${cardData.type}`].texture)
+    }
+    
+    // Загружаем изображение героя (image)
     if (this.assets && this.assets[`card_${cardData.type}`]) {
-      card.loadImage(this.assets[`card_${cardData.type}`].texture)
+      card.loadHeroImage(this.assets[`card_${cardData.type}`].texture)
     }
     
     card.on('pointerdown', () => this.onCardClick(card))
@@ -253,12 +258,12 @@ export class Battle extends EventEmitter {
   resetSelectedCards() {
     this.selectedCards.forEach(card => {
       this.cards = this.cards.filter(c => c !== card)
-      this.container.removeChild(card.container)
+      this.container.removeChild(card)
     })
     this.selectedCards = []
     this.activeCards = 0
     
-    this.dealCards(this.selectedCards.length || 3)
+    this.dealCards(3)
     
     this.updateUI()
   }
@@ -271,7 +276,7 @@ export class Battle extends EventEmitter {
     const cnt = this.selectedCards.length
     this.selectedCards.forEach(card => {
       this.cards = this.cards.filter(c => c !== card)
-      this.container.removeChild(card.container)
+      this.container.removeChild(card)
     })
     this.selectedCards = []
     this.activeCards = 0
@@ -707,9 +712,14 @@ export class Battle extends EventEmitter {
         card.setDisabled(true)
       }
       
-      // Загружаем изображение если есть
+      // Загружаем фоновое изображение (image_bg)
+      if (this.assets && this.assets[`card_bg_${cardType.type}`]) {
+        card.loadBgImage(this.assets[`card_bg_${cardType.type}`].texture)
+      }
+      
+      // Загружаем изображение героя (image)
       if (this.assets && this.assets[`card_${cardType.type}`]) {
-        card.loadImage(this.assets[`card_${cardType.type}`].texture)
+        card.loadHeroImage(this.assets[`card_${cardType.type}`].texture)
       }
       
       menuContainer.addChild(card)

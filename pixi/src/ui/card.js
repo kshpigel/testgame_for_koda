@@ -5,9 +5,9 @@ import { config } from '../data/config.js'
 
 // Настройки карты
 const CARD_CONFIG = {
-  width: 100,
-  height: 140,
-  cornerRadius: 8,
+  width: 120,
+  height: 170,
+  cornerRadius: 10,
   selectedScale: 1.1,
   hoverScale: 1.05,
   colors: {
@@ -30,72 +30,87 @@ export class Card extends PIXI.Container {
     this.isDisabled = false
     this.buffValue = 0
     
-    this.width = options.width || CARD_CONFIG.width
-    this.height = options.height || CARD_CONFIG.height
+    // Используем cardWidth/cardHeight чтобы не переопределять встроенные PIXI свойства
+    this.cardWidth = options.width || CARD_CONFIG.width
+    this.cardHeight = options.height || CARD_CONFIG.height
+    
+    // Pivot по центру
+    this.pivot.set(this.cardWidth / 2, this.cardHeight / 2)
     
     // Позиция в руке
     this.handIndex = options.handIndex || 0
     this.targetX = 0
     this.targetY = 0
+    this.targetScale = 1
     
     this.create()
   }
 
   create() {
-    // Основной контейнер для удобства масштабирования
-    this.cardContainer = new PIXI.Container()
-    this.addChild(this.cardContainer)
-    
-    // Фон карты
+    // === СЛОЙ 1: Фон (цветной прямоугольник) ===
     this.bg = new PIXI.Graphics()
     this.drawBg(CARD_CONFIG.colors.normal)
-    this.cardContainer.addChild(this.bg)
+    this.addChild(this.bg)
     
-    // Картинка карты (если есть)
-    if (this.cardData.image) {
-      this.cardImage = new PIXI.Sprite()
-      this.cardImage.anchor.set(0.5)
-      this.cardImage.y = -10
-      this.cardContainer.addChild(this.cardImage)
+    // === СЛОЙ 2: Фоновое изображение (image_bg) ===
+    this.bgImage = null
+    
+    // === СЛОЙ 3: Картинка героя (image) ===
+    this.heroImage = null
+    
+    // === СЛОЙ 4: Название карты ===
+    const cardName = this.cardData.name || `Тип ${this.cardData.type}`
+    const nameText = new PIXI.Text(cardName, {
+      fontFamily: FONT,
+      fontSize: 14,
+      fontWeight: 'bold',
+      fill: '#ffffff'
+    })
+    nameText.anchor.set(0.5, 1)
+    nameText.y = 65
+    this.addChild(nameText)
+    
+    // Подстраиваем ширину карты под название (как в оригинале)
+    const nameWidth = nameText.width + 20
+    if (nameWidth > this.cardWidth) {
+      this.cardWidth = Math.min(nameWidth, 180) // Максимум 180
+      this.pivot.set(this.cardWidth / 2, this.cardHeight / 2)
     }
     
-    // Номер типа карты (большой по центру)
-    this.typeText = new PIXI.Text(`${this.cardData.type}`, {
+    console.log(`Card created: ${cardName}, width: ${this.cardWidth}, height: ${this.cardHeight}`)
+    
+    // === СЛОЙ 5: Зеленый кружочек с силой ===
+    const typeBg = new PIXI.Graphics()
+    typeBg.beginFill(0x39751b) // Зелёный как в оригинале
+    typeBg.drawCircle(-54, 34, 18)
+    typeBg.endFill()
+    this.addChild(typeBg)
+    
+    this.typeText = new PIXI.Text(`${this.cardData.value}`, {
       fontFamily: FONT,
-      fontSize: 36,
+      fontSize: 16,
       fontWeight: 'bold',
       fill: '#ffffff'
     })
     this.typeText.anchor.set(0.5)
-    this.typeText.y = 10
-    this.cardContainer.addChild(this.typeText)
+    this.typeText.x = -54
+    this.typeText.y = 34
+    this.addChild(this.typeText)
     
-    // Значение карты
-    this.valueText = new PIXI.Text(`${this.cardData.value}`, {
-      fontFamily: FONT,
-      fontSize: 18,
-      fontWeight: 'bold',
-      fill: '#ff6666'
-    })
-    this.valueText.anchor.set(0.5)
-    this.valueText.x = this.width / 2 - 12
-    this.valueText.y = -this.height / 2 + 12
-    this.cardContainer.addChild(this.valueText)
-    
-    // Бафф
+    // === СЛОЙ 6: Бафф ===
     this.buffText = new PIXI.Text('', {
       fontFamily: FONT,
-      fontSize: 16,
+      fontSize: 18,
       fontWeight: 'bold',
       fill: '#66ff66'
     })
     this.buffText.anchor.set(0.5)
-    this.buffText.x = this.width / 2 - 12
-    this.buffText.y = -this.height / 2 + 32
-    this.cardContainer.addChild(this.buffText)
+    this.buffText.x = this.cardWidth / 2 - 15
+    this.buffText.y = -this.cardHeight / 2 + 40
+    this.addChild(this.buffText)
     
-    // Установить размеры
-    this.cardContainer.scale.set(this.width / CARD_CONFIG.width)
+    // Перерисовываем фон с правильными размерами
+    this.drawBg(CARD_CONFIG.colors.normal)
     
     // Интерактивность
     this.eventMode = 'static'
@@ -114,17 +129,44 @@ export class Card extends PIXI.Container {
     const borderColor = this.isSelected ? c.borderSelected : (this.isDisabled ? c.border : c.borderHover)
     const bgColor = this.isDisabled ? c.disabled : (this.isSelected ? c.selected : color)
     
+    // Рисуем относительно центра (так как pivot по центру)
     this.bg.lineStyle(2, borderColor)
     this.bg.beginFill(bgColor)
-    this.bg.drawRoundedRect(0, 0, this.width, this.height, CARD_CONFIG.cornerRadius)
+    this.bg.drawRoundedRect(-this.cardWidth/2, -this.cardHeight/2, this.cardWidth, this.cardHeight, CARD_CONFIG.cornerRadius)
     this.bg.endFill()
   }
 
-  loadImage(texture) {
-    if (this.cardImage && texture) {
-      this.cardImage.texture = texture
-      const scale = Math.min((this.width - 20) / texture.width, 60 / texture.height)
-      this.cardImage.scale.set(scale)
+  // Загрузить фоновое изображение (image_bg)
+  loadBgImage(texture) {
+    if (texture) {
+      this.bgImage = new PIXI.Sprite(texture)
+      this.bgImage.anchor.set(0.5)
+      this.bgImage.y = 0
+      
+      // Cover - заполнить весь фон
+      const scale = Math.max(this.cardWidth / texture.width, this.cardHeight / texture.height)
+      this.bgImage.scale.set(scale)
+      
+      // Добавляем на слой 2 (после bg, перед heroImage)
+      this.addChildAt(this.bgImage, 1)
+    }
+  }
+
+  // Загрузить изображение героя (image)
+  loadHeroImage(texture) {
+    if (texture) {
+      this.heroImage = new PIXI.Sprite(texture)
+      this.heroImage.anchor.set(0.5)
+      this.heroImage.y = -46 // Позиция героя (отрицательное = выше центра)
+      
+      // Вписать в область
+      const maxW = this.cardWidth// - 20
+      const maxH = this.cardHeight// - 60
+      const scale = Math.min(maxW / texture.width, maxH / texture.height)
+      this.heroImage.scale.set(scale)
+      
+      // Добавляем на слой 3
+      this.addChildAt(this.heroImage, 2)
     }
   }
 
@@ -192,13 +234,20 @@ export class Card extends PIXI.Container {
   clearBuffs() {
     this.buffValue = 0
     this.buffText.text = ''
-    // Перерисовываем значение с учётом баффа
     this.updateValue()
+  }
+
+  getValue() {
+    return this.cardData.value + this.buffValue
+  }
+
+  applySkill() {
+    // Логика умений карт - можно расширить
   }
 
   updateValue() {
     const totalValue = this.cardData.value + this.buffValue
-    this.valueText.text = `${totalValue}`
+    this.typeText.text = `${totalValue}`
   }
 
   update() {
@@ -212,8 +261,8 @@ export class Card extends PIXI.Container {
   // Клонировать карту
   clone() {
     const newCard = new Card(this.cardData, {
-      width: this.width,
-      height: this.height,
+      width: this.cardWidth,
+      height: this.cardHeight,
       handIndex: this.handIndex
     })
     

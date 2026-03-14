@@ -22,9 +22,13 @@ async function loadFont() {
 
 async function init() {
   // Создаём приложение
+  // Фиксированный размер 1280x720
+  const GAME_WIDTH = 1280
+  const GAME_HEIGHT = 720
+  
   const app = new Application({
-    width: window.innerWidth,
-    height: window.innerHeight,
+    width: GAME_WIDTH,
+    height: GAME_HEIGHT,
     backgroundColor: 0x1a1a2e,
     resolution: window.devicePixelRatio || 1,
     autoDensity: true,
