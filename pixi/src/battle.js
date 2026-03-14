@@ -258,6 +258,8 @@ export class Battle extends EventEmitter {
   }
 
   resetSelectedCards() {
+    const cardsPlayed = this.selectedCards.length
+    
     this.selectedCards.forEach(card => {
       this.cards = this.cards.filter(c => c !== card)
       this.container.removeChild(card)
@@ -265,7 +267,11 @@ export class Battle extends EventEmitter {
     this.selectedCards = []
     this.activeCards = 0
     
-    this.dealCards(3)
+    // Добираем до 8 карт
+    const cardsNeeded = 8 - this.cards.length
+    if (cardsNeeded > 0) {
+      this.dealCards(cardsNeeded)
+    }
     
     this.updateUI()
   }
@@ -275,7 +281,6 @@ export class Battle extends EventEmitter {
     
     this.cntReset--
     
-    const cnt = this.selectedCards.length
     this.selectedCards.forEach(card => {
       this.cards = this.cards.filter(c => c !== card)
       this.container.removeChild(card)
@@ -283,7 +288,12 @@ export class Battle extends EventEmitter {
     this.selectedCards = []
     this.activeCards = 0
     
-    this.dealCards(cnt)
+    // Добираем до 8 карт
+    const cardsNeeded = 8 - this.cards.length
+    if (cardsNeeded > 0) {
+      this.dealCards(cardsNeeded)
+    }
+    
     this.updateUI()
   }
 
