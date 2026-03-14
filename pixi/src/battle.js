@@ -338,8 +338,9 @@ export class Battle extends EventEmitter {
     text.y = this.app.screen.height / 2 - 100
     this.container.addChild(text)
     
+    soundManager.play('battleVictory')
+    
     setTimeout(() => {
-      soundManager.play('battleVictory')
       this.emit('victory', points)
       this.emit('end')
     }, 2000)
