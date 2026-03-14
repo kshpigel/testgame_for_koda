@@ -3,6 +3,7 @@ import { FONT } from '../data/fonts.js'
 import { soundManager } from '../audio/sound_manager.js'
 import { config } from '../data/config.js'
 import { colors } from '../data/colors.js'
+import { Circle } from './circle.js'
 
 // Настройки карты
 const CARD_CONFIG = {
@@ -86,23 +87,15 @@ export class Card extends PIXI.Container {
     console.log(`Card created: ${cardName}, width: ${this.cardWidth}, height: ${this.cardHeight}`)
     
     // === СЛОЙ 5: Кружочек с силой (позиция: x=-54, y=34) ===
-    this.typeBg = new PIXI.Graphics()
-    this.typeBg.lineStyle(1, colors.card.circle.border) // Белый бордер 1px
-    this.typeBg.beginFill(colors.card.circle.normal) // Зелёный
-    this.typeBg.drawCircle(-54, 34, 18)
-    this.typeBg.endFill()
-    this.addChild(this.typeBg)
-    
-    this.typeText = new PIXI.Text(`${this.cardData.value}`, {
-      fontFamily: FONT,
-      fontSize: 16,
-      fontWeight: 'bold',
-      fill: '#ffffff'
+    this.valueCircle = new Circle({
+      x: -54,
+      y: 34,
+      radius: 18,
+      bgColor: colors.card.circle.normal,
+      borderColor: colors.card.circle.border,
+      text: `${this.cardData.value}`
     })
-    this.typeText.anchor.set(0.5)
-    this.typeText.x = -54
-    this.typeText.y = 34
-    this.addChild(this.typeText)
+    this.addChild(this.valueCircle)
     
     // === СЛОЙ 6: Бафф ===
     this.buffText = new PIXI.Text('', {
@@ -251,32 +244,17 @@ export class Card extends PIXI.Container {
     this.buffValue = value
     if (value > 0) {
       this.buffText.text = `+${value}`
-      // Фиолетовый фон для баффа
-      this.typeBg.clear()
-      this.typeBg.lineStyle(1, colors.card.circle.border)
-      this.typeBg.beginFill(colors.card.circle.buffed)
-      this.typeBg.drawCircle(-54, 34, 18)
-      this.typeBg.endFill()
+      this.valueCircle.setBgColor(colors.card.circle.buffed)
     } else {
       this.buffText.text = ''
-      // Возвращаем зелёный
-      this.typeBg.clear()
-      this.typeBg.lineStyle(1, colors.card.circle.border)
-      this.typeBg.beginFill(colors.card.circle.normal)
-      this.typeBg.drawCircle(-54, 34, 18)
-      this.typeBg.endFill()
+      this.valueCircle.setBgColor(colors.card.circle.normal)
     }
   }
 
   clearBuffs() {
     this.buffValue = 0
     this.buffText.text = ''
-    // Возвращаем зелёный фон
-    this.typeBg.clear()
-    this.typeBg.lineStyle(1, colors.card.circle.border)
-    this.typeBg.beginFill(colors.card.circle.normal)
-    this.typeBg.drawCircle(-54, 34, 18)
-    this.typeBg.endFill()
+    this.valueCircle.setBgColor(colors.card.circle.normal)
     this.updateValue()
   }
 
@@ -290,7 +268,7 @@ export class Card extends PIXI.Container {
 
   updateValue() {
     const totalValue = this.cardData.value + this.buffValue
-    this.typeText.text = `${totalValue}`
+    this.valueCircle.setText(`${totalValue}`)
   }
 
   update() {
