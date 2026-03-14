@@ -268,6 +268,27 @@ export class Battle extends EventEmitter {
   }
 
   showDamage(amount) {
+    // Анимация удара - красная вспышка
+    const hitEffect = new PIXI.Graphics()
+    hitEffect.beginFill(0xff0000, 0.3)
+    hitEffect.drawRect(0, 0, this.app.screen.width, this.app.screen.height)
+    hitEffect.endFill()
+    this.container.addChild(hitEffect)
+    
+    let hitAlpha = 0.3
+    const fadeHit = () => {
+      hitAlpha -= 0.05
+      hitEffect.alpha = hitAlpha
+      if (hitAlpha > 0) {
+        requestAnimationFrame(fadeHit)
+      } else {
+        this.container.removeChild(hitEffect)
+        hitEffect.destroy()
+      }
+    }
+    fadeHit()
+    
+    // Текст урона
     const style = new PIXI.TextStyle({
       fontFamily: FONT,
       fontSize: 48,
@@ -516,17 +537,192 @@ export class Battle extends EventEmitter {
   }
 
   renderDeckInfo() {
+    // Колода с рубашкой
+    const deckContainer = new PIXI.Container()
+    deckContainer.x = this.app.screen.width - 150
+    deckContainer.y = this.app.screen.height - 180
+    deckContainer.eventMode = 'static'
+    deckContainer.cursor = 'pointer'
+    
+    // Карточка-рубашка
+    const cardW = 80
+    const cardH = 120
+    
+    const cardBack = new PIXI.Graphics()
+    cardBack.lineStyle(2, 0xffffff)
+    cardBack.beginFill(0x282424)
+    cardBack.drawRoundedRect(0, 0, cardW, cardH, 8)
+    cardBack.endFill()
+    deckContainer.addChild(cardBack)
+    
+    // Текстура рубашки если загружена
+    if (this.assets && this.assets.cardBack && this.assets.cardBack.texture) {
+      const backSprite = new PIXI.Sprite(this.assets.cardBack.texture)
+      backSprite.width = cardW
+      backSprite.height = cardH
+      deckContainer.addChild(backSprite)
+    }
+    
+    // Количество карт в колоде
     const style = new PIXI.TextStyle({
       fontFamily: FONT,
-      fontSize: 18,
+      fontSize: 16,
       fill: '#ffffff'
     })
+    const countText = new PIXI.Text(`${this.currentDeck.length}`, style)
+    countText.anchor.set(0.5)
+    countText.x = cardW / 2
+    countText.y = cardH / 2
+    deckContainer.addChild(countText)
     
-    const deckText = new PIXI.Text(`В колоде: ${this.currentDeck.length}`, style)
-    deckText.x = 20
-    deckText.y = this.app.screen.height - 30
-    this.container.addChild(deckText)
-    this.deckText = deckText
+    // Подпись "Колода"
+    const labelText = new PIXI.Text('Колода', {
+      fontFamily: FONT,
+      fontSize: 14,
+      fill: '#aaaaaa'
+    })
+    labelText.anchor.set(0.5)
+    labelText.x = cardW / 2
+    labelText.y = cardH + 20
+    deckContainer.addChild(labelText)
+    
+    // Hover эффект
+    deckContainer.on('pointerover', () => {
+      cardBack.clear()
+      cardBack.lineStyle(2, 0x4a9c6d)
+      cardBack.beginFill(0x3a5a4a)
+      cardBack.drawRoundedRect(0, 0, cardW, cardH, 8)
+      cardBack.endFill()
+    })
+    
+    deckContainer.on('pointerout', () => {
+      cardBack.clear()
+      cardBack.lineStyle(2, 0xffffff)
+      cardBack.beginFill(0x282424)
+      cardBack.drawRoundedRect(0, 0, cardW, cardH, 8)
+      cardBack.endFill()
+    })
+    
+    // Клик - показать меню колоды
+    deckContainer.on('pointerdown', () => {
+      soundManager.play('click')
+      this.showDeckMenu()
+    })
+    
+    this.container.addChild(deckContainer)
+    this.deckContainer = deckContainer
+  }
+
+  showDeckMenu() {
+    // Меню колоды
+    const menuContainer = new PIXI.Container()
+    menuContainer.x = this.app.screen.width / 2
+    menuContainer.y = this.app.screen.height / 2
+    
+    // Затемнение фона
+    const overlay = new PIXI.Graphics()
+    overlay.beginFill(0x000000, 0.8)
+    overlay.drawRect(-this.app.screen.width/2, -this.app.screen.height/2, this.app.screen.width, this.app.screen.height)
+    overlay.endFill()
+    menuContainer.addChild(overlay)
+    
+    // Панель меню
+    const panelW = 600
+    const panelH = 400
+    const panel = new PIXI.Graphics()
+    panel.beginFill(0x282424)
+    panel.lineStyle(3, 0x4a9c6d)
+    panel.drawRoundedRect(-panelW/2, -panelH/2, panelW, panelH, 20)
+    panel.endFill()
+    menuContainer.addChild(panel)
+    
+    // Заголовок
+    const title = new PIXI.Text('Колода', {
+      fontFamily: FONT,
+      fontSize: 28,
+      fontWeight: 'bold',
+      fill: '#ffffff'
+    })
+    title.anchor.set(0.5)
+    title.y = -panelH/2 + 30
+    menuContainer.addChild(title)
+    
+    // Кнопка закрытия
+    const closeBtn = new PIXI.Container()
+    closeBtn.x = panelW/2 - 30
+    closeBtn.y = -panelH/2 + 30
+    closeBtn.eventMode = 'static'
+    closeBtn.cursor = 'pointer'
+    
+    const closeX = new PIXI.Text('✕', {
+      fontFamily: FONT,
+      fontSize: 24,
+      fill: '#ff6666'
+    })
+    closeBtn.addChild(closeX)
+    
+    closeBtn.on('pointerdown', () => {
+      soundManager.play('click')
+      this.container.removeChild(menuContainer)
+    })
+    menuContainer.addChild(closeBtn)
+    
+    // Сетка карт
+    const cardW = 70
+    const cardH = 100
+    const startX = -panelW/2 + 50
+    const startY = -panelH/2 + 80
+    const cols = 8
+    
+    // Все типы карт в колоде
+    const allCardTypes = this.cardTypes.filter(ct => this.deck.includes(ct.type))
+    
+    allCardTypes.forEach((cardType, i) => {
+      const col = i % cols
+      const row = Math.floor(i / cols)
+      
+      const cardContainer = new PIXI.Container()
+      cardContainer.x = startX + col * (cardW + 10)
+      cardContainer.y = startY + row * (cardH + 10)
+      
+      // Карточка
+      const cardGfx = new PIXI.Graphics()
+      cardGfx.lineStyle(1, 0x666666)
+      cardGfx.beginFill(0x3a3a3a)
+      cardGfx.drawRoundedRect(0, 0, cardW, cardH, 5)
+      cardGfx.endFill()
+      cardContainer.addChild(cardGfx)
+      
+      // Если карта использована (нет в currentDeck) - серый
+      if (!this.currentDeck.find(c => c.type === cardType.type)) {
+        cardGfx.clear()
+        cardGfx.lineStyle(1, 0x444444)
+        cardGfx.beginFill(0x222222)
+        cardGfx.drawRoundedRect(0, 0, cardW, cardH, 5)
+        cardGfx.endFill()
+      }
+      
+      // Номер типа
+      const typeNum = new PIXI.Text(`${cardType.type}`, {
+        fontFamily: FONT,
+        fontSize: 14,
+        fill: '#ffffff'
+      })
+      typeNum.anchor.set(0.5)
+      typeNum.x = cardW / 2
+      typeNum.y = cardH / 2
+      cardContainer.addChild(typeNum)
+      
+      menuContainer.addChild(cardContainer)
+    })
+    
+    // Закрытие по клику вне панели
+    overlay.eventMode = 'static'
+    overlay.on('pointerdown', () => {
+      this.container.removeChild(menuContainer)
+    })
+    
+    this.container.addChild(menuContainer)
   }
 
   createButton(text, color, onClick) {
