@@ -132,10 +132,10 @@ export class Battle extends EventEmitter {
   }
 
   layoutCards() {
-    const handAreaY = this.app.screen.height - 180
+    const handAreaY = this.app.screen.height - 15
     const cardWidth = CARD_CONFIG.width
     const cardHeight = CARD_CONFIG.height
-    const spacing = 20
+    const spacing = -5
     const totalWidth = this.cards.length * (cardWidth + spacing) - spacing
     const startX = (this.app.screen.width - totalWidth) / 2
 

@@ -44,6 +44,11 @@ export class Card extends PIXI.Container {
     this.targetY = 0
     this.targetScale = 1
     
+    // Анимация покачивания
+    this.wobbleOffset = Math.random() * Math.PI * 2 // Случайная фаза
+    this.wobbleSpeed = 0.015
+    this.wobbleAmount = 3 // Амплитуда в пикселях
+    
     this.create()
   }
 
@@ -292,7 +297,14 @@ export class Card extends PIXI.Container {
     // Плавная анимация scale
     if (Math.abs(this.scale.x - this.targetScale) > 0.001) {
       const diff = this.targetScale - this.scale.x
-      this.scale.set(this.scale.x + diff * 0.2)
+      this.scale.set(this.scale.x + diff * 0.1)
+    }
+    
+    // Анимация покачивания (добавляем к targetY, не перезаписываем y напрямую)
+    this.wobbleOffset += this.wobbleSpeed
+    const wobble = Math.sin(this.wobbleOffset) * this.wobbleAmount
+    if (this.y !== this.targetY + wobble) {
+      this.y = this.targetY + wobble
     }
   }
 
