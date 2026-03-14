@@ -214,13 +214,13 @@ export class Game {
     setTimeout(fadeOut, 2000)
   }
 
-  resize(width, height) {
+  resize(width, height, scale = 1) {
     this.renderMainBg()
     if (this.startScreen && this.startScreen.resize) {
-      this.startScreen.resize(width, height)
+      this.startScreen.resize(width, height, scale)
     }
     if (this.currentScreen && this.currentScreen.resize) {
-      this.currentScreen.resize(width, height)
+      this.currentScreen.resize(width, height, scale)
     }
   }
 
