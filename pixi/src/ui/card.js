@@ -2,6 +2,7 @@ import * as PIXI from 'pixi.js'
 import { FONT } from '../data/fonts.js'
 import { soundManager } from '../audio/sound_manager.js'
 import { config } from '../data/config.js'
+import { colors } from '../data/colors.js'
 
 // Настройки карты
 const CARD_CONFIG = {
@@ -79,12 +80,13 @@ export class Card extends PIXI.Container {
     
     console.log(`Card created: ${cardName}, width: ${this.cardWidth}, height: ${this.cardHeight}`)
     
-    // === СЛОЙ 5: Зеленый кружочек с силой ===
-    const typeBg = new PIXI.Graphics()
-    typeBg.beginFill(0x39751b) // Зелёный как в оригинале
-    typeBg.drawCircle(-54, 34, 18)
-    typeBg.endFill()
-    this.addChild(typeBg)
+    // === СЛОЙ 5: Кружочек с силой (позиция: x=-54, y=34) ===
+    this.typeBg = new PIXI.Graphics()
+    this.typeBg.lineStyle(1, colors.card.circle.border) // Белый бордер 1px
+    this.typeBg.beginFill(colors.card.circle.normal) // Зелёный
+    this.typeBg.drawCircle(-54, 34, 18)
+    this.typeBg.endFill()
+    this.addChild(this.typeBg)
     
     this.typeText = new PIXI.Text(`${this.cardData.value}`, {
       fontFamily: FONT,
@@ -244,14 +246,32 @@ export class Card extends PIXI.Container {
     this.buffValue = value
     if (value > 0) {
       this.buffText.text = `+${value}`
+      // Фиолетовый фон для баффа
+      this.typeBg.clear()
+      this.typeBg.lineStyle(1, colors.card.circle.border)
+      this.typeBg.beginFill(colors.card.circle.buffed)
+      this.typeBg.drawCircle(-54, 34, 18)
+      this.typeBg.endFill()
     } else {
       this.buffText.text = ''
+      // Возвращаем зелёный
+      this.typeBg.clear()
+      this.typeBg.lineStyle(1, colors.card.circle.border)
+      this.typeBg.beginFill(colors.card.circle.normal)
+      this.typeBg.drawCircle(-54, 34, 18)
+      this.typeBg.endFill()
     }
   }
 
   clearBuffs() {
     this.buffValue = 0
     this.buffText.text = ''
+    // Возвращаем зелёный фон
+    this.typeBg.clear()
+    this.typeBg.lineStyle(1, colors.card.circle.border)
+    this.typeBg.beginFill(colors.card.circle.normal)
+    this.typeBg.drawCircle(-54, 34, 18)
+    this.typeBg.endFill()
     this.updateValue()
   }
 

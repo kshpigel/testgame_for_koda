@@ -32,6 +32,11 @@ export const colors = {
     value: {
       normal: '#ffffff',
       buffed: '#00ff00'
+    },
+    circle: {
+      normal: 0x39751b,  // зелёный
+      buffed: 0x8a2791,  // фиолетовый
+      border: 0xffffff   // белый бордер
     }
   },
   
