@@ -6,6 +6,7 @@ import { card_types } from './data/card_types.js'
 import { deck } from './data/deck.js'
 import { enemies } from './data/enemies.js'
 import { maps } from './data/maps.js'
+import { FONT } from './data/fonts.js'
 
 // Главный фон
 const MAIN_BG = '/assets/img/bg_full.jpg'
@@ -134,7 +135,7 @@ export class Game {
     exitBtn.addChild(bg)
     
     const label = new PIXI.Text('Сбежать', {
-      fontFamily: 'Arial',
+      fontFamily: FONT,
       fontSize: 16,
       fill: '#ffffff'
     })
@@ -179,7 +180,7 @@ export class Game {
 
   showMessage(text, color = 0xffffff) {
     const style = new PIXI.TextStyle({
-      fontFamily: 'Arial',
+      fontFamily: FONT,
       fontSize: 36,
       fontWeight: 'bold',
       fill: color,

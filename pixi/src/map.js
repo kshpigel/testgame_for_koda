@@ -4,6 +4,7 @@ import { EventEmitter } from 'events'
 import { mapConfig, hexToPixi } from './data/map_config.js'
 import { colors } from './data/colors.js'
 import { config } from './data/config.js'
+import { FONT } from './data/fonts.js'
 
 export class MapScreen extends EventEmitter {
   constructor(app, mapData, enemies, game) {
@@ -124,7 +125,7 @@ export class MapScreen extends EventEmitter {
     this.container.addChild(titleBg)
     
     const title = new PIXI.Text(this.mapData.name, {
-      fontFamily: 'Arial',
+      fontFamily: FONT,
       fontSize: 32,
       fontWeight: 'bold',
       fill: '#ffffff'
@@ -283,7 +284,7 @@ export class MapScreen extends EventEmitter {
 
       // Имя врага
       const nameStyle = new PIXI.TextStyle({
-        fontFamily: 'Arial',
+        fontFamily: FONT,
         fontSize: 14,
         fontWeight: 'bold',
         fill: isDefeated ? '#666666' : '#ffffff'
@@ -301,7 +302,7 @@ export class MapScreen extends EventEmitter {
       enemyContainer.addChild(healthBg)
       
       const healthStyle = new PIXI.TextStyle({
-        fontFamily: 'Arial',
+        fontFamily: FONT,
         fontSize: 12,
         fill: isDefeated ? '#666666' : '#ff6666'
       })
@@ -313,7 +314,7 @@ export class MapScreen extends EventEmitter {
       // Статус "Побежден"
       if (isDefeated) {
         const defeatedText = new PIXI.Text('Побежден', {
-          fontFamily: 'Arial',
+          fontFamily: FONT,
           fontSize: 16,
           fontWeight: 'bold',
           fill: '#666666'

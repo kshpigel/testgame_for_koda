@@ -1,5 +1,6 @@
 import * as PIXI from 'pixi.js'
 import { EventEmitter } from 'events'
+import { FONT } from './data/fonts.js'
 
 // Импорт ассетов
 const assets = {
@@ -266,7 +267,7 @@ export class Battle extends EventEmitter {
 
   showDamage(amount) {
     const style = new PIXI.TextStyle({
-      fontFamily: 'Arial',
+      fontFamily: FONT,
       fontSize: 48,
       fontWeight: 'bold',
       fill: '#ff4444',
@@ -322,7 +323,7 @@ export class Battle extends EventEmitter {
     
     // Текст победы
     const style = new PIXI.TextStyle({
-      fontFamily: 'Arial',
+      fontFamily: FONT,
       fontSize: 64,
       fontWeight: 'bold',
       fill: '#00ff00',
@@ -361,7 +362,7 @@ export class Battle extends EventEmitter {
     }
     
     const style = new PIXI.TextStyle({
-      fontFamily: 'Arial',
+      fontFamily: FONT,
       fontSize: 64,
       fontWeight: 'bold',
       fill: '#ff0000',
@@ -430,7 +431,7 @@ export class Battle extends EventEmitter {
     
     // Имя врага с тенью
     const nameShadow = new PIXI.Text(this.enemyData.name, {
-      fontFamily: 'Arial',
+      fontFamily: FONT,
       fontSize: 28,
       fontWeight: 'bold',
       fill: '#000000'
@@ -441,7 +442,7 @@ export class Battle extends EventEmitter {
     this.container.addChild(nameShadow)
     
     const nameStyle = new PIXI.TextStyle({
-      fontFamily: 'Arial',
+      fontFamily: FONT,
       fontSize: 28,
       fontWeight: 'bold',
       fill: '#ffffff'
@@ -460,7 +461,7 @@ export class Battle extends EventEmitter {
     this.container.addChild(healthBg)
     
     const healthStyle = new PIXI.TextStyle({
-      fontFamily: 'Arial',
+      fontFamily: FONT,
       fontSize: 24,
       fontWeight: 'bold',
       fill: '#ff6666'
@@ -491,7 +492,7 @@ export class Battle extends EventEmitter {
     
     // Счетчики
     const infoStyle = new PIXI.TextStyle({
-      fontFamily: 'Arial',
+      fontFamily: FONT,
       fontSize: 20,
       fill: '#ffffff'
     })
@@ -511,7 +512,7 @@ export class Battle extends EventEmitter {
 
   renderDeckInfo() {
     const style = new PIXI.TextStyle({
-      fontFamily: 'Arial',
+      fontFamily: FONT,
       fontSize: 18,
       fill: '#ffffff'
     })
@@ -534,7 +535,7 @@ export class Battle extends EventEmitter {
     
     // Текст кнопки
     const style = new PIXI.TextStyle({
-      fontFamily: 'Arial',
+      fontFamily: FONT,
       fontSize: 18,
       fontWeight: 'bold',
       fill: '#ffffff'
@@ -694,7 +695,7 @@ class CardSprite extends EventEmitter {
     
     // Название карты
     const nameStyle = new PIXI.TextStyle({
-      fontFamily: 'Arial',
+      fontFamily: FONT,
       fontSize: 12,
       fill: '#ffffff'
     })
@@ -712,7 +713,7 @@ class CardSprite extends EventEmitter {
     this.container.addChild(valueBg)
     
     this.valueText = new PIXI.Text(String(this.cardData.value), {
-      fontFamily: 'Arial',
+      fontFamily: FONT,
       fontSize: 16,
       fontWeight: 'bold',
       fill: '#ffffff'

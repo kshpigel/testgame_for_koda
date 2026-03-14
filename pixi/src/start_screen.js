@@ -1,4 +1,5 @@
 import * as PIXI from 'pixi.js'
+import { Button } from './ui/button.js'
 
 const START_BG = '/assets/img/bg_full.jpg'
 
@@ -8,9 +9,12 @@ export class StartScreen {
     this.onStart = onStart
     this.container = new PIXI.Container()
     this.container.visible = false
+    this.button = null
   }
 
   async init() {
+    // Ждём загрузки шрифта перед созданием UI
+    await document.fonts.ready
     await this.loadBg()
     this.createButton()
   }
@@ -33,55 +37,21 @@ export class StartScreen {
   }
 
   createButton() {
-    const button = new PIXI.Container()
-    button.x = this.app.screen.width / 2
-    button.y = this.app.screen.height / 2
-    button.eventMode = 'static'
-    button.cursor = 'pointer'
-
-    // Фон кнопки
-    const bg = new PIXI.Graphics()
-    bg.beginFill(0x4a9c6d)
-    bg.lineStyle(3, 0x2d5a3d)
-    bg.drawRoundedRect(-120, -40, 240, 80, 15)
-    bg.endFill()
-    button.addChild(bg)
-
-    // Текст кнопки
-    const text = new PIXI.Text('Играть', {
-      fontFamily: 'Arial',
+    this.button = new Button('Играть', {
+      width: 280,
+      height: 90,
       fontSize: 32,
-      fontWeight: 'bold',
-      fill: 0xffffff
+      app: this.app
     })
-    text.anchor.set(0.5)
-    button.addChild(text)
-
-    // Hover эффект
-    button.on('pointerover', () => {
-      bg.clear()
-      bg.beginFill(0x5cb87d)
-      bg.lineStyle(3, 0x3d7a5d)
-      bg.drawRoundedRect(-120, -40, 240, 80, 15)
-      bg.endFill()
-      button.scale.set(1.05)
-    })
-
-    button.on('pointerout', () => {
-      bg.clear()
-      bg.beginFill(0x4a9c6d)
-      bg.lineStyle(3, 0x2d5a3d)
-      bg.drawRoundedRect(-120, -40, 240, 80, 15)
-      bg.endFill()
-      button.scale.set(1)
-    })
-
-    button.on('pointerdown', () => {
+    
+    this.button.x = this.app.screen.width / 2
+    this.button.y = this.app.screen.height / 2
+    this.button.onClick = () => {
       this.container.visible = false
       if (this.onStart) this.onStart()
-    })
-
-    this.container.addChild(button)
+    }
+    
+    this.container.addChild(this.button)
   }
 
   show() {
@@ -98,7 +68,6 @@ export class StartScreen {
   }
 
   resize(width, height) {
-    // Перерисовать при ресайзе
     this.container.removeChildren()
     this.loadBg()
     this.createButton()

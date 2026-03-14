@@ -3,7 +3,24 @@ import { Game } from './game.js'
 
 let gameInstance = null
 
-function init() {
+async function loadFont() {
+  const fontUrl = '/assets/fonts/Monomakh-Regular.ttf'
+  try {
+    const response = await fetch(fontUrl)
+    const fontData = await response.blob()
+    const fontFace = new FontFace('Monomakh', await fontData.arrayBuffer())
+    await fontFace.load()
+    document.fonts.add(fontFace)
+    console.log('Font loaded successfully')
+  } catch (e) {
+    console.warn('Font load failed:', e)
+  }
+}
+
+async function init() {
+  // Ждём загрузки шрифта
+  await loadFont()
+  
   const app = new Application({
     width: window.innerWidth,
     height: window.innerHeight,
