@@ -161,7 +161,7 @@ export class Game {
     })
     
     exitBtn.x = this.app.screen.width - 140
-    exitBtn.y = 20
+    exitBtn.y = 50
     
     battle.container.addChild(exitBtn)
   }

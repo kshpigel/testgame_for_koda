@@ -623,14 +623,16 @@ export class Battle extends EventEmitter {
     })
     
     const stepsText = new PIXI.Text(`Ходы: ${this.cntSteps}`, infoStyle)
-    stepsText.x = this.app.screen.width / 2 - 100
-    stepsText.y = btnY - 40
+    stepsText.anchor.set(0.5)
+    stepsText.x = this.app.screen.width / 2 + 70
+    stepsText.y = btnY - 50
     this.container.addChild(stepsText)
     this.stepsText = stepsText
     
     const resetsText = new PIXI.Text(`Сбросы: ${this.cntReset}`, infoStyle)
-    resetsText.x = this.app.screen.width / 2 + 100
-    resetsText.y = btnY - 40
+    resetsText.anchor.set(0.5)
+    resetsText.x = this.app.screen.width / 2 - 80
+    resetsText.y = btnY - 50
     this.container.addChild(resetsText)
     this.resetsText = resetsText
   }
