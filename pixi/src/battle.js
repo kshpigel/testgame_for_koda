@@ -32,7 +32,11 @@ export class Battle extends EventEmitter {
     this.activeCards = 0
     this.cntReset = 3
     this.cntSteps = 4
+    this.defCntSteps = 4
     this.enemyHealth = enemyData.health
+    
+    // Хранилище баффов Священника для предотвращения мухлежа
+    this.priestBuffs = {} // { targetCardId: value }
     
     this.isAnimating = false
   }
@@ -238,62 +242,35 @@ export class Battle extends EventEmitter {
   }
 
   applyBuffs() {
+    // Полностью очищаем все баффы
     this.cards.forEach(card => card.clearBuffs())
     
-    this.selectedCards.forEach(selectedCard => {
-      this.applyCardBuffs(selectedCard)
+    // Применяем баффы от всех карт в руке
+    this.cards.forEach(card => {
+      const cardType = this.cardTypes.find(t => t.type === card.cardData.type)
+      if (cardType && cardType.getBuff) {
+        cardType.getBuff(card, this)
+      }
     })
   }
 
-  applyCardBuffs(selectedCard) {
-    const type = selectedCard.cardData.type
-    
-    if (type === 1) {
-      this.cards.forEach(card => {
-        if ([2, 3, 5].includes(card.cardData.type) && !card.isSelected) {
-          card.setBuff(card.cardData.value)
-        }
-      })
+  applySkills() {
+    // Тип 6: Лучница - если в руке 4+ лучниц, добавляется +1 ход
+    const archerCount = this.selectedCards.filter(c => c.cardData.type === 6).length
+    if (archerCount >= 4 && archerCount === this.selectedCards.length) {
+      this.cntSteps++
+      setTimeout(() => {
+        console.log('Ход прибавлен!')
+      }, 100)
     }
     
-    if (type === 3) {
-      this.cards.forEach(card => {
-        if (card !== selectedCard && !card.isSelected) {
-          card.setBuff(3)
-        }
-      })
-    }
-    
-    if (type === 4) {
-      const berserkCount = this.selectedCards.filter(c => c.cardData.type === 4).length
-      if (berserkCount === 3 && this.selectedCards.length === 3) {
-        this.selectedCards.forEach(c => {
-          if (c.cardData.type === 4) {
-            c.setBuff(this.cntSteps === 4 ? 25 : 20)
-          }
-        })
+    // Вызываем getSkill из cardTypes для каждой выбранной карты
+    this.selectedCards.forEach(selectedCard => {
+      const cardType = this.cardTypes.find(t => t.type === selectedCard.cardData.type)
+      if (cardType && cardType.getSkill) {
+        cardType.getSkill(selectedCard, this)
       }
-    }
-    
-    if (type === 7) {
-      this.cards.forEach(card => {
-        if (!card.isSelected) {
-          card.setBuff(3)
-        }
-      })
-    }
-    
-    if (type === 8 && !selectedCard.isSelected) {
-      selectedCard.setBuff(this.currentDeck.length - 1)
-    }
-    
-    if (type === 11 && selectedCard.isSelected) {
-      this.cards.forEach(card => {
-        if (card !== selectedCard && card.isSelected) {
-          card.setBuff(Math.floor(Math.random() * 5) + 1)
-        }
-      })
-    }
+    })
   }
 
   playCards() {
@@ -301,10 +278,12 @@ export class Battle extends EventEmitter {
     
     this.isAnimating = true
     
+    // Применяем скиллы перед ходом
+    this.applySkills()
+    
     let summ = 0
     this.selectedCards.forEach(card => {
       summ += card.getValue()
-      card.applySkill()
     })
     
     this.enemyHealth -= summ
@@ -327,6 +306,9 @@ export class Battle extends EventEmitter {
   }
 
   resetSelectedCards() {
+    // Очищаем баффы Священника после хода
+    this.priestBuffs = {}
+    
     const cardsToRemove = [...this.selectedCards]
     let removedCount = 0
     
@@ -357,6 +339,7 @@ export class Battle extends EventEmitter {
     if (this.cntReset <= 0 || this.selectedCards.length === 0) return
     
     this.cntReset--
+    this.priestBuffs = {}
     
     const cardsToRemove = [...this.selectedCards]
     let removedCount = 0

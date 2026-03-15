@@ -31,6 +31,8 @@ export class Card extends PIXI.Container {
     this.isSelected = false
     this.isDisabled = false
     this.buffValue = 0
+    this.buffs = {} // { [buffId]: { type, value } }
+    this._cachedId = null // Кешируем ID карты
     
     // Используем cardWidth/cardHeight чтобы не переопределять встроенные PIXI свойства
     this.cardWidth = options.width || CARD_CONFIG.width
@@ -105,7 +107,7 @@ export class Card extends PIXI.Container {
       fill: '#66ff66'
     })
     this.buffText.anchor.set(0.5)
-    this.buffText.x = this.cardWidth / 2 - 15
+    this.buffText.x = -this.cardWidth / 2 + 15
     this.buffText.y = -this.cardHeight / 2 + 40
     this.addChild(this.buffText)
     
@@ -252,6 +254,7 @@ export class Card extends PIXI.Container {
   }
 
   clearBuffs() {
+    this.buffs = {}
     this.buffValue = 0
     this.buffText.text = ''
     this.valueCircle.setBgColor(colors.card.circle.normal)
@@ -260,6 +263,50 @@ export class Card extends PIXI.Container {
 
   getValue() {
     return this.cardData.value + this.buffValue
+  }
+
+  get type() {
+    return this.cardData.type
+  }
+
+  get id() {
+    if (!this._cachedId) {
+      this._cachedId = this.cardData.id || `card_${Math.random().toString(16).slice(2)}`
+    }
+    return this._cachedId
+  }
+
+  getBuffByType(type) {
+    return Object.values(this.buffs).filter(b => b.type === type)
+  }
+
+  addBuff(buffId, type, value) {
+    this.buffs[buffId] = { type, value }
+    this.updateBuffDisplay()
+  }
+
+  removeBuff(buffId) {
+    delete this.buffs[buffId]
+    this.updateBuffDisplay()
+  }
+
+  updateBuffDisplay() {
+    // Пересчитываем общий бафф
+    let total = 0
+    Object.values(this.buffs).forEach(b => {
+      total += b.value
+    })
+    this.buffValue = total
+    
+    if (total > 0) {
+      this.buffText.text = `+${total}`
+      this.valueCircle.setBgColor(colors.card.circle.buffed)
+    } else {
+      this.buffText.text = ''
+      this.valueCircle.setBgColor(colors.card.circle.normal)
+    }
+    
+    this.updateValue()
   }
 
   applySkill() {
