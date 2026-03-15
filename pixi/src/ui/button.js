@@ -81,17 +81,17 @@ export class Button extends PIXI.Container {
     const h = this.btnHeight * scale
     const radius = this.btnHeight * 0.75 * scale
     
-    // Тень с blur
+    // Тень с blur (строго вертикальная)
     this.shadow.clear()
     this.shadow.beginFill(0x000000, 0.5)
-    this.shadow.drawRoundedRect(5, 8, w, h, radius)
+    this.shadow.drawRoundedRect(0, 6, w, h, radius)
     this.shadow.endFill()
     this.shadow.filters = [new BlurFilter(8)]
     
-    // Основной фон
+    // Основной фон с бордером
     this.bg.clear()
+    this.bg.lineStyle(1, COLORS.white)
     this.bg.beginFill(color)
-    this.bg.lineStyle(2, COLORS.white)
     this.bg.drawRoundedRect(0, 0, w, h, radius)
     this.bg.endFill()
   }

@@ -4,6 +4,7 @@ import { FONT } from './data/fonts.js'
 import { soundManager } from './audio/sound_manager.js'
 import { Card, CARD_CONFIG } from './ui/card.js'
 import { Circle } from './ui/circle.js'
+import { Button } from './ui/button.js'
 
 // Импорт ассетов
 const assets = {
@@ -835,48 +836,14 @@ export class Battle extends EventEmitter {
   }
 
   createButton(text, color, onClick) {
-    const container = new PIXI.Container()
-    
-    const bg = new PIXI.Graphics()
-    bg.beginFill(color)
-    bg.drawRoundedRect(0, 0, 140, 50, 25)
-    bg.endFill()
-    container.addChild(bg)
-    
-    // Текст кнопки
-    const style = new PIXI.TextStyle({
-      fontFamily: FONT,
+    return new Button(text, {
+      width: 140,
+      height: 50,
+      color: color,
       fontSize: 18,
-      fontWeight: 'bold',
-      fill: '#ffffff'
+      app: this.app,
+      onClick: onClick
     })
-    const label = new PIXI.Text(text, style)
-    label.anchor.set(0.5)
-    label.x = 70
-    label.y = 25
-    container.addChild(label)
-    
-    container.eventMode = 'static'
-    container.cursor = 'pointer'
-    
-    // Эффекты при наведении
-    container.on('pointerover', () => {
-      bg.clear()
-      bg.beginFill(color)
-      bg.drawRoundedRect(-3, -3, 146, 56, 27)
-      bg.endFill()
-    })
-    
-    container.on('pointerout', () => {
-      bg.clear()
-      bg.beginFill(color)
-      bg.drawRoundedRect(0, 0, 140, 50, 25)
-      bg.endFill()
-    })
-    
-    container.on('pointerdown', onClick)
-    
-    return container
   }
 
   updateUI() {

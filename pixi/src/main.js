@@ -97,7 +97,7 @@ async function init() {
     width: GAME_WIDTH,
     height: GAME_HEIGHT,
     backgroundColor: 0x1a1a2e,
-    resolution: 1,
+    resolution: 2,
     autoDensity: true,
     antialias: true
   })

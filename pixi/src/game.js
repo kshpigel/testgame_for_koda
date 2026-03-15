@@ -8,6 +8,7 @@ import { enemies } from './data/enemies.js'
 import { maps } from './data/maps.js'
 import { FONT } from './data/fonts.js'
 import { soundManager } from './audio/sound_manager.js'
+import { Button } from './ui/button.js'
 
 // Главный фон
 const MAIN_BG = '/assets/img/bg_full.jpg'
@@ -132,48 +133,21 @@ export class Game {
 
   addExitButton(battle) {
     // Кнопка "Сбежать"
-    const exitBtn = new PIXI.Container()
-    
-    const bg = new PIXI.Graphics()
-    bg.beginFill(0x8c1300)
-    bg.drawRoundedRect(0, 0, 120, 40, 20)
-    bg.endFill()
-    exitBtn.addChild(bg)
-    
-    const label = new PIXI.Text('Сбежать', {
-      fontFamily: FONT,
+    const exitBtn = new Button('Сбежать', {
+      width: 120,
+      height: 40,
+      color: 0x8c1300,
       fontSize: 16,
-      fill: '#ffffff'
+      app: this.app,
+      onClick: () => {
+        battle.cleanup()
+        this.isBattleActive = false
+        this.showMap()
+      }
     })
-    label.anchor.set(0.5)
-    label.x = 60
-    label.y = 20
-    exitBtn.addChild(label)
     
     exitBtn.x = this.app.screen.width - 140
     exitBtn.y = 20
-    exitBtn.eventMode = 'static'
-    exitBtn.cursor = 'pointer'
-    
-    exitBtn.on('pointerover', () => {
-      bg.clear()
-      bg.beginFill(0xa52a2a)
-      bg.drawRoundedRect(0, 0, 120, 40, 20)
-      bg.endFill()
-    })
-    
-    exitBtn.on('pointerout', () => {
-      bg.clear()
-      bg.beginFill(0x8c1300)
-      bg.drawRoundedRect(0, 0, 120, 40, 20)
-      bg.endFill()
-    })
-    
-    exitBtn.on('pointerdown', () => {
-      battle.cleanup()
-      this.isBattleActive = false
-      this.showMap()
-    })
     
     battle.container.addChild(exitBtn)
   }
