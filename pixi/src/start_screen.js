@@ -1,6 +1,7 @@
 import * as PIXI from 'pixi.js'
 import { Button } from './ui/button.js'
 import { soundManager } from './audio/sound_manager.js'
+import { FONT } from './data/fonts.js'
 
 const START_BG = '/assets/img/bg_full.jpg'
 
@@ -11,6 +12,8 @@ export class StartScreen {
     this.container = new PIXI.Container()
     this.container.visible = false
     this.button = null
+    this.loadingText = null
+    this.isLoading = false
   }
 
   async init() {
@@ -18,6 +21,7 @@ export class StartScreen {
     await document.fonts.ready
     await this.loadBg()
     this.createButton()
+    this.createLoadingText()
   }
 
   async loadBg() {
@@ -48,17 +52,46 @@ export class StartScreen {
     this.button.x = this.app.screen.width / 2
     this.button.y = this.app.screen.height / 2
     this.button.onClick = () => {
-      // Разогрев AudioContext при первом клике
-      soundManager.audioCtx.resume()
-      soundManager.play('click')
-      this.container.visible = false
+      if (this.isLoading) return
+      this.isLoading = true
+      // Разогрев AudioContext при первом клике (если уже инициализирован)
+      if (soundManager.audioCtx) {
+        soundManager.audioCtx.resume()
+        soundManager.play('click')
+      }
+      this.button.visible = false
+      this.loadingText.text = 'Загрузка...'
+      this.loadingText.visible = true
       if (this.onStart) this.onStart()
     }
     
     this.container.addChild(this.button)
   }
 
+  createLoadingText() {
+    this.loadingText = new PIXI.Text('', {
+      fontFamily: FONT,
+      fontSize: 24,
+      fill: 0xffffff,
+      align: 'center'
+    })
+    this.loadingText.anchor.set(0.5)
+    this.loadingText.x = this.app.screen.width / 2
+    this.loadingText.y = this.app.screen.height / 2 + 100
+    this.loadingText.visible = false
+    this.container.addChild(this.loadingText)
+  }
+
+  setLoadingText(text) {
+    if (this.loadingText) {
+      this.loadingText.text = text
+    }
+  }
+
   show() {
+    this.isLoading = false
+    this.button.visible = true
+    this.loadingText.visible = false
     this.container.visible = true
     soundManager.playMusic('musicBg')
   }
@@ -76,5 +109,6 @@ export class StartScreen {
     this.container.removeChildren()
     this.loadBg()
     this.createButton()
+    this.createLoadingText()
   }
 }

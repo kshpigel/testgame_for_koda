@@ -20,6 +20,7 @@ export class Game {
     this.currentScreen = null
     this.user = { points: 0 }
     this.isBattleActive = false
+    this.loadingCallback = null
 
     // Контейнер для фона
     this.bgContainer = new PIXI.Container()
@@ -31,12 +32,28 @@ export class Game {
     this.messageContainer = new PIXI.Container()
     this.app.stage.addChild(this.messageContainer)
     
-    // Инициализация стартового экрана
-    this.startScreen = new StartScreen(this.app, () => this.showMap())
+    // Инициализация стартового экрана (без init - будет вызвано при показе)
+    this.startScreen = new StartScreen(this.app, () => this.runLoading())
     this.app.stage.addChild(this.startScreen.container)
     
     // Загрузка главного фона
     this.loadMainBg()
+  }
+
+  setLoadingCallback(callback) {
+    this.loadingCallback = callback
+  }
+
+  async runLoading() {
+    if (this.loadingCallback) {
+      await this.loadingCallback()
+    }
+  }
+
+  async showStartScreen() {
+    // Инициализируем стартовый экран и показываем
+    await this.startScreen.init()
+    this.startScreen.show()
   }
 
   async loadMainBg() {
@@ -67,13 +84,10 @@ export class Game {
   }
 
   async start() {
-    console.log('Game starting...', this.app.screen)
+    console.log('Game starting after loading...')
     
-    // Показать стартовый экран
-    await this.startScreen.init()
-    this.startScreen.show()
-    
-    console.log('Start screen shown')
+    // Загрузка завершена - показываем карту
+    this.showMap()
   }
 
   showMap() {

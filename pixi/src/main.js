@@ -1,7 +1,6 @@
 import { Application } from 'pixi.js'
 import { Game } from './game.js'
 import { soundManager } from './audio/sound_manager.js'
-import { LoadingScreen } from './loading_screen.js'
 import { loadAllAssets } from './asset_loader.js'
 
 let gameInstance = null
@@ -105,35 +104,44 @@ async function init() {
   const container = document.getElementById('game-container') || document.body
   container.appendChild(app.view)
 
-  // Показываем экран загрузки
-  const loadingScreen = new LoadingScreen(app)
-  await loadingScreen.show()
-  
-  // Загружаем шрифт
-  loadingScreen.setProgress(10, 'Загрузка шрифта...')
-  await loadFont()
-  
-  // Загружаем звуки
-  loadingScreen.setProgress(30, 'Загрузка звуков...')
-  await soundManager.init()
-  
-  // Загружаем ассеты
-  loadingScreen.setProgress(50, 'Загрузка графики...')
-  await loadAllAssets((percent, msg) => {
-    loadingScreen.setProgress(50 + percent * 0.5, msg)
-  })
-  
-  // Скрываем экран загрузки
-  loadingScreen.hide()
-  
-  console.log('All assets loaded, starting game...')
-  
+  // Создаём игру (без старта)
   gameInstance = new Game(app)
+  
+  // Функция запуска загрузки при нажатии "Играть"
+  async function startLoading() {
+    const startScreen = gameInstance.startScreen
+    
+    // Загружаем шрифт
+    startScreen.setLoadingText('Загрузка шрифта...')
+    await loadFont()
+    
+    // Загружаем звуки
+    startScreen.setLoadingText('Загрузка звуков...')
+    await soundManager.init()
+    
+    // Загружаем ассеты
+    startScreen.setLoadingText('Загрузка графики...')
+    await loadAllAssets((percent, msg) => {
+      startScreen.setLoadingText(msg)
+    })
+    
+    // Всё загружено - запускаем игру
+    console.log('All assets loaded, starting game...')
+    startScreen.setLoadingText('Готово!')
+    
+    // Небольшая пауза для чтения "Готово!"
+    await new Promise(r => setTimeout(r, 500))
+    
+    gameInstance.start()
+  }
+  
+  gameInstance.setLoadingCallback(startLoading)
   
   // Настраиваем адаптивный ресайз
   setupResize(app)
   
-  gameInstance.start()
+  // Показываем стартовый экран
+  gameInstance.showStartScreen()
 }
 
 init()
