@@ -12,8 +12,13 @@ export class Circle extends PIXI.Container {
     this.text = options.text || ''
     this.fontSize = options.fontSize || 16
     
+    // Абсолютные координаты
     this.x = options.x || 0
     this.y = options.y || 0
+    
+    // Относительные координаты (для масштабируемых карт)
+    this.xRatio = options.xRatio !== undefined ? options.xRatio : null
+    this.yRatio = options.yRatio !== undefined ? options.yRatio : null
     
     this.create()
   }

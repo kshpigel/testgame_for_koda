@@ -66,32 +66,24 @@ export class Card extends PIXI.Container {
     
     // === СЛОЙ 3: Картинка героя (image) ===
     this.heroImage = null
+    this.heroImageYRatio = -0.15 // 15% от высоты сверху
     
     // === СЛОЙ 4: Название карты ===
     const cardName = this.cardData.name || `Тип ${this.cardData.type}`
-    const nameText = new PIXI.Text(cardName, {
+    this.nameText = new PIXI.Text(cardName, {
       fontFamily: FONT,
       fontSize: 14,
       fontWeight: 'bold',
       fill: '#ffffff'
     })
-    nameText.anchor.set(0.5, 1)
-    nameText.y = 65
-    this.addChild(nameText)
+    this.nameText.anchor.set(0.5, 1)
+    this.nameText.yRatio = 0.38 // 38% от высоты сверху
+    this.addChild(this.nameText)
     
-    // Подстраиваем ширину карты под название (как в оригинале)
-    const nameWidth = nameText.width + 20
-    if (nameWidth > this.cardWidth) {
-      this.cardWidth = Math.min(nameWidth, 180) // Максимум 180
-      this.pivot.set(this.cardWidth / 2, this.cardHeight / 2)
-    }
-    
-    console.log(`Card created: ${cardName}, width: ${this.cardWidth}, height: ${this.cardHeight}`)
-    
-    // === СЛОЙ 5: Кружочек с силой (позиция: x=-54, y=34) ===
+    // === СЛОЙ 5: Кружочек с силой (относительно ширины карты) ===
     this.valueCircle = new Circle({
-      x: -54,
-      y: 34,
+      xRatio: -0.45, // 45% от ширины слева
+      yRatio: 0.2,   // 20% от высоты сверху
       radius: 18,
       bgColor: colors.card.circle.normal,
       borderColor: colors.card.circle.border,
@@ -99,7 +91,7 @@ export class Card extends PIXI.Container {
     })
     this.addChild(this.valueCircle)
     
-    // === СЛОЙ 6: Бафф ===
+    // === СЛОЙ 6: Бафф (относительно размеров карты) ===
     this.buffText = new PIXI.Text('', {
       fontFamily: FONT,
       fontSize: 18,
@@ -107,8 +99,8 @@ export class Card extends PIXI.Container {
       fill: '#66ff66'
     })
     this.buffText.anchor.set(0.5)
-    this.buffText.x = -this.cardWidth / 2 + 15
-    this.buffText.y = -this.cardHeight / 2 + 40
+    this.buffText.xRatio = 0.12 // 12% от ширины слева
+    this.buffText.yRatio = 0.24 // 24% от высоты сверху
     this.addChild(this.buffText)
     
     // Перерисовываем фон с правильными размерами
@@ -123,6 +115,9 @@ export class Card extends PIXI.Container {
     this.on('pointerdown', this.onDown, this)
     this.on('pointerup', this.onUp, this)
     this.on('pointerupoutside', this.onUp, this)
+    
+    // Установить начальные позиции
+    this.updateChildPositions()
   }
 
   drawBg(color) {
@@ -177,16 +172,19 @@ export class Card extends PIXI.Container {
     if (texture) {
       this.heroImage = new PIXI.Sprite(texture)
       this.heroImage.anchor.set(0.5)
-      this.heroImage.y = -46 // Позиция героя (отрицательное = выше центра)
+      // Позиция устанавливается в updateChildPositions через heroImageYRatio
       
       // Вписать в область
-      const maxW = this.cardWidth// - 20
-      const maxH = this.cardHeight// - 60
+      const maxW = this.cardWidth
+      const maxH = this.cardHeight
       const scale = Math.min(maxW / texture.width, maxH / texture.height)
       this.heroImage.scale.set(scale)
       
       // Добавляем на слой 3
       this.addChildAt(this.heroImage, 2)
+      
+      // Обновить позицию после загрузки
+      this.updateChildPositions()
     }
   }
 
@@ -320,9 +318,15 @@ export class Card extends PIXI.Container {
 
   update() {
     // Плавная анимация scale
+    const prevScale = this.scale.x
     if (Math.abs(this.scale.x - this.targetScale) > 0.001) {
       const diff = this.targetScale - this.scale.x
       this.scale.set(this.scale.x + diff * 0.1)
+      
+      // При изменении scale обновляем позиции дочерних элементов
+      if (Math.abs(this.scale.x - prevScale) > 0.01) {
+        this.updateChildPositions()
+      }
     }
     
     // Анимация покачивания (добавляем к targetY, не перезаписываем y напрямую)
@@ -330,6 +334,37 @@ export class Card extends PIXI.Container {
     const wobble = Math.sin(this.wobbleOffset) * this.wobbleAmount
     if (this.y !== this.targetY + wobble) {
       this.y = this.targetY + wobble
+    }
+  }
+
+  updateChildPositions() {
+    // Обновляем позиции элементов с относительными координатами
+    const w = this.cardWidth
+    const h = this.cardHeight
+    
+    if (this.valueCircle) {
+      if (this.valueCircle.xRatio !== null) {
+        this.valueCircle.x = -w/2 + w * (0.5 + this.valueCircle.xRatio)
+      }
+      if (this.valueCircle.yRatio !== null) {
+        this.valueCircle.y = -h/2 + h * (0.5 + this.valueCircle.yRatio)
+      }
+    }
+    
+    // nameText
+    if (this.nameText && this.nameText.yRatio !== undefined) {
+      this.nameText.y = -h/2 + h * (0.5 + this.nameText.yRatio)
+    }
+    
+    // heroImage
+    if (this.heroImage && this.heroImageYRatio !== undefined) {
+      this.heroImage.y = -h/2 + h * (0.5 + this.heroImageYRatio)
+    }
+    
+    // buffText
+    if (this.buffText && this.buffText.xRatio !== undefined) {
+      this.buffText.x = -w/2 + w * (0.5 + this.buffText.xRatio)
+      this.buffText.y = -h/2 + h * (0.5 + this.buffText.yRatio)
     }
   }
 

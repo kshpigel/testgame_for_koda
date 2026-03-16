@@ -1,6 +1,7 @@
 import * as PIXI from 'pixi.js'
 import { EventEmitter } from 'events'
 import { FONT } from './data/fonts.js'
+import { colors } from './data/colors.js'
 import { soundManager } from './audio/sound_manager.js'
 import { Card, CARD_CONFIG } from './ui/card.js'
 import { Circle } from './ui/circle.js'
@@ -39,6 +40,21 @@ export class Battle extends EventEmitter {
     this.priestBuffs = {} // { targetCardId: value }
     
     this.isAnimating = false
+    this.isBlocked = false
+  }
+
+  setBlocked(blocked) {
+    this.isBlocked = blocked
+    
+    // Блокируем/разблокируем кнопки - только события
+    if (this.playBtn) this.playBtn.setDisabled(blocked)
+    if (this.resetBtn) this.resetBtn.setDisabled(blocked)
+    
+    // Блокируем колоду
+    if (this.deckContainer) {
+      this.deckContainer.eventMode = blocked ? 'none' : 'static'
+      this.deckContainer.cursor = blocked ? 'default' : 'pointer'
+    }
   }
 
   start() {
@@ -111,7 +127,10 @@ export class Battle extends EventEmitter {
           this.addCard(cardData)
           // После добавления всех карт - пересчитываем позиции
           if (i === cardsToDeal - 1) {
-            setTimeout(() => this.layoutCards(), cardsToDeal * 100 + 300)
+            setTimeout(() => {
+              this.layoutCards()
+              this.setBlocked(false)
+            }, cardsToDeal * 100 + 300)
           }
           this.updateUI()
         }
@@ -223,7 +242,7 @@ export class Battle extends EventEmitter {
   }
 
   onCardClick(card) {
-    if (this.isAnimating) return
+    if (this.isAnimating || this.isBlocked) return
     
     if (card.isSelected) {
       card.deselect()
@@ -274,7 +293,7 @@ export class Battle extends EventEmitter {
   }
 
   playCards() {
-    if (this.isAnimating || this.cntSteps <= 0 || this.selectedCards.length <= 0) return
+    if (this.isAnimating || this.isBlocked || this.cntSteps <= 0 || this.selectedCards.length <= 0) return
     
     this.isAnimating = true
     
@@ -336,7 +355,7 @@ export class Battle extends EventEmitter {
   }
 
   resetCards() {
-    if (this.cntReset <= 0 || this.selectedCards.length === 0) return
+    if (this.cntReset <= 0 || this.selectedCards.length === 0 || this.isBlocked) return
     
     this.cntReset--
     this.priestBuffs = {}
@@ -461,6 +480,7 @@ export class Battle extends EventEmitter {
     soundManager.play('battleVictory')
     
     setTimeout(() => {
+      this.setBlocked(false)
       this.emit('victory', points)
       this.emit('end')
     }, 2000)
@@ -501,6 +521,7 @@ export class Battle extends EventEmitter {
     this.container.addChild(text)
     
     setTimeout(() => {
+      this.setBlocked(false)
       this.emit('defeat')
       this.emit('end')
     }, 2000)
@@ -604,16 +625,16 @@ export class Battle extends EventEmitter {
     const btnY = this.app.screen.height - 280
     
     // Кнопка "Ход"
-    const playBtn = this.createButton('Сделать ход!', 0x39751b, () => this.playCards())
-    playBtn.x = this.app.screen.width / 2 - 100
-    playBtn.y = btnY
-    this.container.addChild(playBtn)
+    this.playBtn = this.createButton('Сделать ход!', 0x39751b, () => this.playCards())
+    this.playBtn.x = this.app.screen.width / 2 - 100
+    this.playBtn.y = btnY
+    this.container.addChild(this.playBtn)
     
     // Кнопка "Сброс"
-    const resetBtn = this.createButton('Сброс', 0x8c1300, () => this.resetCards())
-    resetBtn.x = this.app.screen.width / 2 + 100
-    resetBtn.y = btnY
-    this.container.addChild(resetBtn)
+    this.resetBtn = this.createButton('Сброс', 0x8c1300, () => this.resetCards())
+    this.resetBtn.x = this.app.screen.width / 2 + 100
+    this.resetBtn.y = btnY
+    this.container.addChild(this.resetBtn)
     
     // Счетчики
     const infoStyle = new PIXI.TextStyle({
@@ -669,7 +690,7 @@ export class Battle extends EventEmitter {
       x: cardW/2 + 3,
       y: cardH -10,
       radius: 22,
-      bgColor: 0x3a3a3a,
+      bgColor: colors.card.circle.normal,
       borderColor: 0x888888,
       text: `${this.currentDeck.length}`
     })
@@ -730,9 +751,9 @@ export class Battle extends EventEmitter {
     overlay.endFill()
     menuContainer.addChild(overlay)
     
-    // Панель меню
-    const panelW = 600
-    const panelH = 400
+    // Панель меню - увеличим
+    const panelW = 660
+    const panelH = 550
     const panel = new PIXI.Graphics()
     panel.beginFill(0x282424)
     panel.lineStyle(3, 0x4a9c6d)
@@ -771,12 +792,21 @@ export class Battle extends EventEmitter {
     })
     menuContainer.addChild(closeBtn)
     
-    // Сетка карт
-    const cardW = CARD_CONFIG.width
-    const cardH = CARD_CONFIG.height
-    const startX = -panelW/2 + 50
-    const startY = -panelH/2 + 80
-    const cols = 8
+    // Подсчёт количества каждого типа карты
+    const cardCounts = {}
+    this.currentDeck.forEach(card => {
+      cardCounts[card.type] = (cardCounts[card.type] || 0) + 1
+    })
+    
+    // Сетка карт - уменьшенный размер
+    const cardScale = 0.8
+    const cardW = CARD_CONFIG.width * cardScale
+    const cardH = CARD_CONFIG.height * cardScale
+    const startX = -panelW/2 + 60 // +30px вправо
+    const startY = -panelH/2 + 110 // +30px сверху
+    const cols = 6
+    const spacingX = 8
+    const spacingY = 8
     
     // Все типы карт в колоде
     const allCardTypes = this.cardTypes.filter(ct => this.deck.includes(ct.type))
@@ -790,11 +820,15 @@ export class Battle extends EventEmitter {
         height: cardH 
       })
       
-      card.x = startX + col * (cardW + 10)
-      card.y = startY + row * (cardH + 10)
+      card.x = startX + col * (cardW + spacingX) + cardW/2
+      card.y = startY + row * (cardH + spacingY) + cardH/2
+      card.scale.set(cardScale)
       
-      // Если карта использована (нет в currentDeck) - серый
-      if (!this.currentDeck.find(c => c.type === cardType.type)) {
+      // Количество карт этого типа в колоде
+      const count = cardCounts[cardType.type] || 0
+      
+      // Если карт нет в currentDeck - серый
+      if (count === 0) {
         card.setDisabled(true)
       }
       
@@ -808,8 +842,30 @@ export class Battle extends EventEmitter {
         card.loadHeroImage(this.assets[`card_${cardType.type}`].texture)
       }
       
+      // Добавляем счётчик поверх карты через Circle
+      const countCircle = new Circle({
+        x: cardW/2 - 5,
+        y: -cardH/2 + 10,
+        radius: 12,
+        bgColor: 0x000000,
+        borderColor: 0x666666,
+        text: `${count}`,
+        fontSize: 12
+      })
+      card.addChild(countCircle)
+      
       menuContainer.addChild(card)
     })
+    
+    // Статистика колоды
+    const statsText = new PIXI.Text(`Всего карт: ${this.currentDeck.length} | В руке: ${this.cards.length}`, {
+      fontFamily: FONT,
+      fontSize: 18,
+      fill: '#aaaaaa'
+    })
+    statsText.anchor.set(0.5)
+    statsText.y = panelH/2 - 40
+    menuContainer.addChild(statsText)
     
     // Закрытие по клику вне панели
     overlay.eventMode = 'static'

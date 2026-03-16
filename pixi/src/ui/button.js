@@ -142,6 +142,12 @@ export class Button extends PIXI.Container {
     this.drawBg(color, 1)
   }
   
+  setDisabled(disabled) {
+    this.isDisabled = disabled
+    this.eventMode = disabled ? 'none' : 'static'
+    this.cursor = disabled ? 'default' : 'pointer'
+  }
+  
   destroy() {
     if (this.app) {
       this.app.ticker.remove(this.updateScale, this)
