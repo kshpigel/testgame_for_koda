@@ -1,16 +1,17 @@
 import * as PIXI from 'pixi.js'
 import { BlurFilter } from 'pixi.js'
 import { FONT } from '../data/fonts.js'
+import { colors } from '../data/colors.js'
 import { soundManager } from '../audio/sound_manager.js'
 
-// Цвета из old проекта
+// Локальные алиасы для удобства
 const COLORS = {
-  main: 0x39751b,
-  mainHover: 0x4a9c2d,
-  red: 0x8c1300,
-  purple: 0x8a2791,
-  black: 0x282424,
-  white: 0xffffff
+  main: colors.ui.button.play,
+  mainHover: colors.ui.button.hover,
+  red: colors.ui.button.reset,
+  purple: colors.card.circle.buffed,
+  black: colors.ui.panel.bg,
+  white: colors.ui.button.white
 }
 
 export class Button extends PIXI.Container {

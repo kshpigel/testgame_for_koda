@@ -112,7 +112,7 @@ export class MapScreen extends EventEmitter {
       this.container.addChild(bg)
     } else {
       const bg = new PIXI.Graphics()
-      bg.beginFill(0x2d4a3e)
+      bg.beginFill(colors.background.map)
       bg.drawRect(0, 0, this.app.screen.width, this.app.screen.height)
       bg.endFill()
       this.container.addChild(bg)
@@ -120,7 +120,7 @@ export class MapScreen extends EventEmitter {
     
     // Заголовок карты с фоном
     const titleBg = new PIXI.Graphics()
-    titleBg.beginFill(0x282424, 0.8)
+    titleBg.beginFill(colors.ui.panel.bg, 0.8)
     titleBg.drawRoundedRect(10, 10, 350, 50, 15)
     titleBg.endFill()
     this.container.addChild(titleBg)
@@ -129,7 +129,7 @@ export class MapScreen extends EventEmitter {
       fontFamily: FONT,
       fontSize: 32,
       fontWeight: 'bold',
-      fill: '#ffffff'
+      fill: colors.ui.text.primary
     })
     title.x = 25
     title.y = 20
@@ -152,7 +152,7 @@ export class MapScreen extends EventEmitter {
     const startY = 80
 
     const grid = new PIXI.Graphics()
-    grid.lineStyle(2, 0x4a6b5c, 0.5)
+    grid.lineStyle(2, colors.map.grid, 0.5)
     
     for (let i = 0; i <= segments; i++) {
       grid.moveTo(startX + i * cellW, startY)
@@ -171,7 +171,7 @@ export class MapScreen extends EventEmitter {
     
     const cfg = mapConfig ? mapConfig.enemy : {
       maxHeight: 90, offsetY: 30, spriteOffsetY: 20,
-      platform: { radius: 45, offsetY: 30, colors: { defeated: 0x333333, active: 0x39751b, default: 0x282424 } },
+      platform: { radius: 45, offsetY: 30, colors: colors.enemy.platform },
       bossRing: { radius: 50, offsetY: 0, color: '#8c1300', lineWidth: 3 },
       name: { offsetY: -55 }, health: { bg: { width: 50, height: 20, offsetY: 60 }, text: { offsetY: 70 } },
       defeated: { offsetY: 90 }
@@ -275,9 +275,9 @@ export class MapScreen extends EventEmitter {
       if (!enemySprite) {
         // Заглушка
         const placeholder = new PIXI.Graphics()
-        if (isDefeated) placeholder.beginFill(0x666666)
-        else if (isActive) placeholder.beginFill(0x00ff00)
-        else placeholder.beginFill(0xff6600)
+        if (isDefeated) placeholder.beginFill(colors.map.platform.defeated)
+    else if (isActive) placeholder.beginFill(colors.map.platform.active)
+    else placeholder.beginFill(colors.map.platform.locked)
         placeholder.drawCircle(0, spriteY - 20, 30)
         placeholder.endFill()
         enemyContainer.addChild(placeholder)
@@ -288,7 +288,7 @@ export class MapScreen extends EventEmitter {
         fontFamily: FONT,
         fontSize: 14,
         fontWeight: 'bold',
-        fill: isDefeated ? '#666666' : '#ffffff'
+        fill: isDefeated ? colors.enemy.platform.defeated : colors.ui.text.primary
       })
       const name = new PIXI.Text(enemy.name, nameStyle)
       name.anchor.set(0.5, 1)
@@ -297,7 +297,7 @@ export class MapScreen extends EventEmitter {
 
       // Здоровье
       const healthBg = new PIXI.Graphics()
-      healthBg.beginFill(0x000000, 0.6)
+      healthBg.beginFill(colors.enemy.healthBg, 0.6)
       healthBg.drawRoundedRect(-cfg.health.bg.width/2, spriteY + cfg.health.bg.offsetY, cfg.health.bg.width, cfg.health.bg.height, 5)
       healthBg.endFill()
       enemyContainer.addChild(healthBg)

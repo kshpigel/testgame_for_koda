@@ -397,7 +397,7 @@ export class Battle extends EventEmitter {
   showDamage(amount) {
     // Анимация удара - красная вспышка
     const hitEffect = new PIXI.Graphics()
-    hitEffect.beginFill(0xff0000, 0.3)
+    hitEffect.beginFill(colors.ui.text.damage, 0.3)
     hitEffect.drawRect(0, 0, this.app.screen.width, this.app.screen.height)
     hitEffect.endFill()
     this.container.addChild(hitEffect)
@@ -454,7 +454,7 @@ export class Battle extends EventEmitter {
     
     // Затемнение
     const overlay = new PIXI.Graphics()
-    overlay.beginFill(0x000000, 0.7)
+    overlay.beginFill(colors.ui.text.primary, 0.7)
     overlay.drawRect(0, 0, this.app.screen.width, this.app.screen.height)
     overlay.endFill()
     this.container.addChild(overlay)
@@ -498,7 +498,7 @@ export class Battle extends EventEmitter {
   showDefeat() {
     soundManager.play('battleFail')
     const overlay = new PIXI.Graphics()
-    overlay.beginFill(0x000000, 0.7)
+    overlay.beginFill(colors.ui.text.primary, 0.7)
     overlay.drawRect(0, 0, this.app.screen.width, this.app.screen.height)
     overlay.endFill()
     this.container.addChild(overlay)
@@ -550,7 +550,7 @@ export class Battle extends EventEmitter {
       this.container.addChild(bg)
     } else {
       const bg = new PIXI.Graphics()
-      bg.beginFill(0x1a1a2e)
+      bg.beginFill(colors.background.battle)
       bg.drawRect(0, 0, this.app.screen.width, this.app.screen.height)
       bg.endFill()
       this.container.addChild(bg)
@@ -602,7 +602,7 @@ export class Battle extends EventEmitter {
       fontFamily: FONT,
       fontSize: 40,
       fontWeight: 'bold',
-      fill: '#ffffff'
+      fill: colors.ui.text.primary
     })
     const name = new PIXI.Text(this.enemyData.name, nameStyle)
     name.anchor.set(0.5, 1)
@@ -612,8 +612,8 @@ export class Battle extends EventEmitter {
     
     // Здоровье врага - как кнопка (красный фон, белый текст, белый бордер), сдвинуто на 150px
     const healthBg = new PIXI.Graphics()
-    healthBg.lineStyle(1, 0xffffff)
-    healthBg.beginFill(0x8c1300)
+    healthBg.lineStyle(1, colors.ui.text.primary)
+    healthBg.beginFill(colors.ui.button.reset)
     healthBg.drawRoundedRect(enemyContainer.x - 115, 264, 230, 50, 14)
     healthBg.endFill()
     this.container.addChild(healthBg)
@@ -622,7 +622,7 @@ export class Battle extends EventEmitter {
       fontFamily: FONT,
       fontSize: 34,
       fontWeight: 'bold',
-      fill: '#ffffff'
+      fill: colors.ui.text.primary
     })
     const health = new PIXI.Text(`${this.enemyHealth}`, healthStyle)
     health.anchor.set(0.5)
@@ -637,13 +637,13 @@ export class Battle extends EventEmitter {
     const btnY = this.app.screen.height - 280
     
     // Кнопка "Ход"
-    this.playBtn = this.createButton('Сделать ход!', 0x39751b, () => this.playCards())
+    this.playBtn = this.createButton('Сделать ход!', colors.ui.button.play, () => this.playCards())
     this.playBtn.x = this.app.screen.width / 2 - 100
     this.playBtn.y = btnY
     this.container.addChild(this.playBtn)
     
     // Кнопка "Сброс"
-    this.resetBtn = this.createButton('Сброс', 0x8c1300, () => this.resetCards())
+    this.resetBtn = this.createButton('Сброс', colors.ui.button.reset, () => this.resetCards())
     this.resetBtn.x = this.app.screen.width / 2 + 100
     this.resetBtn.y = btnY
     this.container.addChild(this.resetBtn)
@@ -652,7 +652,7 @@ export class Battle extends EventEmitter {
     const infoStyle = new PIXI.TextStyle({
       fontFamily: FONT,
       fontSize: 20,
-      fill: '#ffffff'
+      fill: colors.ui.text.primary
     })
     
     const stepsText = new PIXI.Text(`Ходы: ${this.cntSteps}`, infoStyle)
@@ -683,8 +683,8 @@ export class Battle extends EventEmitter {
     const cardH = CARD_CONFIG.height
     
     const cardBack = new PIXI.Graphics()
-    cardBack.lineStyle(2, 0xffffff)
-    cardBack.beginFill(0x282424)
+    cardBack.lineStyle(2, colors.ui.cardBack.borderNormal)
+    cardBack.beginFill(colors.ui.cardBack.normal)
     cardBack.drawRoundedRect(0, 0, cardW, cardH, 8)
     cardBack.endFill()
     deckContainer.addChild(cardBack)
@@ -703,7 +703,7 @@ export class Battle extends EventEmitter {
       y: cardH -10,
       radius: 22,
       bgColor: colors.card.circle.normal,
-      borderColor: 0x888888,
+      borderColor: colors.card.circle.border,
       text: `${this.currentDeck.length}`
     })
     deckContainer.addChild(this.deckCountCircle)
@@ -725,8 +725,8 @@ export class Battle extends EventEmitter {
     deckContainer.on('pointerover', () => {
       deckContainer.targetScale = 1.05
       cardBack.clear()
-      cardBack.lineStyle(2, 0x4a9c6d)
-      cardBack.beginFill(0x3a5a4a)
+      cardBack.lineStyle(2, colors.ui.cardBack.borderHover)
+      cardBack.beginFill(colors.ui.cardBack.hover)
       cardBack.drawRoundedRect(0, 0, cardW, cardH, 8)
       cardBack.endFill()
     })
@@ -734,8 +734,8 @@ export class Battle extends EventEmitter {
     deckContainer.on('pointerout', () => {
       deckContainer.targetScale = 1
       cardBack.clear()
-      cardBack.lineStyle(2, 0xffffff)
-      cardBack.beginFill(0x282424)
+      cardBack.lineStyle(2, colors.ui.cardBack.borderNormal)
+      cardBack.beginFill(colors.ui.cardBack.normal)
       cardBack.drawRoundedRect(0, 0, cardW, cardH, 8)
       cardBack.endFill()
     })
@@ -758,7 +758,7 @@ export class Battle extends EventEmitter {
     
     // Затемнение фона
     const overlay = new PIXI.Graphics()
-    overlay.beginFill(0x000000, 0.8)
+    overlay.beginFill(colors.ui.text.primary, 0.8)
     overlay.drawRect(-this.app.screen.width/2, -this.app.screen.height/2, this.app.screen.width, this.app.screen.height)
     overlay.endFill()
     menuContainer.addChild(overlay)
@@ -767,8 +767,8 @@ export class Battle extends EventEmitter {
     const panelW = 660
     const panelH = 550
     const panel = new PIXI.Graphics()
-    panel.beginFill(0x282424)
-    panel.lineStyle(3, 0x4a9c6d)
+    panel.beginFill(colors.ui.panel.bg)
+    panel.lineStyle(3, colors.ui.panel.border)
     panel.drawRoundedRect(-panelW/2, -panelH/2, panelW, panelH, 20)
     panel.endFill()
     menuContainer.addChild(panel)
@@ -778,7 +778,7 @@ export class Battle extends EventEmitter {
       fontFamily: FONT,
       fontSize: 28,
       fontWeight: 'bold',
-      fill: '#ffffff'
+      fill: colors.ui.text.primary
     })
     title.anchor.set(0.5)
     title.y = -panelH/2 + 30
@@ -859,8 +859,8 @@ export class Battle extends EventEmitter {
         x: cardW/2 - 5,
         y: -cardH/2 + 10,
         radius: 12,
-        bgColor: 0x000000,
-        borderColor: 0x666666,
+        bgColor: colors.ui.circle.bg,
+        borderColor: colors.ui.circle.border,
         text: `${count}`,
         fontSize: 12
       })

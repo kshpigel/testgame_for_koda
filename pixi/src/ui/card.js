@@ -13,13 +13,13 @@ const CARD_CONFIG = {
   selectedScale: 1.05,
   hoverScale: 1.05,
   colors: {
-    normal: 0x3a3a3a,
-    selected: 0x4a7c4a,
-    hover: 0x4a5a4a,
-    disabled: 0x222222,
-    border: 0x666666,
-    borderSelected: 0x4a9c6d,
-    borderHover: 0x5a8c5a
+    normal: colors.card.background.normal,
+    selected: colors.card.background.selected,
+    hover: colors.card.background.hover,
+    disabled: colors.card.background.disabled,
+    border: colors.card.border.normal,
+    borderSelected: colors.card.border.selected,
+    borderHover: colors.card.border.hover
   }
 }
 
@@ -74,7 +74,7 @@ export class Card extends PIXI.Container {
       fontFamily: FONT,
       fontSize: 14,
       fontWeight: 'bold',
-      fill: '#ffffff'
+      fill: colors.ui.text.primary
     })
     this.nameText.anchor.set(0.5, 1)
     this.nameText.yRatio = 0.38 // 38% от высоты сверху
@@ -129,7 +129,7 @@ export class Card extends PIXI.Container {
     
     if (this.isSelected) {
       // Белая обводка когда выбрана
-      this.bg.lineStyle(borderWidth, 0xffffff)
+      this.bg.lineStyle(borderWidth, colors.card.border.white)
       this.bg.drawRoundedRect(
         -this.cardWidth/2 - offset, 
         -this.cardHeight/2 - offset, 
@@ -139,7 +139,7 @@ export class Card extends PIXI.Container {
       )
     } else if (this.isDisabled) {
       // Серая обводка для недоступных
-      this.bg.lineStyle(borderWidth, 0x444444)
+      this.bg.lineStyle(borderWidth, colors.card.border.disabled)
       this.bg.drawRoundedRect(
         -this.cardWidth/2 - offset, 
         -this.cardHeight/2 - offset, 

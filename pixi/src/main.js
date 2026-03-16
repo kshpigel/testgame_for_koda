@@ -2,6 +2,7 @@ import { Application } from 'pixi.js'
 import { Game } from './game.js'
 import { soundManager } from './audio/sound_manager.js'
 import { loadAllAssets } from './asset_loader.js'
+import { colors } from './data/colors.js'
 
 let gameInstance = null
 
@@ -95,7 +96,7 @@ async function init() {
   const app = new Application({
     width: GAME_WIDTH,
     height: GAME_HEIGHT,
-    backgroundColor: 0x1a1a2e,
+    backgroundColor: colors.background.battle,
     resolution: 2,
     autoDensity: true,
     antialias: true

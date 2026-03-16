@@ -2,6 +2,7 @@ import * as PIXI from 'pixi.js'
 import { Button } from './ui/button.js'
 import { soundManager } from './audio/sound_manager.js'
 import { FONT } from './data/fonts.js'
+import { colors } from './data/colors.js'
 
 const START_BG = '/assets/img/bg_full.jpg'
 
@@ -26,7 +27,7 @@ export class StartScreen {
 
   async loadBg() {
     const bg = new PIXI.Graphics()
-    bg.beginFill(0x1a1a2e)
+    bg.beginFill(colors.background.battle)
     bg.drawRect(0, 0, this.app.screen.width, this.app.screen.height)
     bg.endFill()
     this.container.addChild(bg)
@@ -72,7 +73,7 @@ export class StartScreen {
     this.loadingText = new PIXI.Text('', {
       fontFamily: FONT,
       fontSize: 24,
-      fill: 0xffffff,
+      fill: colors.ui.text.primary,
       align: 'center'
     })
     this.loadingText.anchor.set(0.5)

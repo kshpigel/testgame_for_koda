@@ -1,5 +1,6 @@
 import * as PIXI from 'pixi.js'
 import { FONT } from './data/fonts.js'
+import { colors } from './data/colors.js'
 
 export class LoadingScreen {
   constructor(app) {
@@ -12,7 +13,7 @@ export class LoadingScreen {
   async show() {
     // Чёрный фон
     const bg = new PIXI.Graphics()
-    bg.beginFill(0x1a1a2e)
+    bg.beginFill(colors.background.battle)
     bg.drawRect(0, 0, this.app.screen.width, this.app.screen.height)
     bg.endFill()
     this.container.addChild(bg)
@@ -21,7 +22,7 @@ export class LoadingScreen {
     const style = new PIXI.TextStyle({
       fontFamily: FONT,
       fontSize: 32,
-      fill: '#ffffff'
+      fill: colors.ui.text.primary
     })
     this.text = new PIXI.Text('Загрузка...', style)
     this.text.anchor.set(0.5)
@@ -47,7 +48,7 @@ export class LoadingScreen {
 
   drawSpinner(angle) {
     this.spinner.clear()
-    this.spinner.lineStyle(4, 0x4a9c6d)
+    this.spinner.lineStyle(4, colors.ui.panel.border)
     this.spinner.arc(0, 0, 20, angle, angle + 1.5)
   }
 

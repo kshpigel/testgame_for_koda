@@ -7,6 +7,7 @@ import { deck } from './data/deck.js'
 import { enemies } from './data/enemies/index.js'
 import { maps } from './data/maps.js'
 import { FONT } from './data/fonts.js'
+import { colors } from './data/colors.js'
 import { soundManager } from './audio/sound_manager.js'
 import { Button } from './ui/button.js'
 
@@ -76,7 +77,7 @@ export class Game {
     } else {
       // Резервный фон
       const bg = new PIXI.Graphics()
-      bg.beginFill(0x1a1a2e)
+      bg.beginFill(colors.background.battle)
       bg.drawRect(0, 0, this.app.screen.width, this.app.screen.height)
       bg.endFill()
       this.bgContainer.addChild(bg)
@@ -127,11 +128,11 @@ export class Game {
     
     battle.on('victory', (points) => {
       this.user.points += points
-      this.showMessage(`Победа! +${points} очков`, 0x00ff00)
+      this.showMessage(`Победа! +${points} очков`, colors.ui.text.victory)
     })
     
     battle.on('defeat', () => {
-      this.showMessage('Поражение!', 0xff0000)
+      this.showMessage('Поражение!', colors.ui.text.defeat)
     })
     
     this.screens['battle'] = battle
@@ -150,7 +151,7 @@ export class Game {
     const exitBtn = new Button('Сбежать', {
       width: 120,
       height: 40,
-      color: 0x8c1300,
+      color: colors.ui.button.exit,
       fontSize: 16,
       app: this.app,
       onClick: () => {
@@ -172,7 +173,7 @@ export class Game {
     }
   }
 
-  showMessage(text, color = 0xffffff) {
+  showMessage(text, color = colors.ui.text.primary) {
     const style = new PIXI.TextStyle({
       fontFamily: FONT,
       fontSize: 36,

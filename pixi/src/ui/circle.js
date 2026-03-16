@@ -1,13 +1,14 @@
 import * as PIXI from 'pixi.js'
 import { FONT } from '../data/fonts.js'
+import { colors } from '../data/colors.js'
 
 export class Circle extends PIXI.Container {
   constructor(options = {}) {
     super()
     
     this.radius = options.radius || 18
-    this.bgColor = options.bgColor || 0x4a7c4a
-    this.borderColor = options.borderColor || 0xffffff
+    this.bgColor = options.bgColor || colors.ui.circle.bg
+    this.borderColor = options.borderColor || colors.ui.circle.border
     this.borderWidth = options.borderWidth || 1
     this.text = options.text || ''
     this.fontSize = options.fontSize || 16
@@ -32,7 +33,7 @@ export class Circle extends PIXI.Container {
       fontFamily: FONT,
       fontSize: this.fontSize,
       fontWeight: 'bold',
-      fill: '#ffffff'
+      fill: colors.ui.text.primary
     })
     this.textObj.anchor.set(0.5)
     this.addChild(this.textObj)
