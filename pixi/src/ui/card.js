@@ -66,7 +66,7 @@ export class Card extends PIXI.Container {
     
     // === СЛОЙ 3: Картинка героя (image) ===
     this.heroImage = null
-    this.heroImageYRatio = -0.15 // 15% от высоты сверху
+    this.heroImageYRatio = -0.27 // 27% от высоты сверху
     
     // === СЛОЙ 4: Название карты ===
     const cardName = this.cardData.name || `Тип ${this.cardData.type}`

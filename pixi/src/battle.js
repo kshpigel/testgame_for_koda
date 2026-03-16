@@ -575,6 +575,8 @@ export class Battle extends EventEmitter {
       enemyContainer.addChild(enemySprite)
     }
     
+    this.container.addChild(enemyContainer)
+    
     // Имя врага с тенью
     const nameShadow = new PIXI.Text(this.enemyData.name, {
       fontFamily: FONT,
