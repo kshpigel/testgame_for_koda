@@ -231,13 +231,21 @@ export class Battle extends EventEmitter {
     const handAreaY = this.app.screen.height - 15
     const cardWidth = CARD_CONFIG.width
     const cardHeight = CARD_CONFIG.height
-    const spacing = -10
+    const spacing = -20
     const totalWidth = this.cards.length * (cardWidth + spacing) - spacing
-    const startX = (this.app.screen.width - totalWidth) / 2
+    const startX = (this.app.screen.width - totalWidth) / 2 + 80
+    const selectedOffset = cardHeight * 0.1 // 10% выдвижение
+    const maxAngle = 12 * (Math.PI / 180) // 12 градусов в радианах
+
+    const centerIndex = (this.cards.length - 1) / 2
 
     this.cards.forEach((card, index) => {
       card.targetX = startX + index * (cardWidth + spacing)
-      card.targetY = handAreaY
+      card.targetY = card.isSelected ? handAreaY - selectedOffset : handAreaY
+      
+      // Веер: угол зависит от расстояния от центра (инвертировано)
+      const distFromCenter = index - centerIndex
+      card.targetRotation = distFromCenter * maxAngle / Math.max(1, centerIndex)
     })
   }
 
@@ -257,6 +265,7 @@ export class Battle extends EventEmitter {
     }
     
     this.applyBuffs()
+    this.layoutCards()
     this.updateUI()
   }
 
@@ -555,10 +564,10 @@ export class Battle extends EventEmitter {
   renderEnemy() {
     const enemyContainer = new PIXI.Container()
     enemyContainer.x = this.app.screen.width / 2
-    enemyContainer.y = 180
+    enemyContainer.y = 280
     
-    // Изображение врага
-    const enemyMaxHeight = 200
+    // Изображение врага - увеличено на 40%
+    const enemyMaxHeight = 286
     if (this.assets && this.assets.enemy && this.assets.enemy.texture) {
       const enemySprite = new PIXI.Sprite(this.assets.enemy.texture)
       enemySprite.anchor.set(0.5, 1)
@@ -577,47 +586,48 @@ export class Battle extends EventEmitter {
     
     this.container.addChild(enemyContainer)
     
-    // Имя врага с тенью
+    // Имя врага - увеличено на 40%, сдвинуто на 170px, с тенью
     const nameShadow = new PIXI.Text(this.enemyData.name, {
       fontFamily: FONT,
-      fontSize: 28,
+      fontSize: 40,
       fontWeight: 'bold',
       fill: '#000000'
     })
     nameShadow.anchor.set(0.5, 1)
     nameShadow.x = enemyContainer.x + 2
-    nameShadow.y = 100 + 2
+    nameShadow.y = 250 + 2
     this.container.addChild(nameShadow)
     
     const nameStyle = new PIXI.TextStyle({
       fontFamily: FONT,
-      fontSize: 28,
+      fontSize: 40,
       fontWeight: 'bold',
       fill: '#ffffff'
     })
     const name = new PIXI.Text(this.enemyData.name, nameStyle)
     name.anchor.set(0.5, 1)
     name.x = enemyContainer.x
-    name.y = 100
+    name.y = 250
     this.container.addChild(name)
     
-    // Здоровье врага
+    // Здоровье врага - как кнопка (красный фон, белый текст, белый бордер), сдвинуто на 150px
     const healthBg = new PIXI.Graphics()
-    healthBg.beginFill(0x000000, 0.7)
-    healthBg.drawRoundedRect(enemyContainer.x - 80, 120, 160, 35, 10)
+    healthBg.lineStyle(1, 0xffffff)
+    healthBg.beginFill(0x8c1300)
+    healthBg.drawRoundedRect(enemyContainer.x - 115, 264, 230, 50, 14)
     healthBg.endFill()
     this.container.addChild(healthBg)
     
     const healthStyle = new PIXI.TextStyle({
       fontFamily: FONT,
-      fontSize: 24,
+      fontSize: 34,
       fontWeight: 'bold',
-      fill: '#ff6666'
+      fill: '#ffffff'
     })
-    const health = new PIXI.Text(`HP: ${this.enemyHealth}`, healthStyle)
+    const health = new PIXI.Text(`${this.enemyHealth}`, healthStyle)
     health.anchor.set(0.5)
     health.x = enemyContainer.x
-    health.y = 137
+    health.y = 288
     this.container.addChild(health)
     
     this.enemyHealthText = health
@@ -891,7 +901,7 @@ export class Battle extends EventEmitter {
 
   updateUI() {
     if (this.enemyHealthText) {
-      this.enemyHealthText.text = `HP: ${this.enemyHealth}`
+      this.enemyHealthText.text = `${this.enemyHealth}`
     }
     if (this.stepsText) {
       this.stepsText.text = `Ходы: ${this.cntSteps}`
@@ -930,6 +940,10 @@ export class Battle extends EventEmitter {
       }
       if (card.targetY !== undefined && Math.abs(card.y - card.targetY) > 0.5) {
         card.y += (card.targetY - card.y) * 0.15
+      }
+      // Плавное вращение (веер)
+      if (card.targetRotation !== undefined && Math.abs(card.rotation - card.targetRotation) > 0.002) {
+        card.rotation += (card.targetRotation - card.rotation) * 0.1
       }
     })
     
