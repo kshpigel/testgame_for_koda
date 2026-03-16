@@ -102,3 +102,7 @@
 
 ### 7. Улучшения UI
 - [ ] Drag&drop карт в руке
+
+### 8. Рефакторинг
+- [ ] battle.js → вынести EnemyDisplay, HandRenderer, DeckMenu, BattleUI
+- [ ] map.js → вынести MapNode, MapRenderer
