@@ -9,6 +9,7 @@ import { Button } from './ui/button.js'
 import { EnemyDisplay } from './ui/enemy_display.js'
 import { HandRenderer } from './ui/hand_renderer.js'
 import { DeckMenu } from './ui/deck_menu.js'
+import { BattleUI } from './ui/battle_ui.js'
 
 // Импорт ассетов
 const assets = {
@@ -35,6 +36,9 @@ export class Battle extends EventEmitter {
     // HandRenderer для управления картами в руке
     this.handRenderer = null
     
+    // BattleUI для кнопок и счётчиков
+    this.battleUI = null
+    
     this.maxCards = 5
     this.activeCards = 0
     this.cntReset = 3
@@ -52,14 +56,9 @@ export class Battle extends EventEmitter {
   setBlocked(blocked) {
     this.isBlocked = blocked
     
-    // Блокируем/разблокируем кнопки - только события
-    if (this.playBtn) this.playBtn.setDisabled(blocked)
-    if (this.resetBtn) this.resetBtn.setDisabled(blocked)
-    
-    // Блокируем колоду
-    if (this.deckContainer) {
-      this.deckContainer.eventMode = blocked ? 'none' : 'static'
-      this.deckContainer.cursor = blocked ? 'default' : 'pointer'
+    // Используем battleUI для блокировки
+    if (this.battleUI) {
+      this.battleUI.setBlocked(blocked)
     }
   }
 
@@ -554,8 +553,15 @@ export class Battle extends EventEmitter {
     }
     
     this.renderEnemy()
-    this.renderControls()
-    this.renderDeckInfo()
+    this.battleUI = new BattleUI(this.app, this.container, this.assets)
+    this.battleUI.render(
+      this.cntSteps,
+      this.cntReset,
+      this.currentDeck.length,
+      () => this.playCards(),
+      () => this.resetCards(),
+      () => this.showDeckMenu()
+    )
   }
 
   renderEnemy() {
@@ -612,86 +618,6 @@ export class Battle extends EventEmitter {
     this.resetsText = resetsText
   }
 
-  renderDeckInfo() {
-    // Колода с рубашкой
-    const deckContainer = new PIXI.Container()
-    deckContainer.x = this.app.screen.width - CARD_CONFIG.width - 30
-    deckContainer.y = this.app.screen.height - CARD_CONFIG.height - 40
-    deckContainer.eventMode = 'static'
-    deckContainer.cursor = 'pointer'
-    
-    // Карточка-рубашка
-    const cardW = CARD_CONFIG.width
-    const cardH = CARD_CONFIG.height
-    
-    const cardBack = new PIXI.Graphics()
-    cardBack.lineStyle(2, colors.ui.cardBack.borderNormal)
-    cardBack.beginFill(colors.ui.cardBack.normal)
-    cardBack.drawRoundedRect(0, 0, cardW, cardH, 8)
-    cardBack.endFill()
-    deckContainer.addChild(cardBack)
-    
-    // Текстура рубашки если загружена
-    if (this.assets && this.assets.cardBack && this.assets.cardBack.texture) {
-      const backSprite = new PIXI.Sprite(this.assets.cardBack.texture)
-      backSprite.width = cardW
-      backSprite.height = cardH
-      deckContainer.addChild(backSprite)
-    }
-    
-    // Кружочек с количеством карт
-    this.deckCountCircle = new Circle({
-      x: cardW/2 + 3,
-      y: cardH -10,
-      radius: 22,
-      bgColor: colors.card.circle.normal,
-      borderColor: colors.card.circle.border,
-      text: `${this.currentDeck.length}`
-    })
-    deckContainer.addChild(this.deckCountCircle)
-    
-    // Подпись "Колода"
-    const labelText = new PIXI.Text('Колода', {
-      fontFamily: FONT,
-      fontSize: 14,
-      fill: '#aaaaaa'
-    })
-    labelText.anchor.set(0.5)
-    labelText.x = cardW / 2
-    labelText.y = cardH + 20
-    deckContainer.addChild(labelText)
-    
-    // Hover эффект с анимацией scale
-    deckContainer.targetScale = 1
-    
-    deckContainer.on('pointerover', () => {
-      deckContainer.targetScale = 1.05
-      cardBack.clear()
-      cardBack.lineStyle(2, colors.ui.cardBack.borderHover)
-      cardBack.beginFill(colors.ui.cardBack.hover)
-      cardBack.drawRoundedRect(0, 0, cardW, cardH, 8)
-      cardBack.endFill()
-    })
-    
-    deckContainer.on('pointerout', () => {
-      deckContainer.targetScale = 1
-      cardBack.clear()
-      cardBack.lineStyle(2, colors.ui.cardBack.borderNormal)
-      cardBack.beginFill(colors.ui.cardBack.normal)
-      cardBack.drawRoundedRect(0, 0, cardW, cardH, 8)
-      cardBack.endFill()
-    })
-    
-    // Клик - показать меню колоды
-    deckContainer.on('pointerdown', () => {
-      soundManager.play('click')
-      this.showDeckMenu()
-    })
-    
-    this.container.addChild(deckContainer)
-    this.deckContainer = deckContainer
-  }
-
   showDeckMenu() {
     const deckMenu = new DeckMenu(this.app, this.currentDeck, this.cardTypes, this.assets, this.container)
     deckMenu.cardsInHand = this.cards.length
@@ -711,14 +637,10 @@ export class Battle extends EventEmitter {
 
   updateUI() {
     this.updateEnemyHealthDisplay()
-    if (this.stepsText) {
-      this.stepsText.text = `Ходы: ${this.cntSteps}`
-    }
-    if (this.resetsText) {
-      this.resetsText.text = `Сбросы: ${this.cntReset}`
-    }
-    if (this.deckCountCircle) {
-      this.deckCountCircle.setText(`${this.currentDeck.length}`)
+    if (this.battleUI) {
+      this.battleUI.updateSteps(this.cntSteps)
+      this.battleUI.updateResets(this.cntReset)
+      this.battleUI.updateDeckCount(this.currentDeck.length)
     }
     
     this.selectedCards.forEach(card => card.updateValue())
@@ -743,12 +665,9 @@ export class Battle extends EventEmitter {
       this.handRenderer.update()
     }
     
-    // Анимация scale для колоды
-    if (this.deckContainer && this.deckContainer.targetScale !== undefined) {
-      const diff = this.deckContainer.targetScale - this.deckContainer.scale.x
-      if (Math.abs(diff) > 0.001) {
-        this.deckContainer.scale.set(this.deckContainer.scale.x + diff * 0.15)
-      }
+    // Используем BattleUI для анимации колоды
+    if (this.battleUI) {
+      this.battleUI.update()
     }
   }
 
