@@ -10,6 +10,8 @@ import { EnemyDisplay } from './ui/enemy_display.js'
 import { HandRenderer } from './ui/hand_renderer.js'
 import { DeckMenu } from './ui/deck_menu.js'
 import { BattleUI } from './ui/battle_ui.js'
+import { CardAnimator } from './ui/card_animator.js'
+import { BattleEffects } from './ui/battle_effects.js'
 
 // Импорт ассетов
 const assets = {
@@ -38,6 +40,12 @@ export class Battle extends EventEmitter {
     
     // BattleUI для кнопок и счётчиков
     this.battleUI = null
+    
+    // CardAnimator для анимаций карт
+    this.cardAnimator = null
+    
+    // BattleEffects для эффектов
+    this.battleEffects = null
     
     this.maxCards = 5
     this.activeCards = 0
@@ -110,6 +118,8 @@ export class Battle extends EventEmitter {
     this.render()
     // Инициализируем HandRenderer ПОСЛЕ render(), когда контейнер добавлен
     this.handRenderer = new HandRenderer(this.app, this.cards, this.assets, this.cardTypes)
+    this.cardAnimator = new CardAnimator(this.app, this.container)
+    this.battleEffects = new BattleEffects(this.app, this.container, this.assets)
     this.app.stage.addChild(this.container)
     this.container.alpha = 0
     this.fadeIn()
