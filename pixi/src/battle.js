@@ -116,7 +116,6 @@ export class Battle extends EventEmitter {
   onAssetsLoaded() {
     this.prepareDeck()
     this.render()
-    // Инициализируем HandRenderer ПОСЛЕ render(), когда контейнер добавлен
     this.handRenderer = new HandRenderer(this.app, this.cards, this.assets, this.cardTypes)
     this.cardAnimator = new CardAnimator(this.app, this.container)
     this.battleEffects = new BattleEffects(this.app, this.container, this.assets)
@@ -193,7 +192,9 @@ export class Battle extends EventEmitter {
     
     // Небольшая задержка перед анимацией чтобы layoutCards отработал
     setTimeout(() => {
-      this.animateCardIn(card)
+      if (this.cardAnimator) {
+        this.cardAnimator.animateCardIn(card)
+      }
     }, 10)
   }
   
@@ -324,14 +325,28 @@ export class Battle extends EventEmitter {
     this.cntSteps--
     
     soundManager.play('attack')
-    this.showDamage(summ)
+    if (this.battleEffects) {
+      this.battleEffects.showDamage(summ)
+    }
     
     setTimeout(() => {
       if (this.enemyHealth <= 0) {
         this.enemyHealth = 0
-        this.showVictory()
+        if (this.battleEffects) {
+          this.battleEffects.showVictory(() => {
+            this.setBlocked(false)
+            this.emit('victory', this.enemyData.health + this.cntSteps * 10)
+            this.emit('end')
+          })
+        }
       } else if (this.cntSteps <= 0) {
-        this.showDefeat()
+        if (this.battleEffects) {
+          this.battleEffects.showDefeat(() => {
+            this.setBlocked(false)
+            this.emit('defeat')
+            this.emit('end')
+          })
+        }
       } else {
         this.resetSelectedCards()
       }
@@ -348,20 +363,22 @@ export class Battle extends EventEmitter {
     
     cardsToRemove.forEach((card, index) => {
       setTimeout(() => {
-        this.animateCardOut(card, () => {
-          this.cards = this.cards.filter(c => c !== card)
-          this.container.removeChild(card)
-          removedCount++
-          
-          // Когда все карты улетели - добираем новые
-          if (removedCount === cardsToRemove.length) {
-            const cardsNeeded = 8 - this.cards.length
-            if (cardsNeeded > 0) {
-              this.dealCards(cardsNeeded)
+        if (this.cardAnimator) {
+          this.cardAnimator.animateCardOut(card, () => {
+            this.cards = this.cards.filter(c => c !== card)
+            this.container.removeChild(card)
+            removedCount++
+            
+            // Когда все карты улетели - добираем новые
+            if (removedCount === cardsToRemove.length) {
+              const cardsNeeded = 8 - this.cards.length
+              if (cardsNeeded > 0) {
+                this.dealCards(cardsNeeded)
+              }
+              this.updateUI()
             }
-            this.updateUI()
-          }
-        })
+          })
+        }
       }, index * 100)
     })
     
@@ -380,19 +397,21 @@ export class Battle extends EventEmitter {
     
     cardsToRemove.forEach((card, index) => {
       setTimeout(() => {
-        this.animateCardOut(card, () => {
-          this.cards = this.cards.filter(c => c !== card)
-          this.container.removeChild(card)
-          removedCount++
-          
-          if (removedCount === cardsToRemove.length) {
-            const cardsNeeded = 8 - this.cards.length
-            if (cardsNeeded > 0) {
-              this.dealCards(cardsNeeded)
+        if (this.cardAnimator) {
+          this.cardAnimator.animateCardOut(card, () => {
+            this.cards = this.cards.filter(c => c !== card)
+            this.container.removeChild(card)
+            removedCount++
+            
+            if (removedCount === cardsToRemove.length) {
+              const cardsNeeded = 8 - this.cards.length
+              if (cardsNeeded > 0) {
+                this.dealCards(cardsNeeded)
+              }
+              this.updateUI()
             }
-            this.updateUI()
-          }
-        })
+          })
+        }
       }, index * 100)
     })
     

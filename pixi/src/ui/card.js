@@ -189,9 +189,7 @@ export class Card extends PIXI.Container {
   }
 
   onHover() {
-    if (this.isDisabled) return
-    
-    if (config.debug) console.log('Card hover:', this.cardData.type)
+    if (this.isDisabled || !config.debug) return
     soundManager.play('hover')
     
     if (!this.isSelected) {
