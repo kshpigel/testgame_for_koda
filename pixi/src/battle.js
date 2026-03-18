@@ -6,6 +6,7 @@ import { soundManager } from './audio/sound_manager.js'
 import { Card, CARD_CONFIG } from './ui/card.js'
 import { Circle } from './ui/circle.js'
 import { Button } from './ui/button.js'
+import { EnemyDisplay } from './ui/enemy_display.js'
 
 // Импорт ассетов
 const assets = {
@@ -562,75 +563,20 @@ export class Battle extends EventEmitter {
   }
 
   renderEnemy() {
-    const enemyContainer = new PIXI.Container()
-    enemyContainer.x = this.app.screen.width / 2
-    enemyContainer.y = 280
-    
-    // Изображение врага - увеличено на 40%
-    const enemyMaxHeight = 286
-    if (this.assets && this.assets.enemy && this.assets.enemy.texture) {
-      const enemySprite = new PIXI.Sprite(this.assets.enemy.texture)
-      enemySprite.anchor.set(0.5, 1)
-      const scale = Math.min(1, enemyMaxHeight / enemySprite.texture.height)
-      enemySprite.scale.set(scale)
-      enemySprite.y = 0
-      enemyContainer.addChild(enemySprite)
-    } else if (this.enemyData.image) {
-      const enemySprite = PIXI.Sprite.from(this.enemyData.image)
-      enemySprite.anchor.set(0.5, 1)
-      const scale = Math.min(1, enemyMaxHeight / enemySprite.texture.height)
-      enemySprite.scale.set(scale)
-      enemySprite.y = 0
-      enemyContainer.addChild(enemySprite)
+    // Используем EnemyDisplay
+    this.enemyDisplay = new EnemyDisplay(this.app, this.enemyData, this.assets)
+    this.enemyDisplay.render()
+    this.container.addChild(this.enemyDisplay.getContainer())
+    this.updateEnemyHealthDisplay()
+  }
+
+  updateEnemyHealthDisplay() {
+    if (this.enemyDisplay) {
+      this.enemyDisplay.updateHealth(this.enemyHealth)
     }
-    
-    this.container.addChild(enemyContainer)
-    
-    // Имя врага - увеличено на 40%, сдвинуто на 170px, с тенью
-    const nameShadow = new PIXI.Text(this.enemyData.name, {
-      fontFamily: FONT,
-      fontSize: 40,
-      fontWeight: 'bold',
-      fill: '#000000'
-    })
-    nameShadow.anchor.set(0.5, 1)
-    nameShadow.x = enemyContainer.x + 2
-    nameShadow.y = 250 + 2
-    this.container.addChild(nameShadow)
-    
-    const nameStyle = new PIXI.TextStyle({
-      fontFamily: FONT,
-      fontSize: 40,
-      fontWeight: 'bold',
-      fill: colors.ui.text.primary
-    })
-    const name = new PIXI.Text(this.enemyData.name, nameStyle)
-    name.anchor.set(0.5, 1)
-    name.x = enemyContainer.x
-    name.y = 250
-    this.container.addChild(name)
-    
-    // Здоровье врага - как кнопка (красный фон, белый текст, белый бордер), сдвинуто на 150px
-    const healthBg = new PIXI.Graphics()
-    healthBg.lineStyle(1, colors.ui.text.primary)
-    healthBg.beginFill(colors.ui.button.reset)
-    healthBg.drawRoundedRect(enemyContainer.x - 115, 264, 230, 50, 14)
-    healthBg.endFill()
-    this.container.addChild(healthBg)
-    
-    const healthStyle = new PIXI.TextStyle({
-      fontFamily: FONT,
-      fontSize: 34,
-      fontWeight: 'bold',
-      fill: colors.ui.text.primary
-    })
-    const health = new PIXI.Text(`${this.enemyHealth}`, healthStyle)
-    health.anchor.set(0.5)
-    health.x = enemyContainer.x
-    health.y = 288
-    this.container.addChild(health)
-    
-    this.enemyHealthText = health
+    if (this.enemyHealthText) {
+      this.enemyHealthText.text = `${this.enemyHealth}`
+    }
   }
 
   renderControls() {
@@ -900,9 +846,7 @@ export class Battle extends EventEmitter {
   }
 
   updateUI() {
-    if (this.enemyHealthText) {
-      this.enemyHealthText.text = `${this.enemyHealth}`
-    }
+    this.updateEnemyHealthDisplay()
     if (this.stepsText) {
       this.stepsText.text = `Ходы: ${this.cntSteps}`
     }
