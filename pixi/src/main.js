@@ -7,8 +7,8 @@ import { colors } from './data/colors.js'
 let gameInstance = null
 
 // Константы дизайна
-const GAME_WIDTH = 1280
-const GAME_HEIGHT = 720
+const GAME_WIDTH = 1600
+const GAME_HEIGHT = 900
 const GAME_ASPECT = GAME_WIDTH / GAME_HEIGHT
 
 async function loadFont() {
@@ -25,59 +25,47 @@ async function loadFont() {
   }
 }
 
-// Адаптивный ресайз с letterbox (black bars)
+// Адаптивный ресайз с центрированием и макс. шириной
 function setupResize(app) {
   const container = document.getElementById('game-container')
-  const letterbox = document.getElementById('letterbox')
   
   function updateSize() {
     const winW = window.innerWidth
     const winH = window.innerHeight
-    const winAspect = winW / winH
     
-    let scale, offsetX = 0, offsetY = 0
+    // Максимальная ширина 1600
+    const maxWidth = Math.min(winW, 1600)
+    const maxHeight = Math.min(winH, 900)
     
-    if (winAspect > GAME_ASPECT) {
-      // Экран шире - добавляем боковые полосы
-      scale = winH / GAME_HEIGHT
-      offsetX = (winW - GAME_WIDTH * scale) / 2
+    // Соотношение сторон
+    const targetAspect = GAME_WIDTH / GAME_HEIGHT
+    const winAspect = maxWidth / maxHeight
+    
+    let scale, renderW, renderH
+    
+    if (winAspect > targetAspect) {
+      // Экран шире - ограничиваем по высоте
+      scale = maxHeight / GAME_HEIGHT
+      renderH = GAME_HEIGHT
+      renderW = GAME_WIDTH
     } else {
-      // Экран уже - добавляем верхние/нижние полосы
-      scale = winW / GAME_WIDTH
-      offsetY = (winH - GAME_HEIGHT * scale) / 2
+      // Экран уже - ограничиваем по ширине
+      scale = maxWidth / GAME_WIDTH
+      renderH = GAME_HEIGHT
+      renderW = GAME_WIDTH
     }
     
-    // Масштабируем canvas
-    app.view.style.width = `${GAME_WIDTH * scale}px`
-    app.view.style.height = `${GAME_HEIGHT * scale}px`
-    app.view.style.marginLeft = `${offsetX}px`
-    app.view.style.marginTop = `${offsetY}px`
-    
-    // Позиционируем letterbox
-    if (letterbox) {
-      if (winAspect > GAME_ASPECT) {
-        // Боковые полосы
-        letterbox.style.left = '0'
-        letterbox.style.top = '0'
-        letterbox.style.width = `${offsetX}px`
-        letterbox.style.height = '100%'
-        letterbox.style.right = 'auto'
-        letterbox.style.bottom = 'auto'
-      } else {
-        // Верхние/нижние полосы
-        letterbox.style.top = '0'
-        letterbox.style.left = '0'
-        letterbox.style.width = '100%'
-        letterbox.style.height = `${offsetY}px`
-        letterbox.style.right = 'auto'
-        letterbox.style.bottom = 'auto'
-      }
-    }
+    // Применяем масштаб и центрируем
+    app.view.style.position = 'absolute'
+    app.view.style.left = '50%'
+    app.view.style.top = '50%'
+    app.view.style.transform = `translate(-50%, -50%) scale(${scale})`
+    app.view.style.transformOrigin = 'center center'
     
     // Сохраняем scale для UI элементов
     app.gameScale = scale
     
-    // Обновляем размер рендерера
+    // Обновляем размер рендерера (всегда 1600x900)
     app.renderer.resize(GAME_WIDTH, GAME_HEIGHT)
     
     // Уведомляем игру

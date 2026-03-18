@@ -107,9 +107,14 @@ export class StartScreen {
   }
 
   resize(width, height) {
-    this.container.removeChildren()
-    this.loadBg()
-    this.createButton()
-    this.createLoadingText()
+    // Не пересоздаём - только пересчитываем позиции кнопки и текста
+    if (this.button) {
+      this.button.x = this.app.screen.width / 2
+      this.button.y = this.app.screen.height / 2
+    }
+    if (this.loadingText) {
+      this.loadingText.x = this.app.screen.width / 2
+      this.loadingText.y = this.app.screen.height / 2 + 100
+    }
   }
 }

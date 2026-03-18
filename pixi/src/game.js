@@ -114,6 +114,7 @@ export class Game {
     this.hideCurrentScreen()
     soundManager.play('battleStart')
     soundManager.stopMusic()
+    soundManager.playMusic('battleBg')
     const battle = new Battle(this.app, deck, card_types, enemyData, this)
     
     battle.on('end', () => {

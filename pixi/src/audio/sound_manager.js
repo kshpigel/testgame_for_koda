@@ -6,7 +6,8 @@ const SOUNDS = {
   battleVictory: { src: '/assets/sounds/battle_victory.mp3', start: 4 },
   battleFail: { src: '/assets/sounds/battle_fail.mp3', start: 0.1 },
   mapBg: { src: '/assets/sounds/map_bg.mp3', start: 0 },
-  musicBg: { src: '/assets/sounds/music_bg.mp3', start: 0 }
+  musicBg: { src: '/assets/sounds/music_bg.mp3', start: 0 },
+  battleBg: { src: '/assets/sounds/battle_bg.mp3', start: 0 }
 }
 
 class SoundManager {

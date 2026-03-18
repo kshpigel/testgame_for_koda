@@ -411,6 +411,6 @@ export class MapScreen extends EventEmitter {
 
   resize(width, height) {
     this.cellSize = Math.min(width, height) / 20
-    this.render()
+    // Не пересоздаём весь UI - просто пересчитываем размер
   }
 }

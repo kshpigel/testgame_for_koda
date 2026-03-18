@@ -993,6 +993,7 @@ export class Battle extends EventEmitter {
   }
 
   resize(width, height) {
-    this.render()
+    // Не пересоздаём весь UI - только пересчитываем позиции
+    this.layoutCards()
   }
 }

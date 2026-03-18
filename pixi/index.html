@@ -23,17 +23,34 @@
     }
     #game-container {
       position: relative;
+      width: 100%;
+      height: 100%;
+      max-width: 1600px;
+      max-height: 900px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    #game-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('/assets/img/battle_bg.jpg') center center no-repeat;
+      background-size: cover;
+      filter: blur(2px);
+      z-index: 0;
     }
     #letterbox {
-      position: absolute;
-      background: #1a1a2e;
-      pointer-events: none;
-      z-index: 10;
+      display: none;
     }
     canvas {
       display: block;
       position: relative;
       z-index: 1;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.25);
     }
   </style>
 </head>
