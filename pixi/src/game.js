@@ -8,6 +8,7 @@ import { enemies } from './data/enemies/index.js'
 import { maps } from './data/maps.js'
 import { FONT } from './data/fonts.js'
 import { colors } from './data/colors.js'
+import { GAME_VERSION } from './data/version.js'
 import { soundManager } from './audio/sound_manager.js'
 import { Button } from './ui/button.js'
 
@@ -39,6 +40,10 @@ export class Game {
     
     // Загрузка главного фона
     this.loadMainBg()
+    
+    // Версия игры
+    this.versionText = null
+    this.showVersion()
   }
 
   setLoadingCallback(callback) {
@@ -204,6 +209,19 @@ export class Game {
     setTimeout(fadeOut, 2000)
   }
 
+  showVersion() {
+    this.versionText = new PIXI.Text(`v${GAME_VERSION}`, {
+      fontFamily: FONT,
+      fontSize: 12,
+      fill: '#ffffff',
+      alpha: 0.5
+    })
+    this.versionText.anchor.set(1, 1)
+    this.versionText.x = this.app.screen.width - 10
+    this.versionText.y = this.app.screen.height - 10
+    this.app.stage.addChild(this.versionText)
+  }
+
   resize(width, height, scale = 1) {
     this.renderMainBg()
     if (this.startScreen && this.startScreen.resize) {
@@ -211,6 +229,11 @@ export class Game {
     }
     if (this.currentScreen && this.currentScreen.resize) {
       this.currentScreen.resize(width, height, scale)
+    }
+    // Обновляем позицию версии
+    if (this.versionText) {
+      this.versionText.x = this.app.screen.width - 10
+      this.versionText.y = this.app.screen.height - 10
     }
   }
 
