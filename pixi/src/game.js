@@ -163,8 +163,17 @@ export class Game {
       this.showMessage(`Победа! +${points} очков`, colors.ui.text.victory)
     })
     
-    battle.on('defeat', () => {
+    battle.on('defeat', async () => {
       this.showMessage('Поражение!', colors.ui.text.defeat)
+      // Ждём завершения анимации поражения
+      await new Promise(r => setTimeout(r, 1500))
+      // Возврат на базу и удаление карты (как при победе над последним врагом)
+      this.isBattleActive = false
+      if (this.screens['map']) {
+        this.screens['map'].cleanup()
+        delete this.screens['map']
+      }
+      this.showBase()
     })
     
     this.screens['battle'] = battle
