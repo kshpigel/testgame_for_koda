@@ -94,7 +94,6 @@ export class StartScreen {
     this.button.visible = true
     this.loadingText.visible = false
     this.container.visible = true
-    soundManager.playMusic('musicBg')
   }
 
   scaleToCover(sprite, targetWidth, targetHeight) {
