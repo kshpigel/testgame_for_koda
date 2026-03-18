@@ -7,8 +7,8 @@ import { Circle } from './circle.js'
 
 // Настройки карты
 const CARD_CONFIG = {
-  width: 120,
-  height: 170,
+  width: 150,
+  height: 213,
   cornerRadius: 10,
   selectedScale: 1.05,
   hoverScale: 1.05,
@@ -72,7 +72,7 @@ export class Card extends PIXI.Container {
     const cardName = this.cardData.name || `Тип ${this.cardData.type}`
     this.nameText = new PIXI.Text(cardName, {
       fontFamily: FONT,
-      fontSize: 14,
+      fontSize: 17,
       fontWeight: 'bold',
       fill: colors.ui.text.primary
     })
@@ -83,8 +83,8 @@ export class Card extends PIXI.Container {
     // === СЛОЙ 5: Кружочек с силой (относительно ширины карты) ===
     this.valueCircle = new Circle({
       xRatio: -0.45, // 45% от ширины слева
-      yRatio: 0.2,   // 20% от высоты сверху
-      radius: 18,
+      yRatio: 0.18,   // 20% от высоты сверху
+      radius: 20,
       bgColor: colors.card.circle.normal,
       borderColor: colors.card.circle.border,
       text: `${this.cardData.value}`
@@ -94,7 +94,7 @@ export class Card extends PIXI.Container {
     // === СЛОЙ 6: Бафф (относительно размеров карты) ===
     this.buffText = new PIXI.Text('', {
       fontFamily: FONT,
-      fontSize: 18,
+      fontSize: 20,
       fontWeight: 'bold',
       fill: '#66ff66'
     })

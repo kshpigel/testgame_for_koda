@@ -228,7 +228,7 @@ export class Battle extends EventEmitter {
   }
 
   layoutCards() {
-    const handAreaY = this.app.screen.height - 15
+    const handAreaY = this.app.screen.height - 130
     const cardWidth = CARD_CONFIG.width
     const cardHeight = CARD_CONFIG.height
     const spacing = -20
@@ -634,7 +634,7 @@ export class Battle extends EventEmitter {
   }
 
   renderControls() {
-    const btnY = this.app.screen.height - 280
+    const btnY = this.app.screen.height - 60
     
     // Кнопка "Ход"
     this.playBtn = this.createButton('Сделать ход!', colors.ui.button.play, () => this.playCards())
