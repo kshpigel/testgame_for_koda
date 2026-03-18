@@ -7,6 +7,7 @@ import { Card, CARD_CONFIG } from './ui/card.js'
 import { Circle } from './ui/circle.js'
 import { Button } from './ui/button.js'
 import { EnemyDisplay } from './ui/enemy_display.js'
+import { HandRenderer } from './ui/hand_renderer.js'
 
 // Импорт ассетов
 const assets = {
@@ -29,6 +30,9 @@ export class Battle extends EventEmitter {
     this.cards = []
     this.selectedCards = []
     this.currentDeck = []
+    
+    // HandRenderer для управления картами в руке
+    this.handRenderer = null
     
     this.maxCards = 5
     this.activeCards = 0
@@ -104,6 +108,8 @@ export class Battle extends EventEmitter {
   onAssetsLoaded() {
     this.prepareDeck()
     this.render()
+    // Инициализируем HandRenderer ПОСЛЕ render(), когда контейнер добавлен
+    this.handRenderer = new HandRenderer(this.app, this.cards, this.assets, this.cardTypes)
     this.app.stage.addChild(this.container)
     this.container.alpha = 0
     this.fadeIn()
@@ -140,7 +146,7 @@ export class Battle extends EventEmitter {
   }
 
   addCard(cardData) {
-    const card = new Card(cardData, { 
+    const card = new Card(cardData, {
       handIndex: this.cards.length,
       width: CARD_CONFIG.width,
       height: CARD_CONFIG.height
@@ -170,10 +176,15 @@ export class Battle extends EventEmitter {
     
     // Добавляем в массив и рассчитываем позицию
     this.cards.push(card)
+    
+    // Обновляем HandRenderer с актуальным массивом карт
+    this.handRenderer = new HandRenderer(this.app, this.cards, this.assets, this.cardTypes)
     this.layoutCards()
     
-    // Анимация появления карты - летит из колоды в руку
-    this.animateCardIn(card)
+    // Небольшая задержка перед анимацией чтобы layoutCards отработал
+    setTimeout(() => {
+      this.animateCardIn(card)
+    }, 10)
   }
   
   animateCardIn(card) {
@@ -229,25 +240,9 @@ export class Battle extends EventEmitter {
   }
 
   layoutCards() {
-    const handAreaY = this.app.screen.height - 130
-    const cardWidth = CARD_CONFIG.width
-    const cardHeight = CARD_CONFIG.height
-    const spacing = -20
-    const totalWidth = this.cards.length * (cardWidth + spacing) - spacing
-    const startX = (this.app.screen.width - totalWidth) / 2 + 80
-    const selectedOffset = cardHeight * 0.1 // 10% выдвижение
-    const maxAngle = 12 * (Math.PI / 180) // 12 градусов в радианах
-
-    const centerIndex = (this.cards.length - 1) / 2
-
-    this.cards.forEach((card, index) => {
-      card.targetX = startX + index * (cardWidth + spacing)
-      card.targetY = card.isSelected ? handAreaY - selectedOffset : handAreaY
-      
-      // Веер: угол зависит от расстояния от центра (инвертировано)
-      const distFromCenter = index - centerIndex
-      card.targetRotation = distFromCenter * maxAngle / Math.max(1, centerIndex)
-    })
+    if (this.handRenderer) {
+      this.handRenderer.layoutCards()
+    }
   }
 
   onCardClick(card) {
@@ -874,22 +869,10 @@ export class Battle extends EventEmitter {
   }
 
   gameLoop() {
-    // Обновляем все карты (включая позиции)
-    this.cards.forEach(card => {
-      card.update()
-      
-      // Плавное перемещение к целевой позиции
-      if (card.targetX !== undefined && Math.abs(card.x - card.targetX) > 0.5) {
-        card.x += (card.targetX - card.x) * 0.15
-      }
-      if (card.targetY !== undefined && Math.abs(card.y - card.targetY) > 0.5) {
-        card.y += (card.targetY - card.y) * 0.15
-      }
-      // Плавное вращение (веер)
-      if (card.targetRotation !== undefined && Math.abs(card.rotation - card.targetRotation) > 0.002) {
-        card.rotation += (card.targetRotation - card.rotation) * 0.1
-      }
-    })
+    // Используем HandRenderer для обновления карт
+    if (this.handRenderer) {
+      this.handRenderer.update()
+    }
     
     // Анимация scale для колоды
     if (this.deckContainer && this.deckContainer.targetScale !== undefined) {
