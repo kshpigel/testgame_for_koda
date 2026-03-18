@@ -5,6 +5,7 @@ import { config } from './data/config.js'
 import { FONT } from './data/fonts.js'
 import { MapNode } from './ui/map_node.js'
 import { MapRenderer } from './ui/map_renderer.js'
+import { Button } from './ui/button.js'
 
 export class MapScreen extends EventEmitter {
   constructor(app, mapData, enemies, game) {
@@ -49,6 +50,7 @@ export class MapScreen extends EventEmitter {
 
   onAssetsLoaded() {
     this.render()
+    this.afterRender()
     this.app.stage.addChild(this.container)
     this.container.alpha = 0
     this.fadeIn()
@@ -58,10 +60,33 @@ export class MapScreen extends EventEmitter {
     if (this.assets) {
       console.log('Map show, currentEnemyIndex:', this.currentEnemyIndex)
       this.render()
+      this.afterRender()
       this.app.stage.addChild(this.container)
       this.container.alpha = 0
       this.fadeIn()
     }
+  }
+  
+  afterRender() {
+    this.addExitButton()
+  }
+  
+  addExitButton() {
+    const exitBtn = new Button('Покинуть', {
+      width: 120,
+      height: 40,
+      color: colors.ui.button.exit,
+      fontSize: 16,
+      app: this.app,
+      onClick: () => {
+        this.emit('exit_to_base')
+      }
+    })
+    
+    exitBtn.x = this.app.screen.width - 140
+    exitBtn.y = 50
+    
+    this.container.addChild(exitBtn)
   }
 
   hide() {
@@ -168,6 +193,12 @@ export class MapScreen extends EventEmitter {
 
   disableCurrentEnemy() {
     this.currentEnemyIndex++
+  }
+  
+  isLastEnemyDefeated() {
+    // Текущий индекс уже увеличен после победы
+    // Если мы победили врага с индексом enemies.length - 1 (последний)
+    return this.currentEnemyIndex >= this.enemies.length
   }
 
   cleanup() {

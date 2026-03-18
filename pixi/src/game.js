@@ -2,6 +2,7 @@ import * as PIXI from 'pixi.js'
 import { Battle } from './battle.js'
 import { MapScreen } from './map.js'
 import { StartScreen } from './start_screen.js'
+import { BaseScreen } from './base_screen.js'
 import { card_types } from './data/card_types/index.js'
 import { deck } from './data/deck.js'
 import { enemies } from './data/enemies/index.js'
@@ -92,8 +93,26 @@ export class Game {
   async start() {
     console.log('Game starting after loading...')
     
-    // Загрузка завершена - показываем карту
-    this.showMap()
+    // Загрузка завершена - показываем базу
+    this.showBase()
+  }
+
+  showBase() {
+    this.hideCurrentScreen()
+    soundManager.stopMusic()
+    
+    // Удаляем старую карту, чтобы создать новую
+    if (this.screens['map']) {
+      this.screens['map'].cleanup()
+      delete this.screens['map']
+    }
+    
+    const baseScreen = new BaseScreen(this.app)
+    baseScreen.on('start_game', () => this.showMap())
+    baseScreen.init()
+    
+    this.screens['base'] = baseScreen
+    this.currentScreen = baseScreen
   }
 
   showMap() {
@@ -107,6 +126,7 @@ export class Game {
       const randomMap = maps[Math.floor(Math.random() * maps.length)]
       mapScreen = new MapScreen(this.app, randomMap, enemies, this)
       mapScreen.on('enemy_click', (enemyData) => this.initBattle(enemyData))
+      mapScreen.on('exit_to_base', () => this.showBase())
       this.screens['map'] = mapScreen
     }
     
@@ -127,6 +147,12 @@ export class Game {
       // Обновляем карту после боя
       if (this.screens['map']) {
         this.screens['map'].disableCurrentEnemy()
+        
+        // Если это был последний враг - возвращаемся на базу
+        if (this.screens['map'].isLastEnemyDefeated()) {
+          this.showBase()
+          return
+        }
       }
       this.showMap()
       soundManager.playMusic('mapBg')
