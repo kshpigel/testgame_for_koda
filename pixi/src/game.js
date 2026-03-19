@@ -4,7 +4,8 @@ import { MapScreen } from './map.js'
 import { StartScreen } from './start_screen.js'
 import { BaseScreen } from './base_screen.js'
 import { card_types } from './data/card_types/index.js'
-import { deck } from './data/deck.js'
+import { getDeckByCode, deck as defaultDeck } from './data/deck.js'
+import { player } from './data/player.js'
 import { enemies } from './data/enemies/index.js'
 import { maps } from './data/maps.js'
 import { FONT } from './data/fonts.js'
@@ -21,7 +22,6 @@ export class Game {
     this.app = app
     this.screens = {}
     this.currentScreen = null
-    this.user = { points: 0 }
     this.isBattleActive = false
     this.loadingCallback = null
 
@@ -140,7 +140,10 @@ export class Game {
     soundManager.play('battleStart')
     soundManager.stopMusic()
     soundManager.playMusic('battleBg')
-    const battle = new Battle(this.app, deck, card_types, enemyData, this)
+    
+    // Получаем колоду по коду игрока
+    const playerDeck = getDeckByCode(player.deckCode)
+    const battle = new Battle(this.app, playerDeck.cards, card_types, enemyData, this)
     
     battle.on('end', () => {
       this.isBattleActive = false
@@ -150,6 +153,7 @@ export class Game {
         
         // Если это был последний враг - возвращаемся на базу
         if (this.screens['map'].isLastEnemyDefeated()) {
+          player.addMap(1) // +1 пройденый портал
           this.showBase()
           return
         }
@@ -159,8 +163,9 @@ export class Game {
     })
     
     battle.on('victory', (points) => {
-      this.user.points += points
-      this.showMessage(`Победа! +${points} очков`, colors.ui.text.victory)
+      player.addGold(points)
+      player.addWin()
+      this.showMessage(`Победа! +${points} золота`, colors.ui.text.victory)
     })
     
     battle.on('defeat', async () => {

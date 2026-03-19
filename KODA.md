@@ -49,6 +49,14 @@
 - CSS: game-container на всю ширину/высоту, фон battle_bg.jpg в ::before с blur 2px, canvas тень + центрирование, letterbox скрыт
 - Удалён musicBg со стартового экрана
 - При поражении — возврат на базу и удаление карты
+- Добавлены планы: CLIENT_SERVER_PLAN.md, SCALING_PLAN.md
+- Клиент-серверная архитектура с client-side compute + server-side verification
+- Добавлен класс Player (data/player.js) с localStorage
+  - deckCode, gold, crystals, name, wins, maps, baseLevel, cards
+  - Методы: load(), save(), reset(), addGold(), addCrystals(), addWin(), addMap()
+- Добавлены 3 колоды в data/deck.js (ID 1-3)
+- Интеграция Player в game.js
+- При победе над боссом: +золото, +1 победа, +1 пройденый портал
 
 ---
 

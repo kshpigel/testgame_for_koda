@@ -102,7 +102,9 @@ const colorsData = {
       secondary: '#cccccc',
       damage: '#ff4444',
       victory: '#00ff00',
-      defeat: '#ff0000'
+      defeat: '#ff0000',
+      gold: '#ffd700',
+      crystals: '#00bfff'
     }
   },
   

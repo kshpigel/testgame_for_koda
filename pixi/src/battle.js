@@ -59,6 +59,9 @@ export class Battle extends EventEmitter {
     
     this.isAnimating = false
     this.isBlocked = false
+    
+    // Счётчик сыгранных карт за бой
+    this.cardsPlayedThisBattle = 0
   }
 
   setBlocked(blocked) {

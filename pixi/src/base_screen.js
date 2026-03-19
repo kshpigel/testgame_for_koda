@@ -4,6 +4,7 @@ import { EventEmitter } from 'events'
 import { FONT } from './data/fonts.js'
 import { colors } from './data/colors.js'
 import { soundManager } from './audio/sound_manager.js'
+import { player } from './data/player.js'
 
 const ASSETS = {
   bg: '/assets/img/base_bg.png',
@@ -88,6 +89,59 @@ export class BaseScreen extends EventEmitter {
 
     // Портал - 7/10 по горизонтали, 3/10 по вертикали
     this.createPortal()
+    
+    // Информация об игроке (левый верхний угол)
+    this.createPlayerInfo()
+  }
+
+  createPlayerInfo() {
+    const padding = 10
+    const fontSize = 14
+    const lineHeight = 18
+    
+    const text1 = new PIXI.Text(player.name, {
+      fontFamily: FONT,
+      fontSize: fontSize,
+      fill: colors.ui.text.primary
+    })
+    
+    const text2 = new PIXI.Text(`💰 ${player.gold}`, {
+      fontFamily: FONT,
+      fontSize: fontSize,
+      fill: colors.ui.text.gold
+    })
+    
+    const text3 = new PIXI.Text(`💎 ${player.crystals}`, {
+      fontFamily: FONT,
+      fontSize: fontSize,
+      fill: colors.ui.text.crystals
+    })
+    
+    // Фон
+    const totalWidth = text1.width + text2.width + text3.width + padding * 4
+    const height = lineHeight + padding * 2
+    
+    const bg = new PIXI.Graphics()
+    bg.beginFill(0x000000, 0.25)
+    bg.drawRoundedRect(0, 0, totalWidth, height, 8)
+    bg.endFill()
+    bg.x = 10
+    bg.y = 10
+    this.container.addChild(bg)
+    
+    // Размещаем горизонтально
+    text1.x = padding
+    text1.y = padding
+    
+    text2.x = padding + text1.width + 20
+    text2.y = padding
+    
+    text3.x = padding + text1.width + text2.width + 40
+    text3.y = padding
+    
+    this.container.addChild(text1, text2, text3)
+    
+    this.playerInfoContainer = bg
   }
 
   createPortal() {
