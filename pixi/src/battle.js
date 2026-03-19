@@ -283,23 +283,56 @@ export class Battle extends EventEmitter {
     // Полностью очищаем все баффы
     this.cards.forEach(card => card.clearBuffs())
     
+    // Сбрасываем флаг keepSteps
+    this.keepStepsActive = false
+    
     // Применяем баффы от всех карт в руке
     this.cards.forEach(card => {
       const cardType = this.cardTypes.find(t => t.type === card.cardData.type)
-      if (cardType && cardType.getBuff) {
-        cardType.getBuff(card, this)
+      if (cardType && cardType.buff) {
+        // Используем новую систему баффов
+        const results = cardType.buff.apply(card, this.selectedCards, this.cards, this)
+        
+        // Применяем результаты баффа
+        results.forEach(({ card: targetCard, value, isSet }) => {
+          targetCard.addBuff(card.id, card.cardData.type, value, isSet)
+        })
+        
+        // Проверяем специальные баффы (KeepSteps, ExactTypeAndDiscard)
+        if (cardType.buff.checkCondition && cardType.buff.checkCondition(card, this.selectedCards, this.cards, this)) {
+          if (cardType.buff.isSpecial && cardType.buff.isSpecial()) {
+            const action = cardType.buff.getSpecialAction()
+            if (action === 'keepSteps') {
+              this.keepStepsActive = true
+            }
+            // discardFromDeck вызывается после хода, а не при выборе
+          }
+        }
+      }
+    })
+    
+    // Сохраняем баффы для сброса после хода
+    this.pendingDiscards = []
+    this.cards.forEach(card => {
+      const cardType = this.cardTypes.find(t => t.type === card.cardData.type)
+      if (cardType && cardType.buff && cardType.buff.checkCondition && 
+          cardType.buff.checkCondition(card, this.selectedCards, this.cards, this)) {
+        if (cardType.buff.isSpecial && cardType.buff.isSpecial()) {
+          const action = cardType.buff.getSpecialAction()
+          if (action === 'discardFromDeck') {
+            this.pendingDiscards.push(cardType.buff)
+          }
+        }
       }
     })
   }
 
   applySkills() {
-    // Тип 6: Лучница - если в руке 4+ лучниц, добавляется +1 ход
-    const archerCount = this.selectedCards.filter(c => c.cardData.type === 6).length
-    if (archerCount >= 4 && archerCount === this.selectedCards.length) {
-      this.cntSteps++
-      setTimeout(() => {
-        console.log('Ход прибавлен!')
-      }, 100)
+    // Если активен бафф KeepSteps - не тратим ход
+    if (this.keepStepsActive) {
+      console.log('Бафф KeepSteps активен - ход не тратится')
+      this.keepStepsActive = false // Сбрасываем для следующего хода
+      return true
     }
     
     // Вызываем getSkill из cardTypes для каждой выбранной карты
@@ -309,6 +342,8 @@ export class Battle extends EventEmitter {
         cardType.getSkill(selectedCard, this)
       }
     })
+    
+    return false
   }
 
   playCards() {
@@ -317,7 +352,7 @@ export class Battle extends EventEmitter {
     this.isAnimating = true
     
     // Применяем скиллы перед ходом
-    this.applySkills()
+    const skipStep = this.applySkills()
     
     let summ = 0
     this.selectedCards.forEach(card => {
@@ -325,7 +360,9 @@ export class Battle extends EventEmitter {
     })
     
     this.enemyHealth -= summ
-    this.cntSteps--
+    if (!skipStep) {
+      this.cntSteps--
+    }
     
     soundManager.play('attack')
     if (this.battleEffects) {
@@ -351,6 +388,15 @@ export class Battle extends EventEmitter {
           })
         }
       } else {
+        // Выполняем отложенный сброс карт из колоды (Берсерк и т.п.)
+        if (this.pendingDiscards) {
+          this.pendingDiscards.forEach(buff => {
+            if (buff.discardFromDeck) {
+              buff.discardFromDeck(this)
+            }
+          })
+          this.pendingDiscards = []
+        }
         this.resetSelectedCards()
       }
       this.isAnimating = false

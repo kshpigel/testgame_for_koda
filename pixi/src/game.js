@@ -163,9 +163,12 @@ export class Game {
     })
     
     battle.on('victory', (points) => {
-      player.addGold(points)
+      const gold = Math.floor(points * 0.75)
+      const crystals = Math.floor(points * 0.25)
+      player.addGold(gold)
+      player.addCrystals(crystals)
       player.addWin()
-      this.showMessage(`Победа! +${points} золота`, colors.ui.text.victory)
+      this.showMessage(`Победа! +${gold}💰 +${crystals}💎`, colors.ui.text.victory)
     })
     
     battle.on('defeat', async () => {

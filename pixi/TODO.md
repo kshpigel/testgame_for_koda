@@ -1,27 +1,27 @@
 # Текущее TODO
 
+## Рефакторинг карт и баффов
+- [x] Создать класс баффа (buff.js)
+- [x] 6 баффов:
+  - [x] FactionHp - фракция +N HP
+  - [x] SelectedIfNotSelected - +N HP выбраным (если сам не выбран)
+  - [x] SelectedRandomIfNotSelected - + случайное HP выбраным
+  - [x] DeckCount - HP = кол-во в колоде
+  - [x] KeepSteps - >= N карт этого типа, ходы не тратятся
+  - [x] ExactTypeAndDiscard - строго N карт: бафф +A, остальные в колоде сбрасываются
+- [x] JSON карт (cards.json) с kind, faction, maxInDeck
+- [x] Интеграция в battle.js
+- [x] Тестирование и отладка баффов
+- [ ] Рефакторинг: баффы через события (battle emits: preTurn, postTurn, onSelect, onDeselect)
+
 ## Игровая экономика
 - [x] Класс Player (localStorage)
-  - [x] Создать файл player.js в data/
-  - [x] Методы: load(), save(), reset()
-  - [x] Свойства: deckCode, gold, crystals, name, wins, cardsPlayed, baseLevel, cards
-- [x] Расширить deck.js
-  - [x] Добавить 2-3 колоды с ID/CODE
-  - [x] Функция getDeckByCode(code)
-- [x] Интегрировать Player в game.js
-  - [x] Заменить this.user на экземпляр Player
-  - [x] Использовать deckCode для выбора колоды
-- [x] Обновлять статистику (wins, cardsPlayed) после боя
+- [x] 3 колоды в deck.js
+- [x] Интеграция в game.js
 
-## Следующие задачи (после экономики)
+## Следующие задачи
 - Магазин карт
-- Магазин cash
-- Система наград за победу
-
-## Локализация
-- [ ] Реализовать систему локализации (RU/EN)
-- [ ] Все строкиUI вынести в отдельный файл
-- [ ] Переключение языка в настройках
+- Локализация
 
 ## Уровень базы (будущий функционал)
 - Влияет на количество хранимых карт

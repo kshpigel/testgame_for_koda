@@ -1,14 +1,29 @@
-// Автоимпорт всех типов карт
-const modules = import.meta.glob('./*.js', { eager: true })
-console.log('CARD modules raw:', modules)
+// Импорт JSON с картами и классов баффов
+import cardsData from '../cards.json' with { type: 'json' }
+import { createBuff } from '../buffs/index.js'
 
-const raw = Object.values(modules)
+// Преобразование JSON в формат card_types с созданием баффов
+export const card_types = cardsData.cards.map(card => {
+  const result = {
+    type: card.type,
+    name: card.name,
+    description: card.description,
+    value: card.value,
+    image: card.image,
+    image_bg: card.image_bg,
+    kind: card.kind,
+    faction: card.faction,
+    maxInDeck: card.maxInDeck
+  }
 
-// Извлекаем первый именованный экспорт из каждго модуля
-export const card_types = raw
-  .map(m => {
-    const keys = Object.keys(m)
-    return keys.length > 0 ? m[keys[0]] : null
-  })
-  .filter(m => m && m.type)
-  .sort((a, b) => a.type - b.type)
+  // Создаём бафф если указан
+  if (card.buff) {
+    result.buff = createBuff(card.buff.type, card.buff.params)
+    result.buffType = card.buff.type
+    result.buffParams = card.buff.params
+  }
+
+  return result
+}).sort((a, b) => a.type - b.type)
+
+console.log('card_types loaded:', card_types.length)

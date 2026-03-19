@@ -276,8 +276,14 @@ export class Card extends PIXI.Container {
     return Object.values(this.buffs).filter(b => b.type === type)
   }
 
-  addBuff(buffId, type, value) {
-    this.buffs[buffId] = { type, value }
+  addBuff(buffId, type, value, isSet = false) {
+    if (isSet) {
+      // Очищаем все баффы и устанавливаем новое значение (базовое игнорируется)
+      this.buffs = {}
+      this.buffs[buffId] = { type, value, isSet: true }
+    } else {
+      this.buffs[buffId] = { type, value }
+    }
     this.updateBuffDisplay()
   }
 
@@ -289,13 +295,23 @@ export class Card extends PIXI.Container {
   updateBuffDisplay() {
     // Пересчитываем общий бафф
     let total = 0
-    Object.values(this.buffs).forEach(b => {
-      total += b.value
-    })
-    this.buffValue = total
+    let hasSetBuff = false
+    let setValue = 0
     
-    if (total > 0) {
-      this.buffText.text = `+${total}`
+    Object.values(this.buffs).forEach(b => {
+      if (b.isSet) {
+        hasSetBuff = true
+        setValue = b.value
+      } else {
+        total += b.value
+      }
+    })
+    
+    // Если есть isSet бафф - используем его значение
+    this.buffValue = hasSetBuff ? setValue : total
+    
+    if (this.buffValue > 0) {
+      this.buffText.text = `+${this.buffValue}`
       this.valueCircle.setBgColor(colors.card.circle.buffed)
     } else {
       this.buffText.text = ''
