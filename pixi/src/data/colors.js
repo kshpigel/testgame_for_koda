@@ -41,7 +41,11 @@ const colorsData = {
       boss: '#8c1300',
       active: '#39751b',
       default: '#4a6b5c',
-      defeated: '#333333'
+      defeated: '#333333',
+      easy: '#39751b',
+      medium: '#6b8c19',
+      strong: '#8c5a00',
+      very_strong: '#a83200'
     },
     healthBg: '#000000'
   },

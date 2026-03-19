@@ -19,4 +19,12 @@ export class Buff {
   checkCondition(sel_card, selectedCards, allCards, battle) {
     return true
   }
+
+  // Рассчитать примерный вес баффа для симуляции
+  // deck - массив typeId карт в колоде
+  // cardType - тип текущей карты
+  // Возвращает ожидаемый бонус к урону
+  getWeight(deck, cardType) {
+    return 0
+  }
 }

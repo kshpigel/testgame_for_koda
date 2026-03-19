@@ -16,4 +16,9 @@ export class SelectedIfNotSelected extends Buff {
 
     return results
   }
+
+  getWeight(deck, cardType) {
+    // Бафф работает когда карта не выбрана, влияет на 2-4 другие карты
+    return this.params.value * 2 * 0.15
+  }
 }

@@ -12,4 +12,9 @@ export class DeckCount extends Buff {
     // isSet = true - устанавливаем значение, не добавляем
     return [{ card: sel_card, value: deckCount, isSet: true }]
   }
+
+  getWeight(deck, cardType) {
+    // Средний размер колоды ~40-50 карт
+    return 30 * 0.2
+  }
 }

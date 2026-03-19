@@ -30,4 +30,11 @@ export class SelectedRandomIfNotSelected extends Buff {
 
     return results
   }
+
+  getWeight(deck, cardType) {
+    // Среднее значение между min и max
+    const avg = (this.params.min + this.params.max) / 2
+    // Влияет на 2-3 карты
+    return avg * 2 * 0.1
+  }
 }

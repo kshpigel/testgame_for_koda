@@ -57,4 +57,15 @@ export class ExactTypeAndDiscard extends Buff {
   getSpecialAction() {
     return 'discardFromDeck'
   }
+
+  getWeight(deck, cardType) {
+    // Проверяем достаточно ли карт в колоде
+    const count = deck.filter(t => t === cardType.type).length
+    if (count >= this.params.count) {
+      // Бафф +A на N карт
+      const value = this.params.value + (this.params.firstTurnBonus || 0)
+      return value * this.params.count * 0.15
+    }
+    return 0
+  }
 }

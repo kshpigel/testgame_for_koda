@@ -1,0 +1,74 @@
+{
+  "enemies": [
+    {
+      "type": 1,
+      "name": "Бандиты",
+      "description": "Просто бандиты",
+      "image": "/assets/img/enemies/bandits.png",
+      "image_bg": "/assets/img/battle_bg/bg1.png"
+    },
+    {
+      "type": 2,
+      "name": "Крепость",
+      "description": "Охрана крепости",
+      "image": "/assets/img/cards/type10.png",
+      "image_bg": "/assets/img/battle_bg/bg2.png"
+    },
+    {
+      "type": 3,
+      "name": "Эльфы",
+      "description": "Лесные эльфы",
+      "image": "/assets/img/cards/type6.png",
+      "image_bg": "/assets/img/battle_bg/bg3.png"
+    },
+    {
+      "type": 4,
+      "name": "Берсерки",
+      "description": "Яростные воины",
+      "image": "/assets/img/cards/type4.png",
+      "image_bg": "/assets/img/battle_bg/bg1.png"
+    },
+    {
+      "type": 5,
+      "name": "Варвар",
+      "description": "Сильный варвар",
+      "image": "/assets/img/enemies/barbarian.png",
+      "image_bg": "/assets/img/battle_bg/bg2.png"
+    },
+    {
+      "type": 6,
+      "name": "Тёмный маг",
+      "description": "Мастер тёмной магии",
+      "image": "/assets/img/enemies/dark_mage.png",
+      "image_bg": "/assets/img/battle_bg/bg3.png"
+    },
+    {
+      "type": 7,
+      "name": "Друид",
+      "description": "Хранитель леса",
+      "image": "/assets/img/enemies/druid.png",
+      "image_bg": "/assets/img/battle_bg/bg1.png"
+    },
+    {
+      "type": 8,
+      "name": "Тёмный рыцарь",
+      "description": "Рыцарь тьмы",
+      "image": "/assets/img/cards/type8.png",
+      "image_bg": "/assets/img/battle_bg/bg2.png"
+    },
+    {
+      "type": 9,
+      "name": "Золотой рыцарь",
+      "description": "Элитный рыцарь",
+      "image": "/assets/img/enemies/gold_knight.png",
+      "image_bg": "/assets/img/battle_bg/bg3.png"
+    },
+    {
+      "type": 10,
+      "name": "Дракон",
+      "description": "Древний дракон",
+      "image": "/assets/img/enemies/dragon.png",
+      "image_bg": "/assets/img/battle_bg/bg1.png"
+    }
+  ]
+}

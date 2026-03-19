@@ -1,5 +1,5 @@
 // Импорт JSON с картами и классов баффов
-import cardsData from '../cards.json' with { type: 'json' }
+import cardsData from '../../../public/assets/data/cards.json' with { type: 'json' }
 import { createBuff } from '../buffs/index.js'
 
 // Преобразование JSON в формат card_types с созданием баффов

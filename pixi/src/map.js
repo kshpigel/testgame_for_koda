@@ -3,6 +3,8 @@ import { EventEmitter } from 'events'
 import { colors } from './data/colors.js'
 import { config } from './data/config.js'
 import { FONT } from './data/fonts.js'
+import { player } from './data/player.js'
+import { getEnemyDifficulty } from './data/deck_power.js'
 import { MapNode } from './ui/map_node.js'
 import { MapRenderer } from './ui/map_renderer.js'
 import { Button } from './ui/button.js'
@@ -162,8 +164,13 @@ export class MapScreen extends EventEmitter {
 
       // Создаём MapNode
       const isBoss = index === this.enemies.length - 1
+      
+      // Используем difficulty из enemies (уже рассчитан относительно HP)
+      const difficulty = enemy.difficulty || 'medium'
+      
       const mapNode = new MapNode(enemy, index, this.currentEnemyIndex, this.assets, this.app)
-      mapNode.setBoss(isBoss)
+      mapNode.isBoss = isBoss
+      mapNode.setDifficulty(difficulty)
       mapNode.setPosition(x, y)
       
       // Обработка клика

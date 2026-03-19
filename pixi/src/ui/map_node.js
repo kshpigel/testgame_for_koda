@@ -71,6 +71,10 @@ export class MapNode {
     } else if (this.isActive) {
       ringColor = colors.enemy.ring.active
       ringAlpha = 1
+    } else if (this.difficulty) {
+      // Цвет кольца по сложности
+      ringColor = colors.enemy.ring[this.difficulty] || colors.enemy.ring.default
+      ringAlpha = 0.8
     } else {
       ringColor = colors.enemy.ring.default
       ringAlpha = 0.6
@@ -231,5 +235,40 @@ export class MapNode {
   
   getContainer() {
     return this.container
+  }
+  
+  setDifficulty(difficulty) {
+    this.difficulty = difficulty
+    // Перерисовываем кольцо с учётом сложности
+    if (this.ring && this.container && this.platform) {
+      this.container.removeChild(this.ring)
+      this.ring.destroy()
+      
+      let ringColor, ringAlpha
+      if (this.isDefeated) {
+        ringColor = colors.enemy.ring.defeated
+        ringAlpha = 0.3
+      } else if (this.isBoss) {
+        ringColor = colors.enemy.ring.boss
+        ringAlpha = 1
+      } else if (this.isActive) {
+        ringColor = colors.enemy.ring.active
+        ringAlpha = 1
+      } else if (this.difficulty) {
+        ringColor = colors.enemy.ring[this.difficulty] || colors.enemy.ring.default
+        ringAlpha = 0.8
+      } else {
+        ringColor = colors.enemy.ring.default
+        ringAlpha = 0.6
+      }
+      
+      // Позиция как в renderRing - используем позицию платформы
+      const ringY = this.platform.y
+      
+      this.ring = new PIXI.Graphics()
+      this.ring.lineStyle(3, hexToPixi(ringColor), ringAlpha)
+      this.ring.drawCircle(0, ringY, 53) // platform.radius + 8 = 45 + 8
+      this.container.addChildAt(this.ring, 0)
+    }
   }
 }
