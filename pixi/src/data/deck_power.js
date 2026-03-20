@@ -32,8 +32,8 @@ export function calculateDeckPower(deckCode) {
     }
   })
   
-  console.log('Deck power:', { totalBaseValue, totalBuffWeight, cardCount })
-  
+  // console.log('Deck power:', { totalBaseValue, totalBuffWeight, cardCount })
+
   if (cardCount === 0) return 0
   
   // Среднее значение карты с учётом баффов

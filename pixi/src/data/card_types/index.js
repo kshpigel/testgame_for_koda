@@ -26,4 +26,4 @@ export const card_types = cardsData.cards.map(card => {
   return result
 }).sort((a, b) => a.type - b.type)
 
-console.log('card_types loaded:', card_types.length)
+// console.log('card_types loaded:', card_types.length)

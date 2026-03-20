@@ -29,14 +29,14 @@
 - Влияет на количество доступных порталов
 
 ## Разработка Layout системы
-- [ ] Разработать класс Layout для Pixi.js
-  - [ ] Рисование объектов в ряд (horizontal)
-  - [ ] Рисование объектов в колонку (vertical)
-  - [ ] Многострочный layout (wrap)
-  - [ ] Центрирование (align: start/center/end)
-  - [ ] Процентные колонки (flex: 1, 2, 3...)
-  - [ ] Отступы (gap, padding)
-  - [ ] Вложенные layout-ы
+- [x] Разработать класс Layout для Pixi.js (src/ui/layout.js)
+  - [x] direction: 'row' | 'column'
+  - [x] gap, padding
+  - [x] width, height: number | 'auto'
+  - [x] add(child, {flex, zIndex}) / remove(child)
+  - [x] Абсолютное позиционирование children
+  - [x] resize() callback для children
+- [ ] Расширения: wrap, align, justify
 - [ ] Использовать для UI из Figma
 - [ ] Пример: переписать battle UI на Layout
 

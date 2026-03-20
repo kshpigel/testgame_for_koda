@@ -82,4 +82,4 @@ export const enemies = tempEnemies.map((enemy, index) => {
   }
 })
 
-console.log('enemies loaded:', enemies.length)
+// console.log('enemies loaded:', enemies.length)

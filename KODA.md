@@ -7,6 +7,7 @@
 5. Все служебные скрипты и временные файлы сохраняй в папке ~/.koda_tmp
 6. Для восстановления сессии нужно писать /восстанови (это правило для пользователя)
 7. Если в папке проекта нет git-репозитория — предлагаю создать его
+8. НЕ использовать зарезервированные слова (this, width, height, children, container и т.д.) для названий переменных, функций, методов, свойств
 ---
 
 ## Локальные правила работы (проект)
@@ -115,7 +116,19 @@
 ### 7. Улучшения UI
 - [ ] Drag&drop карт в руке
 
-### 8. Рефакторинг
+### 8. Layout система
+- [x] Класс UINode (pixi/src/ui/ui_node.js) - базовый для всех UI элементов
+- [x] Класс Layout (pixi/src/ui/layout.js)
+  - [x] Правило: в Layout вкладываются только UINode и его наследники
+  - [x] direction: 'row' | 'column'
+  - [x] gap, padding
+  - [x] width, height: number | 'auto'
+  - [x] add(child, {flex, zIndex}) / remove(child)
+  - [x] Абсолютное позиционирование children
+  - [x] resize() callback для children
+- [ ] Использовать для UI из Figma
+
+### 9. Рефакторинг
 - [ ] battle.js → вынести EnemyDisplay, HandRenderer, DeckMenu, BattleUI
 - [ ] map.js → вынести MapNode, MapRenderer
 
