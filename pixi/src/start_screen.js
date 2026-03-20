@@ -1,6 +1,5 @@
 import * as PIXI from 'pixi.js'
 import { Button } from './ui/button.js'
-import { Layout } from './ui/layout.js'
 import { soundManager } from './audio/sound_manager.js'
 import { FONT } from './data/fonts.js'
 import { colors } from './data/colors.js'
@@ -13,18 +12,14 @@ export class StartScreen {
     this.onStart = onStart
     this.container = new PIXI.Container()
     this.container.visible = false
-    this.titleText = null
     this.button = null
     this.loadingText = null
     this.isLoading = false
-    this.mainLayout = null
   }
 
   async init() {
     await document.fonts.ready
     await this.loadBg()
-    this.createLayouts()
-    this.createTitle()
     this.createButton()
     this.createLoadingText()
   }
@@ -46,71 +41,16 @@ export class StartScreen {
     }
   }
 
-  createLayouts() {
-    // Главный layout - column, занимает весь экран, растянуть
-    this.mainLayout = new Layout({
-      direction: 'column',
-      justify: 'center',
-      gap: 10,
-      width: this.app.screen.width,
-      height: this.app.screen.height
-    })
-    this.mainLayout.x = 0
-    this.mainLayout.y = 0
-    this.mainLayout.setSize(this.app.screen.width, this.app.screen.height)
-    this.container.addChild(this.mainLayout)
-
-    // Layout для заголовка (row, по центру)
-    this.titleLayout = new Layout({
-      direction: 'row',
-      justify: 'center',
-      gap: 0,
-      width: 'auto',
-      height: 'auto'
-    })
-    this.mainLayout.add(this.titleLayout, { flex: 0, stretch: true })
-
-    // Layout для кнопки (row, по центру)
-    this.buttonLayout = new Layout({
-      direction: 'row',
-      justify: 'center',
-      gap: 0,
-      width: 'auto',
-      height: 'auto'
-    })
-    this.mainLayout.add(this.buttonLayout, { flex: 0, stretch: true })
-
-    // Layout для текста загрузки (row, по центру)
-    this.loadingLayout = new Layout({
-      direction: 'row',
-      justify: 'center',
-      gap: 0,
-      width: 'auto',
-      height: 'auto'
-    })
-    this.mainLayout.add(this.loadingLayout, { flex: 0, stretch: true })
-  }
-
-  createTitle() {
-    this.titleText = new PIXI.Text('Начать игру!', {
-      fontFamily: FONT,
-      fontSize: 48,
-      fontWeight: 'bold',
-      fill: colors.ui.text.primary,
-      align: 'center'
-    })
-    this.titleText.anchor.set(0.5)
-    this.titleLayout.add(this.titleText, { flex: 0 })
-  }
-
   createButton() {
-    this.button = new Button('Старт', {
+    this.button = new Button('Играть', {
       width: 280,
       height: 90,
       fontSize: 32,
       app: this.app
     })
-
+    
+    this.button.x = this.app.screen.width / 2
+    this.button.y = this.app.screen.height / 2
     this.button.onClick = () => {
       if (this.isLoading) return
       this.isLoading = true
@@ -123,8 +63,8 @@ export class StartScreen {
       this.loadingText.visible = true
       if (this.onStart) this.onStart()
     }
-
-    this.buttonLayout.add(this.button, { flex: 0 })
+    
+    this.container.addChild(this.button)
   }
 
   createLoadingText() {
@@ -135,8 +75,10 @@ export class StartScreen {
       align: 'center'
     })
     this.loadingText.anchor.set(0.5)
+    this.loadingText.x = this.app.screen.width / 2
+    this.loadingText.y = this.app.screen.height / 2 + 80
     this.loadingText.visible = false
-    this.loadingLayout.add(this.loadingText, { flex: 0 })
+    this.container.addChild(this.loadingText)
   }
 
   setLoadingText(text) {
@@ -150,10 +92,6 @@ export class StartScreen {
     this.button.visible = true
     this.loadingText.visible = false
     this.container.visible = true
-
-    if (this.mainLayout) {
-      this.mainLayout.setSize(this.app.screen.width, this.app.screen.height)
-    }
   }
 
   scaleToCover(sprite, targetWidth, targetHeight) {
@@ -166,8 +104,13 @@ export class StartScreen {
   }
 
   resize(width, height, scale = 1) {
-    if (this.mainLayout) {
-      this.mainLayout.setSize(width, height)
+    if (this.button) {
+      this.button.x = width / 2
+      this.button.y = height / 2
+    }
+    if (this.loadingText) {
+      this.loadingText.x = width / 2
+      this.loadingText.y = height / 2 + 80
     }
   }
 }

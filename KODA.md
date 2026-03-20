@@ -116,19 +116,7 @@
 ### 7. Улучшения UI
 - [ ] Drag&drop карт в руке
 
-### 8. Layout система
-- [x] Класс UINode (pixi/src/ui/ui_node.js) - базовый для всех UI элементов
-- [x] Класс Layout (pixi/src/ui/layout.js)
-  - [x] Правило: в Layout вкладываются только UINode и его наследники
-  - [x] direction: 'row' | 'column'
-  - [x] gap, padding
-  - [x] width, height: number | 'auto'
-  - [x] add(child, {flex, zIndex}) / remove(child)
-  - [x] Абсолютное позиционирование children
-  - [x] resize() callback для children
-- [ ] Использовать для UI из Figma
-
-### 9. Рефакторинг
+### 8. Рефакторинг
 - [ ] battle.js → вынести EnemyDisplay, HandRenderer, DeckMenu, BattleUI
 - [ ] map.js → вынести MapNode, MapRenderer
 

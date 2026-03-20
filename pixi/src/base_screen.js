@@ -5,6 +5,7 @@ import { FONT } from './data/fonts.js'
 import { colors } from './data/colors.js'
 import { soundManager } from './audio/sound_manager.js'
 import { player } from './data/player.js'
+import { Portal } from './ui/portal.js'
 
 const ASSETS = {
   bg: '/assets/img/base_bg.png',
@@ -20,9 +21,10 @@ export class BaseScreen extends EventEmitter {
     this.assets = {}
   }
 
-  async init() {
+  async init(completedPortals = []) {
+    this.completedPortals = completedPortals
     await this.loadAssets()
-    this.render()
+    await this.render()
     this.app.stage.addChild(this.container)
     this.container.alpha = 0
     this.fadeIn()
@@ -38,7 +40,7 @@ export class BaseScreen extends EventEmitter {
     }
   }
 
-  render() {
+  async render() {
     this.container.removeChildren()
 
     // Фон (cover)
@@ -87,8 +89,9 @@ export class BaseScreen extends EventEmitter {
       this.container.addChild(this.base)
     }
 
-    // Портал - 7/10 по горизонтали, 3/10 по вертикали
-    this.createPortal()
+    // Порталы - загружаем из JSON
+    const positions = await this.loadPortalsData()
+    this.createPortals(positions)
     
     // Информация об игроке (левый верхний угол)
     this.createPlayerInfo()
@@ -144,72 +147,52 @@ export class BaseScreen extends EventEmitter {
     this.playerInfoContainer = bg
   }
 
-  createPortal() {
-    const portalContainer = new PIXI.Container()
-    portalContainer.x = this.app.screen.width * 0.8
-    portalContainer.y = this.app.screen.height * 0.4
-    portalContainer.eventMode = 'static'
-    portalContainer.cursor = 'pointer'
-    portalContainer.targetScale = 1
-
-    // Если есть картинка портала
-    if (this.assets.portal && this.assets.portal.texture) {
-      const portal = new PIXI.Sprite(this.assets.portal.texture)
-      portal.anchor.set(0.5)
-      // Масштабируем до 200x200
-      const targetW = 200
-      const targetH = 200
-      const scale = Math.min(
-        targetW / portal.texture.width,
-        targetH / portal.texture.height
-      )
-      portal.scale.set(scale)
-      portalContainer.addChild(portal)
-    } else {
-      // Заглушка - зелёный круг 200x200
-      const portal = new PIXI.Graphics()
-      portal.beginFill(0x00ff00, 0.7)
-      portal.drawCircle(0, 0, 100)
-      portal.endFill()
-      portalContainer.addChild(portal)
-
-      const label = new PIXI.Text('ПОРТАЛ', {
-        fontFamily: FONT,
-        fontSize: 16,
-        fontWeight: 'bold',
-        fill: '#ffffff'
-      })
-      label.anchor.set(0.5)
-      label.y = 60
-      portalContainer.addChild(label)
+  async loadPortalsData() {
+    try {
+      const positions = await PIXI.Assets.load('/assets/data/portal_positions.json')
+      const portalsData = await PIXI.Assets.load('/assets/data/portals.json')
+      
+      // portalsData - это пройденные порталы (будут загружаться с сервера)
+      // Пока просто все позиции
+      return positions
+    } catch (e) {
+      console.warn('Failed to load portals data:', e)
+      return []
     }
+  }
 
-    // Анимация при наведении - эффект свечения + scale
-    const glowFilter = new ColorMatrixFilter()
-    glowFilter.brightness(1.3, false)
-    
-    portalContainer.on('pointerover', () => {
-      portalContainer.targetScale = 1.1
-      if (portalContainer.children[0]) {
-        portalContainer.children[0].filters = [glowFilter]
-      }
-      soundManager.play('hover')
+  createPortals(positions) {
+    const texture = this.assets.portal?.texture || null
+    this.portals = []
+
+    console.log('[BaseScreen] createPortals:', { 
+      total: positions.length, 
+      completed: this.completedPortals 
     })
 
-    portalContainer.on('pointerout', () => {
-      portalContainer.targetScale = 1
-      if (portalContainer.children[0]) {
-        portalContainer.children[0].filters = null
-      }
-    })
+    // Фильтруем пройденные порталы
+    const activePositions = positions.filter(pos => 
+      !this.completedPortals.includes(pos.id)
+    )
 
-    portalContainer.on('pointerdown', () => {
-      soundManager.play('click')
-      this.emit('start_game')
-    })
+    console.log('[BaseScreen] active portals:', activePositions.map(p => p.id))
 
-    this.container.addChild(portalContainer)
-    this.portalContainer = portalContainer
+    activePositions.forEach(pos => {
+      const portal = new Portal({
+        texture: texture,
+        scale: 1,
+        width: 200,
+        height: 200,
+        onClick: () => {
+          this.emit('start_game', pos.id)
+        }
+      })
+      portal.x = this.app.screen.width * pos.x
+      portal.y = this.app.screen.height * pos.y
+      portal.portalId = pos.id
+      this.container.addChild(portal)
+      this.portals.push(portal)
+    })
   }
 
   fadeIn() {
@@ -241,11 +224,18 @@ export class BaseScreen extends EventEmitter {
   }
 
   update() {
-    if (this.portalContainer) {
-      const diff = this.portalContainer.targetScale - this.portalContainer.scale.x
-      if (Math.abs(diff) > 0.001) {
-        this.portalContainer.scale.set(this.portalContainer.scale.x + diff * 0.15)
-      }
+    if (this.portals) {
+      this.portals.forEach(p => p.update())
+    }
+  }
+
+  removePortal(portalId) {
+    if (!this.portals) return
+    const idx = this.portals.findIndex(p => p.portalId === portalId)
+    if (idx !== -1) {
+      const portal = this.portals[idx]
+      this.container.removeChild(portal)
+      this.portals.splice(idx, 1)
     }
   }
 

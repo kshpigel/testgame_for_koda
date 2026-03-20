@@ -24,6 +24,7 @@ export class Game {
     this.currentScreen = null
     this.isBattleActive = false
     this.loadingCallback = null
+    this.completedPortals = [] // IDs пройденных порталов
 
     // Контейнер для фона
     this.bgContainer = new PIXI.Container()
@@ -107,15 +108,20 @@ export class Game {
       delete this.screens['map']
     }
     
-    const baseScreen = new BaseScreen(this.app)
-    baseScreen.on('start_game', () => this.showMap())
-    baseScreen.init()
+    // Переиспользуем baseScreen или создаём новый
+    let baseScreen = this.screens['base']
+    if (!baseScreen) {
+      baseScreen = new BaseScreen(this.app)
+      baseScreen.on('start_game', (portalId) => this.showMap(portalId))
+      this.screens['base'] = baseScreen
+    }
     
-    this.screens['base'] = baseScreen
+    // Передаём список пройденных порталов
+    baseScreen.init(this.completedPortals || [])
     this.currentScreen = baseScreen
   }
 
-  showMap() {
+  showMap(portalId) {
     this.isBattleActive = false
     this.hideCurrentScreen()
     soundManager.playMusic('mapBg')
@@ -130,6 +136,7 @@ export class Game {
       this.screens['map'] = mapScreen
     }
     
+    mapScreen.portalId = portalId
     this.currentScreen = mapScreen
     mapScreen.show()
   }
@@ -154,6 +161,12 @@ export class Game {
         // Если это был последний враг - возвращаемся на базу
         if (this.screens['map'].isLastEnemyDefeated()) {
           player.addMap(1) // +1 пройденый портал
+          const portalId = this.screens['map'].portalId
+          console.log('[Game] Victory! portalId:', portalId, 'completedPortals:', this.completedPortals)
+          if (portalId && !this.completedPortals.includes(portalId)) {
+            this.completedPortals.push(portalId)
+          }
+          console.log('[Game] After push:', this.completedPortals)
           this.showBase()
           return
         }
