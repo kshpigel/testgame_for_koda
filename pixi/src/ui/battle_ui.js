@@ -4,6 +4,7 @@ import { colors } from '../data/colors.js'
 import { CARD_CONFIG } from './card.js'
 import { Button } from './button.js'
 import { Circle } from './circle.js'
+import { DeckDisplay } from './deck_display.js'
 import { soundManager } from '../audio/sound_manager.js'
 
 export class BattleUI {
@@ -16,8 +17,7 @@ export class BattleUI {
     this.resetBtn = null
     this.stepsText = null
     this.resetsText = null
-    this.deckContainer = null
-    this.deckCountCircle = null
+    this.deckDisplay = null
   }
   
   render(cntSteps, cntReset, currentDeckLength, onPlay, onReset, onDeckClick) {
@@ -75,77 +75,12 @@ export class BattleUI {
   }
   
   renderDeckInfo(currentDeckLength, onDeckClick) {
-    const cardW = CARD_CONFIG.width
-    const cardH = CARD_CONFIG.height
-    
-    this.deckContainer = new PIXI.Container()
-    this.deckContainer.x = this.app.screen.width - cardW - 30
-    this.deckContainer.y = this.app.screen.height - cardH - 40
-    this.deckContainer.eventMode = 'static'
-    this.deckContainer.cursor = 'pointer'
-    
-    const cardBack = new PIXI.Graphics()
-    cardBack.lineStyle(2, colors.ui.cardBack.borderNormal)
-    cardBack.beginFill(colors.ui.cardBack.normal)
-    cardBack.drawRoundedRect(0, 0, cardW, cardH, 8)
-    cardBack.endFill()
-    this.deckContainer.addChild(cardBack)
-    
-    if (this.assets && this.assets.cardBack && this.assets.cardBack.texture) {
-      const backSprite = new PIXI.Sprite(this.assets.cardBack.texture)
-      backSprite.width = cardW
-      backSprite.height = cardH
-      this.deckContainer.addChild(backSprite)
-    }
-    
-    // Счётчик карт в колоде
-    this.deckCountCircle = new Circle({
-      x: cardW / 2 + 3,
-      y: cardH - 10,
-      radius: 22,
-      bgColor: colors.card.circle.normal,
-      borderColor: colors.card.circle.border,
-      text: `${currentDeckLength}`,
-      app: this.app
-    })
-    this.deckContainer.addChild(this.deckCountCircle)
-    
-    // Подпись "Колода"
-    const deckLabel = new PIXI.Text('Колода', {
-      fontFamily: FONT,
-      fontSize: 14,
-      fill: '#aaaaaa'
-    })
-    deckLabel.anchor.set(0.5)
-    deckLabel.x = cardW / 2
-    deckLabel.y = cardH + 20
-    this.deckContainer.addChild(deckLabel)
-    
-    // Анимация при наведении
-    this.deckContainer.on('pointerover', () => {
-      this.deckContainer.targetScale = 1.05
-      cardBack.clear()
-      cardBack.lineStyle(2, colors.ui.cardBack.borderHover)
-      cardBack.beginFill(colors.ui.cardBack.hover)
-      cardBack.drawRoundedRect(0, 0, cardW, cardH, 8)
-      cardBack.endFill()
-    })
-    
-    this.deckContainer.on('pointerout', () => {
-      this.deckContainer.targetScale = 1
-      cardBack.clear()
-      cardBack.lineStyle(2, colors.ui.cardBack.borderNormal)
-      cardBack.beginFill(colors.ui.cardBack.normal)
-      cardBack.drawRoundedRect(0, 0, cardW, cardH, 8)
-      cardBack.endFill()
-    })
-    
-    this.deckContainer.on('pointerdown', () => {
-      soundManager.play('click')
-      onDeckClick()
-    })
-    
-    this.container.addChild(this.deckContainer)
+    this.deckDisplay = new DeckDisplay(this.app, this.assets, currentDeckLength, onDeckClick)
+    // TODO: настроить позицию - сейчас по центру
+    this.deckDisplay.setX(1450)
+    this.deckDisplay.setY(700)
+    this.deckDisplay.zIndex = 1000
+    this.container.addChild(this.deckDisplay)
   }
   
   updateSteps(cntSteps) {
@@ -161,26 +96,20 @@ export class BattleUI {
   }
   
   updateDeckCount(count) {
-    if (this.deckCountCircle) {
-      this.deckCountCircle.setText(`${count}`)
+    if (this.deckDisplay) {
+      this.deckDisplay.updateDeckCount(count)
     }
   }
   
   setBlocked(blocked) {
     if (this.playBtn) this.playBtn.setDisabled(blocked)
     if (this.resetBtn) this.resetBtn.setDisabled(blocked)
-    if (this.deckContainer) {
-      this.deckContainer.eventMode = blocked ? 'none' : 'static'
-      this.deckContainer.cursor = blocked ? 'default' : 'pointer'
+    if (this.deckDisplay) {
+      this.deckDisplay.setBlocked(blocked)
     }
   }
   
   update() {
-    if (this.deckContainer && this.deckContainer.targetScale !== undefined) {
-      const diff = this.deckContainer.targetScale - this.deckContainer.scale.x
-      if (Math.abs(diff) > 0.001) {
-        this.deckContainer.scale.set(this.deckContainer.scale.x + diff * 0.15)
-      }
-    }
+    // deckDisplay обрабатывает свою анимацию через UINode ticker
   }
 }

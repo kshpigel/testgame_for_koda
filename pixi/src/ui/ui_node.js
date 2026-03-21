@@ -2,10 +2,44 @@ import * as PIXI from 'pixi.js'
 import { config, log } from '../data/config.js'
 import { Z } from '../data/z_index.js'
 
-// Базовый класс для всех UI элементов
-// - Единая система координат (pivot по центру)
-// - Автоматические debug рамки
-// - Универсальный sizing
+/**
+ * UINode - базовый класс для UI компонентов
+ * 
+ * ОСОБЕННОСТИ:
+ * - pivot по центру (width/2, height/2)
+ * - автоматические debug рамки (если debug: true)
+ * - scale анимация через setScale() и ticker
+ * 
+ * ВАЖНО: setX/setY учитывают pivot:
+ *   x = visualX + pivotX = visualX + width/2
+ *   Поэтому setX(centerX) помещает ЦЕНТР элемента в visualX
+ * 
+ * ИСПОЛЬЗОВАНИЕ:
+ * 1. Наследовать: class MyComponent extends UINode
+ * 2. В конструкторе вызвать super() с width/height
+ * 3. В конструкторе вызвать create() для рендера (НЕ в отдельном методе!)
+ * 4. При позиционировании: node.setX(screenCenter) - это ЦЕНТР элемента
+ * 5. Добавлять в parent: parent.addChild(node) - НЕ node.getContainer()
+ * 
+ * ПРИМЕР:
+ *   class MyButton extends UINode {
+ *     constructor(app) {
+ *       super({ width: 100, height: 50, app: app })
+ *       this.create() // рисуем в конструкторе!
+ *     }
+ *     create() {
+ *       this.bg = new Graphics()
+ *       this.bg.drawRect(-50, -25, 100, 50) // от центра!
+ *       this.addChild(this.bg)
+ *     }
+ *   }
+ *   
+ *   // Использование:
+ *   const btn = new MyButton(app)
+ *   btn.setX(640) // ЦЕНТР кнопки в 640
+ *   btn.setY(360) // ЦЕНТР кнопки в 360
+ *   stage.addChild(btn)
+ */
 export class UINode extends PIXI.Container {
   constructor(options = {}) {
     super()
