@@ -5,35 +5,40 @@ import { colors } from '../data/colors.js'
 import { FONT } from '../data/fonts.js'
 import { soundManager } from '../audio/sound_manager.js'
 import { config } from '../data/config.js'
-import { addDebugBounds } from './ui_node.js'
+import { UINode } from './ui_node.js'
 
-export class MapNode {
+export class MapNode extends UINode {
   constructor(enemy, index, currentEnemyIndex, assets, app) {
-    this.enemy = enemy
-    this.index = index
-    this.currentEnemyIndex = currentEnemyIndex
-    this.assets = assets
-    this.app = app
-    
-    this.isActive = index === currentEnemyIndex
-    this.isDefeated = index < currentEnemyIndex
-    this.isBoss = false // будет установлено извне
-    
-    this.container = new PIXI.Container()
-    this.targetScale = 1
-    this.baseScale = 1
-    
-    this.create()
-  }
-  
-  create() {
+    // Определяем размеры ноды
     const cfg = mapConfig ? mapConfig.enemy : {
       maxHeight: 90, offsetY: 30, spriteOffsetY: 20,
       platform: { radius: 45, offsetY: 30, colors: colors.enemy.platform },
       name: { offsetY: -55 }, health: { bg: { width: 50, height: 20, offsetY: 60 }, text: { offsetY: 70 } },
       defeated: { offsetY: 90 }
     }
+    const size = cfg.platform.radius * 2 + 40 // платформа + отступы
     
+    super({
+      width: size,
+      height: size,
+      app: app,
+      scaleSpeed: 0.15
+    })
+    
+    this.enemy = enemy
+    this.index = index
+    this.currentEnemyIndex = currentEnemyIndex
+    this.assets = assets
+    
+    this.isActive = index === currentEnemyIndex
+    this.isDefeated = index < currentEnemyIndex
+    this.isBoss = false
+    this.targetScale = 1
+    
+    this.create(cfg)
+  }
+  
+  create(cfg) {
     const spriteY = cfg.offsetY + cfg.spriteOffsetY
     
     // Кольцо вокруг врага
@@ -60,6 +65,8 @@ export class MapNode {
     if (!this.isDefeated) {
       this.setupInteraction(cfg, spriteY)
     }
+    
+    this.updateDebug()
   }
   
   renderRing(cfg) {
@@ -74,7 +81,6 @@ export class MapNode {
       ringColor = colors.enemy.ring.active
       ringAlpha = 1
     } else if (this.difficulty) {
-      // Цвет кольца по сложности
       ringColor = colors.enemy.ring[this.difficulty] || colors.enemy.ring.default
       ringAlpha = 0.8
     } else {
@@ -85,7 +91,7 @@ export class MapNode {
     this.ring = new PIXI.Graphics()
     this.ring.lineStyle(3, hexToPixi(ringColor), ringAlpha)
     this.ring.drawCircle(0, cfg.platform.offsetY + cfg.offsetY, cfg.platform.radius + 8)
-    this.container.addChild(this.ring)
+    this.addChild(this.ring)
   }
   
   renderPlatform(cfg) {
@@ -105,7 +111,7 @@ export class MapNode {
     this.platform.beginFill(platformColor, platformAlpha)
     this.platform.drawCircle(0, cfg.platform.offsetY + cfg.offsetY, cfg.platform.radius)
     this.platform.endFill()
-    this.container.addChild(this.platform)
+    this.addChild(this.platform)
   }
   
   renderSprite(cfg) {
@@ -118,17 +124,16 @@ export class MapNode {
       const scale = Math.min(1, cfg.maxHeight / enemySprite.texture.height)
       enemySprite.scale.set(scale)
       enemySprite.y = spriteY
-      this.container.addChild(enemySprite)
+      this.addChild(enemySprite)
     } else if (this.enemy.image) {
       enemySprite = PIXI.Sprite.from(this.enemy.image)
       enemySprite.anchor.set(0.5, 1)
       const scale = Math.min(1, cfg.maxHeight / enemySprite.texture.height)
       enemySprite.scale.set(scale)
       enemySprite.y = spriteY
-      this.container.addChild(enemySprite)
+      this.addChild(enemySprite)
     }
     
-    // Grayscale для побеждённых
     if (this.isDefeated && enemySprite) {
       const grayscaleFilter = new ColorMatrixFilter()
       grayscaleFilter.grayscale()
@@ -148,7 +153,7 @@ export class MapNode {
     this.name = new PIXI.Text(this.enemy.name, nameStyle)
     this.name.anchor.set(0.5, 1)
     this.name.y = spriteY + cfg.name.offsetY
-    this.container.addChild(this.name)
+    this.addChild(this.name)
   }
   
   renderHealth(cfg, spriteY) {
@@ -156,7 +161,7 @@ export class MapNode {
     healthBg.beginFill(colors.enemy.healthBg, 0.6)
     healthBg.drawRoundedRect(-cfg.health.bg.width/2, spriteY + cfg.health.bg.offsetY, cfg.health.bg.width, cfg.health.bg.height, 5)
     healthBg.endFill()
-    this.container.addChild(healthBg)
+    this.addChild(healthBg)
     
     const healthStyle = new PIXI.TextStyle({
       fontFamily: FONT,
@@ -166,7 +171,7 @@ export class MapNode {
     this.health = new PIXI.Text('~' + this.enemy.health, healthStyle)
     this.health.anchor.set(0.5)
     this.health.y = spriteY + cfg.health.text.offsetY
-    this.container.addChild(this.health)
+    this.addChild(this.health)
   }
   
   renderDefeated(cfg, spriteY) {
@@ -178,12 +183,12 @@ export class MapNode {
     })
     defeatedText.anchor.set(0.5)
     defeatedText.y = spriteY + cfg.defeated.offsetY
-    this.container.addChild(defeatedText)
+    this.addChild(defeatedText)
   }
   
   setupInteraction(cfg, spriteY) {
-    this.container.eventMode = 'static'
-    this.container.cursor = 'pointer'
+    this.eventMode = 'static'
+    this.cursor = 'pointer'
     
     const glowFilter = new ColorMatrixFilter()
     glowFilter.brightness(1.3, false)
@@ -191,8 +196,8 @@ export class MapNode {
     const grayscaleFilter = new ColorMatrixFilter()
     grayscaleFilter.grayscale()
     
-    this.container.on('pointerover', () => {
-      this.targetScale = 1.1
+    this.on('pointerover', () => {
+      this.setScale(1.1)
       if (this.isActive) this.platform.alpha = 1
       if (this.enemySprite && !this.isDefeated) {
         this.enemySprite.filters = [glowFilter]
@@ -200,50 +205,40 @@ export class MapNode {
       soundManager.play('hover')
     })
     
-    this.container.on('pointerout', () => {
-      this.targetScale = 1
+    this.on('pointerout', () => {
+      this.setScale(1)
       this.platform.alpha = this.isActive ? 0.8 : 0.7
       if (this.enemySprite) {
         this.enemySprite.filters = this.isDefeated ? [grayscaleFilter] : null
       }
     })
     
-    this.container.on('pointerdown', () => {
+    this.on('pointerdown', () => {
       if (this.isActive) {
         soundManager.play('click')
-        this.container.emit('enemy_click', this.enemy)
+        this.emit('enemy_click', this.enemy)
       }
     })
   }
   
   update() {
-    const diff = this.targetScale - this.container.scale.x
-    if (Math.abs(diff) > 0.001) {
-      this.container.scale.set(this.container.scale.x + diff * 0.15)
-    } else {
-      this.container.scale.set(this.targetScale)
-    }
+    // UINode сам обрабатывает scale через setScale()
   }
   
   setPosition(x, y) {
-    this.container.x = x
-    this.container.y = y
+    this.setX(x)
+    this.setY(y)
   }
   
   setBoss(isBoss) {
     this.isBoss = isBoss
-    // Перерисовать кольцо
-  }
-  
-  getContainer() {
-    return this.container
   }
   
   setDifficulty(difficulty) {
     this.difficulty = difficulty
     // Перерисовываем кольцо с учётом сложности
-    if (this.ring && this.container && this.platform) {
-      this.container.removeChild(this.ring)
+    if (this.ring) {
+      this.removeChild(this.ring)
       this.ring.destroy()
       
       let ringColor, ringAlpha
@@ -264,21 +259,15 @@ export class MapNode {
         ringAlpha = 0.6
       }
       
-      // Позиция как в renderRing - используем позицию платформы
-      const ringY = this.platform.y
+      const cfg = mapConfig ? mapConfig.enemy : { platform: { radius: 45, offsetY: 30, colors: colors.enemy.platform }, offsetY: 30 }
+      const ringY = cfg.platform.offsetY + cfg.offsetY
       
       this.ring = new PIXI.Graphics()
       this.ring.lineStyle(3, hexToPixi(ringColor), ringAlpha)
-      this.ring.drawCircle(0, ringY, 53) // platform.radius + 8 = 45 + 8
-      this.container.addChildAt(this.ring, 0)
+      this.ring.drawCircle(0, ringY, cfg.platform.radius + 8)
+      this.addChildAt(this.ring, 0)
     }
     
-    // Debug рамка
-    this.drawDebugFrame()
-  }
-  
-  drawDebugFrame() {
-    const bounds = this.container.getBounds()
-    addDebugBounds(this.container, bounds.width, bounds.height)
+    this.updateDebug()
   }
 }

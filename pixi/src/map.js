@@ -176,15 +176,15 @@ export class MapScreen extends EventEmitter {
       mapNode.setPosition(x, y)
       
       // Обработка клика
-      mapNode.getContainer().on('enemy_click', (enemyData) => {
+      mapNode.on('enemy_click', (enemyData) => {
         this.emit('enemy_click', enemyData)
       })
       
       // Добавляем в массив анимации
       this.animatableEnemies.push(mapNode)
 
-      this.container.addChild(mapNode.getContainer())
-      this.enemySprites.push(mapNode.getContainer())
+      this.container.addChild(mapNode)
+      this.enemySprites.push(mapNode)
     })
     
     // Запускаем тикер для плавной анимации
