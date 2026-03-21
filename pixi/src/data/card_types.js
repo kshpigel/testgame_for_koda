@@ -1,3 +1,5 @@
+import { log } from './config.js'
+
 export const card_types = [
 	{
 		type: 1,
@@ -96,7 +98,7 @@ export const card_types = [
 				
 				if (cntInDeck > 0) {
 					battle.currentDeck = battle.currentDeck.filter(card => card.type !== 4)
-					console.log(`Сброшено ${cntInDeck} карт Берсерк`)
+					log(`Сброшено ${cntInDeck} карт Берсерк`)
 				}
 			}
 		}

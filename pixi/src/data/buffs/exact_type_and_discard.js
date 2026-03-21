@@ -1,4 +1,5 @@
 import { Buff } from './buff.js'
+import { log } from '../config.js'
 
 // 6. Если выбрано строго N карт этого типа и только они: бафф +A, остальные в колоде сбрасываются
 // Параметры: count (N), value (A), type (тип карты для сброса), firstTurnBonus (бонус на первый ход)
@@ -46,7 +47,7 @@ export class ExactTypeAndDiscard extends Buff {
     
     if (cntInDeck > 0) {
       battle.currentDeck = battle.currentDeck.filter(card => card.type !== cardType)
-      console.log(`Сброшено ${cntInDeck} карт типа ${cardType}`)
+      log(`Сброшено ${cntInDeck} карт типа ${cardType}`)
     }
   }
 

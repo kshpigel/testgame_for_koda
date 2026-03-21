@@ -1,42 +1,44 @@
-// Глобальный конфиг игры (дефолтные значения)
-// Переопределяется значениями из local_config.json при старте
+// Глобальный конфиг игры
+// Изменяется в коде или через local_config.json (который грузится в рантайме)
 
-const DEFAULT_CONFIG = {
-  debug: true,
-  // Количество врагов на карте (для тестирования)
+// Приватный объект с значениями
+const _config = {
+  debug: false,  // Включить логи и debug рамки
   enemiesCount: 10
 }
 
-export let config = { ...DEFAULT_CONFIG }
+// Публичный API
+export const config = {
+  get debug() { return _config.debug },
+  set debug(v) { _config.debug = v },
+  get enemiesCount() { return _config.enemiesCount },
+  set enemiesCount(v) { _config.enemiesCount = v }
+}
 
-// Загрузка local_config.json и слияние с дефолтным конфигом
+// Логирование только в debug режиме
+export function log(...args) {
+  if (_config.debug) {
+    console.log(...args)
+  }
+}
+
+// Загрузка local_config.json (вызывать после старта игры)
 export async function loadConfig() {
-  // Сначала применяем дефолты
-  Object.assign(config, DEFAULT_CONFIG)
+  _config.debug = false // Дефолт
+  _config.enemiesCount = 10
   
-  try {
-    // Пробуем разные пути
-    let localConfig = null
+  const paths = ['local_config.json', '/local_config.json']
+  
+  for (const path of paths) {
     try {
-      const res = await fetch('local_config.json')
-      if (res.ok) localConfig = await res.json()
+      const res = await fetch(path + '?v=' + Date.now())
+      if (res.ok) {
+        const localConfig = await res.json()
+        if (localConfig.debug !== undefined) _config.debug = localConfig.debug
+        if (localConfig.enemiesCount !== undefined) _config.enemiesCount = localConfig.enemiesCount
+        console.log('[Config] Loaded:', _config)
+        break
+      }
     } catch (e) { /* ignore */ }
-    
-    if (!localConfig) {
-      try {
-        const res = await fetch('/local_config.json')
-        if (res.ok) localConfig = await res.json()
-      } catch (e) { /* ignore */ }
-    }
-    
-    if (!localConfig) {
-      throw new Error('local_config.json not found')
-    }
-    
-    // Мутируем существующий объект (чтобы импорты видели изменения)
-    Object.assign(config, localConfig)
-    console.log('[Config] Loaded:', config)
-  } catch (e) {
-    console.log('[Config] Using defaults:', config)
   }
 }

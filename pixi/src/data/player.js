@@ -1,4 +1,5 @@
 import { decks } from './deck.js'
+import { log } from './config.js'
 
 const STORAGE_KEY = 'card_game_player'
 
@@ -45,7 +46,7 @@ export class Player {
       if (starterDeck) {
         this.data.cards = getUniqueCardIds(starterDeck.cards)
         this.save()
-        console.log('Выданы стартовые карты:', this.data.cards)
+        log('Выданы стартовые карты:', this.data.cards)
       }
     }
   }

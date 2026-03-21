@@ -2,6 +2,7 @@ import * as PIXI from 'pixi.js'
 import { EventEmitter } from 'events'
 import { FONT } from './data/fonts.js'
 import { colors } from './data/colors.js'
+import { log } from './data/config.js'
 import { soundManager } from './audio/sound_manager.js'
 import { Card, CARD_CONFIG } from './ui/card.js'
 import { Circle } from './ui/circle.js'
@@ -330,7 +331,7 @@ export class Battle extends EventEmitter {
   applySkills() {
     // Если активен бафф KeepSteps - не тратим ход
     if (this.keepStepsActive) {
-      console.log('Бафф KeepSteps активен - ход не тратится')
+      log('Бафф KeepSteps активен - ход не тратится')
       this.keepStepsActive = false // Сбрасываем для следующего хода
       return true
     }

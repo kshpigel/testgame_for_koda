@@ -1,7 +1,7 @@
 import * as PIXI from 'pixi.js'
 import { EventEmitter } from 'events'
 import { colors } from './data/colors.js'
-import { config } from './data/config.js'
+import { config, log } from './data/config.js'
 import { FONT } from './data/fonts.js'
 import { player } from './data/player.js'
 import { getEnemyDifficulty } from './data/deck_power.js'
@@ -60,7 +60,7 @@ export class MapScreen extends EventEmitter {
 
   show() {
     if (this.assets) {
-      console.log('Map show, currentEnemyIndex:', this.currentEnemyIndex)
+      log('Map show, currentEnemyIndex:', this.currentEnemyIndex)
       this.render()
       this.afterRender()
       this.app.stage.addChild(this.container)

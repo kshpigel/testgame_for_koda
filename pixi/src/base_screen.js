@@ -3,6 +3,7 @@ import { ColorMatrixFilter } from 'pixi.js'
 import { EventEmitter } from 'events'
 import { FONT } from './data/fonts.js'
 import { colors } from './data/colors.js'
+import { log } from './data/config.js'
 import { soundManager } from './audio/sound_manager.js'
 import { player } from './data/player.js'
 import { Portal } from './ui/portal.js'
@@ -23,7 +24,7 @@ export class BaseScreen extends EventEmitter {
 
   async init(completedPortals = []) {
     this.completedPortals = completedPortals
-    console.log('[BaseScreen] init() called with completedPortals:', completedPortals)
+    log('[BaseScreen] init() called with completedPortals:', completedPortals)
     await this.loadAssets()
     this.render()
     this.app.stage.addChild(this.container)
@@ -42,7 +43,7 @@ export class BaseScreen extends EventEmitter {
   }
 
   render() {
-    console.log('[BaseScreen] render() START')
+    log('[BaseScreen] render() START')
     this.container.removeChildren()
 
     // Фон (cover)
@@ -162,16 +163,16 @@ export class BaseScreen extends EventEmitter {
     const texture = this.assets.portal?.texture || null
     this.portals = []
 
-    console.log('[BaseScreen] createPortals() START')
-    console.log('[BaseScreen]   positions:', positions.map(p => p.id))
-    console.log('[BaseScreen]   completedPortals:', this.completedPortals)
+    log('[BaseScreen] createPortals() START')
+    log('[BaseScreen]   positions:', positions.map(p => p.id))
+    log('[BaseScreen]   completedPortals:', this.completedPortals)
 
     // Фильтруем пройденные порталы
     const activePositions = positions.filter(pos => 
       !this.completedPortals.includes(pos.id)
     )
 
-    console.log('[BaseScreen]   activePositions:', activePositions.map(p => p.id))
+    log('[BaseScreen]   activePositions:', activePositions.map(p => p.id))
 
     activePositions.forEach(pos => {
       const portal = new Portal({

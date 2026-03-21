@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite --no-open --host",
     "prebuild": "node scripts/generate-version.cjs",
+    "postbuild": "cp -n public/local_config.json dist/ 2>/dev/null || true",
     "build": "vite build",
     "preview": "vite preview"
   },

@@ -1,3 +1,5 @@
+import { log } from '../config.js'
+
 // Берсерк - Баффается +20 ед.силы когда выбраны 3 карты Берсерк
 export const berserk = {
   type: 4,
@@ -37,7 +39,7 @@ export const berserk = {
       
       if (cntInDeck > 0) {
         battle.currentDeck = battle.currentDeck.filter(card => card.type !== 4)
-        console.log(`Сброшено ${cntInDeck} карт Берсерк`)
+        log(`Сброшено ${cntInDeck} карт Берсерк`)
       }
     }
   }

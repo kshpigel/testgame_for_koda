@@ -3,7 +3,7 @@ import { Game } from './game.js'
 import { soundManager } from './audio/sound_manager.js'
 import { loadAllAssets } from './asset_loader.js'
 import { colors } from './data/colors.js'
-import { loadConfig } from './data/config.js'
+import { config, loadConfig, log } from './data/config.js'
 
 let gameInstance = null
 
@@ -20,7 +20,7 @@ async function loadFont() {
     const fontFace = new FontFace('Monomakh', await fontData.arrayBuffer())
     await fontFace.load()
     document.fonts.add(fontFace)
-    console.log('Font loaded successfully')
+    log('Font loaded successfully')
   } catch (e) {
     console.warn('Font load failed:', e)
   }
@@ -85,6 +85,8 @@ async function init() {
   // Загружаем конфиг (сначала дефолтный, потом пытаемся переопределить из local_config.json)
   await loadConfig()
   
+  log('Game starting after loading...')
+  
   const app = new Application({
     width: GAME_WIDTH,
     height: GAME_HEIGHT,
@@ -119,7 +121,7 @@ async function init() {
     })
     
     // Всё загружено - запускаем игру
-    console.log('All assets loaded, starting game...')
+    log('All assets loaded, starting game...')
     startScreen.setLoadingText('Готово!')
     
     // Небольшая пауза для чтения "Готово!"
