@@ -184,11 +184,6 @@ export class Card extends PIXI.Container {
       
       // Добавляем после bg
       this.addChild(this.bgImage)
-      
-      // Пересортируем: nameText, valueCircle, buffText наверх
-      this.setChildIndex(this.nameText, this.children.length - 3)
-      this.setChildIndex(this.valueCircle, this.children.length - 2)
-      this.setChildIndex(this.buffText, this.children.length - 1)
     }
   }
 
@@ -211,9 +206,9 @@ export class Card extends PIXI.Container {
       // Обновить позицию после загрузки
       this.updateChildPositions()
       
-      // Пересортируем: nameText, valueCircle, buffText наверх
-      this.setChildIndex(this.nameText, this.children.length - 3)
-      this.setChildIndex(this.valueCircle, this.children.length - 2)
+      // Пересортируем: nameText, valueCircle, buffText поверх heroImage
+      this.setChildIndex(this.nameText, this.children.length - 1)
+      this.setChildIndex(this.valueCircle, this.children.length - 1)
       this.setChildIndex(this.buffText, this.children.length - 1)
     }
   }
