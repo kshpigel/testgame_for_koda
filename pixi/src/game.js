@@ -8,6 +8,7 @@ import { getDeckByCode, deck as defaultDeck } from './data/deck.js'
 import { player } from './data/player.js'
 import { enemies as allEnemies } from './data/enemies/index.js'
 import { config, log } from './data/config.js'
+import { Z } from './data/z_index.js'
 import { maps } from './data/maps.js'
 import { FONT } from './data/fonts.js'
 import { colors } from './data/colors.js'
@@ -21,6 +22,8 @@ const MAIN_BG = '/assets/img/bg_full.jpg'
 export class Game {
   constructor(app) {
     this.app = app
+    this.app.stage.sortableChildren = true
+    
     this.screens = {}
     this.currentScreen = null
     this.isBattleActive = false
@@ -29,16 +32,25 @@ export class Game {
 
     // Контейнер для фона
     this.bgContainer = new PIXI.Container()
+    this.bgContainer.zIndex = Z.BG_START - 1 // Под фоном старта
     this.app.stage.addChild(this.bgContainer)
 
     this.screenContainer = new PIXI.Container()
+    this.screenContainer.zIndex = Z.BG_BASE
     this.app.stage.addChild(this.screenContainer)
 
     this.messageContainer = new PIXI.Container()
+    this.messageContainer.zIndex = Z.UI
     this.app.stage.addChild(this.messageContainer)
+    
+    // Контейнер для debug (поверх всех экранов)
+    this.debugContainer = new PIXI.Container()
+    this.debugContainer.zIndex = 100
+    this.app.stage.addChild(this.debugContainer)
     
     // Инициализация стартового экрана (без init - будет вызвано при показе)
     this.startScreen = new StartScreen(this.app, () => this.runLoading())
+    this.startScreen.container.zIndex = Z.BG_START
     this.app.stage.addChild(this.startScreen.container)
     
     // Загрузка главного фона
@@ -90,10 +102,66 @@ export class Game {
       bg.endFill()
       this.bgContainer.addChild(bg)
     }
+    
+    // Debug сетка рисуется в messageContainer (поверх всех экранов)
+    if (config.debug) {
+      this.drawDebugGrid()
+    }
+  }
+  
+  drawDebugGrid() {
+    if (!config.debug) return
+    
+    // Удаляем старую сетку
+    const old = this.debugContainer.getChildByName('debugGrid')
+    if (old) this.debugContainer.removeChild(old)
+    
+    const grid = new PIXI.Graphics()
+    grid.name = 'debugGrid'
+    
+    const step = 50
+    const color = 0xFFFFFF
+    const alpha = 0.3
+    
+    // Вертикальные линии
+    for (let x = 0; x < this.app.screen.width; x += step) {
+      grid.lineStyle(1, color, alpha)
+      grid.moveTo(x, 0)
+      grid.lineTo(x, this.app.screen.height)
+    }
+    
+    // Горизонтальные линии
+    for (let y = 0; y < this.app.screen.height; y += step) {
+      grid.lineStyle(1, color, alpha)
+      grid.moveTo(0, y)
+      grid.lineTo(this.app.screen.width, y)
+    }
+    
+    // Добавляем в debugContainer ПОВЕРХ всех экранов
+    this.debugContainer.addChild(grid)
+    
+    if (this.mainBg && this.mainBg.texture) {
+      const bg = new PIXI.Sprite(this.mainBg.texture)
+      this.scaleToCover(bg, this.app.screen.width, this.app.screen.height)
+      this.bgContainer.addChild(bg)
+    } else {
+      // Резервный фон
+      const bg = new PIXI.Graphics()
+      bg.beginFill(colors.background.battle)
+      bg.drawRect(0, 0, this.app.screen.width, this.app.screen.height)
+      bg.endFill()
+      this.bgContainer.addChild(bg)
+    }
   }
 
   async start() {
     log('Game starting after loading...')
+    
+    // Скрываем startScreen
+    this.startScreen.container.visible = false
+    
+    // Рисуем debug сетку
+    this.drawDebugGrid()
     
     // Загрузка завершена - показываем базу
     this.showBase()
@@ -101,6 +169,7 @@ export class Game {
 
   showBase() {
     log('[Game] showBase() called, completedPortals:', [...this.completedPortals])
+    Z.reset() // Сбрасываем счётчики zIndex
     this.hideCurrentScreen()
     soundManager.stopMusic()
     
@@ -129,6 +198,7 @@ export class Game {
 
   showMap(portalId) {
     this.isBattleActive = false
+    Z.reset()
     this.hideCurrentScreen()
     soundManager.playMusic('mapBg')
     
@@ -154,6 +224,7 @@ export class Game {
 
   initBattle(enemyData) {
     this.isBattleActive = true
+    Z.reset()
     this.hideCurrentScreen()
     soundManager.play('battleStart')
     soundManager.stopMusic()
@@ -295,6 +366,9 @@ export class Game {
 
   resize(width, height, scale = 1) {
     this.renderMainBg()
+    if (config.debug) {
+      this.drawDebugGrid()
+    }
     if (this.startScreen && this.startScreen.resize) {
       this.startScreen.resize(width, height, scale)
     }

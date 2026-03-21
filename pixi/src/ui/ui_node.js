@@ -1,5 +1,6 @@
 import * as PIXI from 'pixi.js'
 import { config, log } from '../data/config.js'
+import { Z } from '../data/z_index.js'
 
 // Базовый класс для всех UI элементов
 // - Единая система координат (pivot по центру)
@@ -26,6 +27,18 @@ export class UINode extends PIXI.Container {
     this._app = options.app || null
     this._visualX = 0
     this._visualY = 0
+    
+    // Auto zIndex - по умолчанию UI слой
+    // Можно переопределить через options.zIndex или options.layer
+    if (options.zIndex !== undefined) {
+      this.zIndex = options.zIndex
+    } else if (options.layer === 'bg') {
+      this.zIndex = Z.getBg()
+    } else if (options.layer === 'gameObject') {
+      this.zIndex = Z.getGameObject()
+    } else {
+      this.zIndex = Z.getUi()
+    }
     
     // Подключаем tick если есть app
     if (this._app) {
@@ -102,6 +115,10 @@ export class UINode extends PIXI.Container {
     if (oldDebug) {
       this.removeChild(oldDebug)
     }
+    const oldZIndex = this.getChildByName('debugZIndex')
+    if (oldZIndex) {
+      this.removeChild(oldZIndex)
+    }
 
     // Рисуем только если есть размеры и debug включен
     if ((this._width > 0 || this._height > 0) && config.debug) {
@@ -123,6 +140,18 @@ export class UINode extends PIXI.Container {
       debug.lineTo(x + this._width, 0)
       
       this.addChild(debug)
+      
+      // zIndex текст в правом верхнем углу (за пределами бордера)
+      const zIndexText = new PIXI.Text(`${this.zIndex}`, {
+        fontFamily: 'monospace',
+        fontSize: 12,
+        fill: this._debugColor
+      })
+      zIndexText.name = 'debugZIndex'
+      zIndexText.anchor.set(0, 0)
+      zIndexText.x = x + this._width + 5
+      zIndexText.y = y - 2
+      this.addChild(zIndexText)
     }
     
     this._debugDirty = false
@@ -140,6 +169,10 @@ export class UINode extends PIXI.Container {
     const oldDebug = this.getChildByName('debugFrame')
     if (oldDebug) {
       this.removeChild(oldDebug)
+    }
+    const oldZIndex = this.getChildByName('debugZIndex')
+    if (oldZIndex) {
+      this.removeChild(oldZIndex)
     }
   }
   

@@ -5,6 +5,7 @@ import { config, log } from './data/config.js'
 import { FONT } from './data/fonts.js'
 import { player } from './data/player.js'
 import { getEnemyDifficulty } from './data/deck_power.js'
+import { Z } from './data/z_index.js'
 import { MapNode } from './ui/map_node.js'
 import { MapRenderer } from './ui/map_renderer.js'
 import { Button } from './ui/button.js'
@@ -17,6 +18,7 @@ export class MapScreen extends EventEmitter {
     this.enemies = enemies
     this.game = game
     this.container = new PIXI.Container()
+    this.container.zIndex = Z.BG_MAP
     this.enemySprites = []
     this.currentEnemyIndex = 0
     

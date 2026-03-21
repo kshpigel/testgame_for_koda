@@ -14,11 +14,14 @@ const ASSETS = {
   portal: '/assets/img/portal.png'
 }
 
+import { Z } from './data/z_index.js'
+
 export class BaseScreen extends EventEmitter {
   constructor(app) {
     super()
     this.app = app
     this.container = new PIXI.Container()
+    this.container.zIndex = Z.bgBase
     this.assets = {}
   }
 
@@ -184,8 +187,8 @@ export class BaseScreen extends EventEmitter {
           this.emit('start_game', pos.id)
         }
       })
-      portal.x = this.app.screen.width * pos.x
-      portal.y = this.app.screen.height * pos.y
+      portal.setX(this.app.screen.width * pos.x)
+      portal.setY(this.app.screen.height * pos.y)
       portal.portalId = pos.id
       this.container.addChild(portal)
       this.portals.push(portal)

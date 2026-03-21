@@ -3,6 +3,7 @@ import { Button } from './ui/button.js'
 import { soundManager } from './audio/sound_manager.js'
 import { FONT } from './data/fonts.js'
 import { colors } from './data/colors.js'
+import { Z } from './data/z_index.js'
 
 const START_BG = '/assets/img/bg_full.jpg'
 
@@ -11,6 +12,7 @@ export class StartScreen {
     this.app = app
     this.onStart = onStart
     this.container = new PIXI.Container()
+    this.container.zIndex = Z.BG_START
     this.container.visible = false
     this.button = null
     this.loadingText = null

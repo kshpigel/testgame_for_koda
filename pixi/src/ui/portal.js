@@ -3,20 +3,20 @@ import { ColorMatrixFilter } from 'pixi.js'
 import { FONT } from '../data/fonts.js'
 import { soundManager } from '../audio/sound_manager.js'
 import { config } from '../data/config.js'
-import { addDebugBounds } from './ui_node.js'
+import { UINode } from './ui_node.js'
 
-export class Portal extends PIXI.Container {
+export class Portal extends UINode {
   constructor(options = {}) {
-    super()
+    super({
+      width: options.width || 200,
+      height: options.height || 200,
+      app: options.app || null,
+      scaleSpeed: 0.15
+    })
 
     this.texture = options.texture || null
-    this.scale_ = options.scale || 1
-    this.width_ = options.width || 200
-    this.height_ = options.height || 200
     this.onClick = options.onClick || null
-
-    this.targetScale = 1
-    this.baseScale = 1
+    
     this.targetBrightness = 1
     
     // Мерцание (замедленное в 3 раза)
@@ -29,6 +29,9 @@ export class Portal extends PIXI.Container {
 
     this.create()
     this.setupInteraction()
+    
+    // Debug рамка
+    this.updateDebug()
   }
 
   create() {
@@ -37,8 +40,8 @@ export class Portal extends PIXI.Container {
       const portal = new PIXI.Sprite(this.texture)
       portal.anchor.set(0.5)
       const scale = Math.min(
-        this.width_ / portal.texture.width,
-        this.height_ / portal.texture.height
+        this.width / portal.texture.width,
+        this.height / portal.texture.height
       )
       portal.scale.set(scale)
       portal.name = 'portalSprite'
@@ -47,7 +50,7 @@ export class Portal extends PIXI.Container {
       // Заглушка
       const portal = new PIXI.Graphics()
       portal.beginFill(0x00ff00, 0.7)
-      portal.drawCircle(0, 0, this.width_ / 2)
+      portal.drawCircle(0, 0, this.width / 2)
       portal.endFill()
       portal.name = 'portalSprite'
       this.addChild(portal)
@@ -59,14 +62,9 @@ export class Portal extends PIXI.Container {
         fill: '#ffffff'
       })
       label.anchor.set(0.5)
-      label.y = this.height_ / 2 + 20
+      label.y = this.height / 2 + 20
       this.addChild(label)
     }
-
-    this.scale.set(this.scale_)
-    
-    // Debug рамка
-    this.drawDebugFrame()
   }
 
   setupInteraction() {
@@ -74,15 +72,14 @@ export class Portal extends PIXI.Container {
     this.cursor = 'pointer'
 
     this.on('pointerover', () => {
-      this.targetScale = 1.05
+      this.setScale(1.05)
       this.targetBrightness = 1.5
       soundManager.play('hover')
     })
 
     this.on('pointerout', () => {
-      this.targetScale = 1
+      this.setScale(1)
       this.targetBrightness = 1
-      // Не сбрасываем baseScale - анимация сама плавно уменьшит
     })
 
     this.on('pointerdown', () => {
@@ -91,19 +88,20 @@ export class Portal extends PIXI.Container {
     })
   }
 
+  // Alias для совместимости с base_screen
   update() {
-    // Scale анимация (базовый scale без wobble)
-    const diff = this.targetScale - this.baseScale
-    if (Math.abs(diff) > 0.001) {
-      this.baseScale = this.baseScale + diff * 0.15
-    } else {
-      this.baseScale = this.targetScale
-    }
-
-    // Мерцание
+    this.updateScale()
+  }
+  
+  // Переопределяем updateScale для добавления wobble эффекта
+  updateScale() {
+    // Сначала базовый scale от UINode
+    super.updateScale()
+    
+    // Мерцание добавляется к финальному scale
     this.wobbleOffset += this.wobbleSpeed
     const wobble = Math.sin(this.wobbleOffset) * this.wobbleAmount
-    const finalScale = this.baseScale * (1 + wobble)
+    const finalScale = this._scale * (1 + wobble)
     this.scale.set(finalScale)
 
     // Brightness анимация (плавная)
@@ -122,9 +120,5 @@ export class Portal extends PIXI.Container {
         portalSprite.filters = null
       }
     }
-  }
-  
-  drawDebugFrame() {
-    addDebugBounds(this, this.width_, this.height_)
   }
 }

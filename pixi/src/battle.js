@@ -3,6 +3,7 @@ import { EventEmitter } from 'events'
 import { FONT } from './data/fonts.js'
 import { colors } from './data/colors.js'
 import { log } from './data/config.js'
+import { Z } from './data/z_index.js'
 import { soundManager } from './audio/sound_manager.js'
 import { Card, CARD_CONFIG } from './ui/card.js'
 import { Circle } from './ui/circle.js'
@@ -32,6 +33,7 @@ export class Battle extends EventEmitter {
     this.game = game
     
     this.container = new PIXI.Container()
+    this.container.zIndex = 100 // Высокий zIndex для боя
     this.cards = []
     this.selectedCards = []
     this.currentDeck = []
@@ -124,6 +126,7 @@ export class Battle extends EventEmitter {
     this.cardAnimator = new CardAnimator(this.app, this.container)
     this.battleEffects = new BattleEffects(this.app, this.container, this.assets)
     this.app.stage.addChild(this.container)
+    this.app.stage.sortChildren() // Пересортировать после добавления
     this.container.alpha = 0
     this.fadeIn()
     this.dealCards(8)
