@@ -95,14 +95,21 @@ export class Portal extends UINode {
   
   // Переопределяем updateScale для добавления wobble эффекта
   updateScale() {
-    // Сначала базовый scale от UINode
+    // Сначала базовый scale от UINode (включая компенсацию позиции)
     super.updateScale()
     
     // Мерцание добавляется к финальному scale
     this.wobbleOffset += this.wobbleSpeed
     const wobble = Math.sin(this.wobbleOffset) * this.wobbleAmount
     const finalScale = this._scale * (1 + wobble)
+    
+    // Применяем scale с учетом компенсации позиции
     this.scale.set(finalScale)
+    // Обновляем позицию с учетом нового scale
+    if (this._visualX !== undefined) {
+      this.x = this._visualX + this.pivot.x * finalScale
+      this.y = this._visualY + this.pivot.y * finalScale
+    }
 
     // Brightness анимация (плавная)
     const brightnessDiff = this.targetBrightness - (this.glowFilter.brightness || 1)
