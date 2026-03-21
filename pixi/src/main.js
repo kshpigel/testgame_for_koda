@@ -3,6 +3,7 @@ import { Game } from './game.js'
 import { soundManager } from './audio/sound_manager.js'
 import { loadAllAssets } from './asset_loader.js'
 import { colors } from './data/colors.js'
+import { loadConfig } from './data/config.js'
 
 let gameInstance = null
 
@@ -81,6 +82,9 @@ function setupResize(app) {
 }
 
 async function init() {
+  // Загружаем конфиг (сначала дефолтный, потом пытаемся переопределить из local_config.json)
+  await loadConfig()
+  
   const app = new Application({
     width: GAME_WIDTH,
     height: GAME_HEIGHT,

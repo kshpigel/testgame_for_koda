@@ -4,3 +4,6 @@ dist/
 *.log
 .koda_tmp/
 .koda/
+# Локальный конфиг (не коммитится)
+local_config.json
+/public/local_config.json

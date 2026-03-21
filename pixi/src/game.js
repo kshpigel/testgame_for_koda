@@ -6,7 +6,8 @@ import { BaseScreen } from './base_screen.js'
 import { card_types } from './data/card_types/index.js'
 import { getDeckByCode, deck as defaultDeck } from './data/deck.js'
 import { player } from './data/player.js'
-import { enemies } from './data/enemies/index.js'
+import { enemies as allEnemies } from './data/enemies/index.js'
+import { config } from './data/config.js'
 import { maps } from './data/maps.js'
 import { FONT } from './data/fonts.js'
 import { colors } from './data/colors.js'
@@ -99,6 +100,7 @@ export class Game {
   }
 
   showBase() {
+    console.log('[Game] showBase() called, completedPortals:', [...this.completedPortals])
     this.hideCurrentScreen()
     soundManager.stopMusic()
     
@@ -111,12 +113,16 @@ export class Game {
     // Переиспользуем baseScreen или создаём новый
     let baseScreen = this.screens['base']
     if (!baseScreen) {
+      console.log('[Game] Creating NEW BaseScreen')
       baseScreen = new BaseScreen(this.app)
       baseScreen.on('start_game', (portalId) => this.showMap(portalId))
       this.screens['base'] = baseScreen
+    } else {
+      console.log('[Game] Reusing existing BaseScreen')
     }
     
     // Передаём список пройденных порталов
+    console.log('[Game] Calling baseScreen.init with:', [...this.completedPortals])
     baseScreen.init(this.completedPortals || [])
     this.currentScreen = baseScreen
   }
@@ -130,13 +136,18 @@ export class Game {
     let mapScreen = this.screens['map']
     if (!mapScreen) {
       const randomMap = maps[Math.floor(Math.random() * maps.length)]
+      // Ограничиваем количество врагов для тестирования
+      const enemies = allEnemies.slice(0, config.enemiesCount || allEnemies.length)
       mapScreen = new MapScreen(this.app, randomMap, enemies, this)
       mapScreen.on('enemy_click', (enemyData) => this.initBattle(enemyData))
       mapScreen.on('exit_to_base', () => this.showBase())
       this.screens['map'] = mapScreen
     }
     
-    mapScreen.portalId = portalId
+    // Сохраняем portalId — не перезаписываем если уже установлен
+    if (portalId !== undefined) {
+      mapScreen.portalId = portalId
+    }
     this.currentScreen = mapScreen
     mapScreen.show()
   }
@@ -162,12 +173,16 @@ export class Game {
         if (this.screens['map'].isLastEnemyDefeated()) {
           player.addMap(1) // +1 пройденый портал
           const portalId = this.screens['map'].portalId
-          console.log('[Game] Victory! portalId:', portalId, 'completedPortals:', this.completedPortals)
+          console.log('[Game] === VICTORY OVER BOSS ===')
+          console.log('[Game] portalId:', portalId)
+          console.log('[Game] completedPortals BEFORE:', [...this.completedPortals])
           if (portalId && !this.completedPortals.includes(portalId)) {
             this.completedPortals.push(portalId)
           }
-          console.log('[Game] After push:', this.completedPortals)
+          console.log('[Game] completedPortals AFTER:', [...this.completedPortals])
+          console.log('[Game] calling showBase()...')
           this.showBase()
+          console.log('[Game] showBase() done')
           return
         }
       }

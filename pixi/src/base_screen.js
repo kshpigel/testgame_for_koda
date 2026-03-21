@@ -23,8 +23,9 @@ export class BaseScreen extends EventEmitter {
 
   async init(completedPortals = []) {
     this.completedPortals = completedPortals
+    console.log('[BaseScreen] init() called with completedPortals:', completedPortals)
     await this.loadAssets()
-    await this.render()
+    this.render()
     this.app.stage.addChild(this.container)
     this.container.alpha = 0
     this.fadeIn()
@@ -40,7 +41,8 @@ export class BaseScreen extends EventEmitter {
     }
   }
 
-  async render() {
+  render() {
+    console.log('[BaseScreen] render() START')
     this.container.removeChildren()
 
     // Фон (cover)
@@ -89,8 +91,8 @@ export class BaseScreen extends EventEmitter {
       this.container.addChild(this.base)
     }
 
-    // Порталы - загружаем из JSON
-    const positions = await this.loadPortalsData()
+    // Порталы - статические позиции
+    const positions = this.getPortalPositions()
     this.createPortals(positions)
     
     // Информация об игроке (левый верхний угол)
@@ -147,35 +149,29 @@ export class BaseScreen extends EventEmitter {
     this.playerInfoContainer = bg
   }
 
-  async loadPortalsData() {
-    try {
-      const positions = await PIXI.Assets.load('/assets/data/portal_positions.json')
-      const portalsData = await PIXI.Assets.load('/assets/data/portals.json')
-      
-      // portalsData - это пройденные порталы (будут загружаться с сервера)
-      // Пока просто все позиции
-      return positions
-    } catch (e) {
-      console.warn('Failed to load portals data:', e)
-      return []
-    }
+  // Позиции порталов на базе (статические)
+  getPortalPositions() {
+    return [
+      { id: 'portal_1', x: 0.8, y: 0.4 },
+      { id: 'portal_2', x: 0.25, y: 0.25 },
+      { id: 'portal_3', x: 0.25, y: 0.8 }
+    ]
   }
 
   createPortals(positions) {
     const texture = this.assets.portal?.texture || null
     this.portals = []
 
-    console.log('[BaseScreen] createPortals:', { 
-      total: positions.length, 
-      completed: this.completedPortals 
-    })
+    console.log('[BaseScreen] createPortals() START')
+    console.log('[BaseScreen]   positions:', positions.map(p => p.id))
+    console.log('[BaseScreen]   completedPortals:', this.completedPortals)
 
     // Фильтруем пройденные порталы
     const activePositions = positions.filter(pos => 
       !this.completedPortals.includes(pos.id)
     )
 
-    console.log('[BaseScreen] active portals:', activePositions.map(p => p.id))
+    console.log('[BaseScreen]   activePositions:', activePositions.map(p => p.id))
 
     activePositions.forEach(pos => {
       const portal = new Portal({
