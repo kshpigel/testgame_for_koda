@@ -1,4 +1,5 @@
 import * as PIXI from 'pixi.js'
+import { BlurFilter } from 'pixi.js'
 import { FONT } from '../data/fonts.js'
 import { soundManager } from '../audio/sound_manager.js'
 import { config } from '../data/config.js'
@@ -57,6 +58,12 @@ export class Card extends PIXI.Container {
   }
 
   create() {
+    // === СЛОЙ 0: Тень (фиолетовая, только для выбранной карты) ===
+    this.shadow = new PIXI.Graphics()
+    this.shadow.name = 'shadow'
+    this.shadow.visible = false
+    this.addChild(this.shadow)
+    
     // === СЛОЙ 1: Фон (цветной прямоугольник) ===
     this.bg = new PIXI.Graphics()
     this.drawBg(CARD_CONFIG.colors.normal)
@@ -68,6 +75,9 @@ export class Card extends PIXI.Container {
     // === СЛОЙ 3: Картинка героя (image) ===
     this.heroImage = null
     this.heroImageYRatio = -0.27 // 27% от высоты сверху
+    
+    // Перерисовываем фон с правильными размерами
+    this.drawBg(CARD_CONFIG.colors.normal)
     
     // === СЛОЙ 4: Название карты ===
     const cardName = this.cardData.name || `Тип ${this.cardData.type}`
@@ -104,9 +114,6 @@ export class Card extends PIXI.Container {
     this.buffText.yRatio = 0.24 // 24% от высоты сверху
     this.addChild(this.buffText)
     
-    // Перерисовываем фон с правильными размерами
-    this.drawBg(CARD_CONFIG.colors.normal)
-    
     // Интерактивность
     this.eventMode = 'static'
     this.cursor = 'pointer'
@@ -122,6 +129,11 @@ export class Card extends PIXI.Container {
     
     // Debug рамка
     this.drawDebugFrame()
+    
+    // Пересортируем: nameText, valueCircle, buffText наверх
+    this.setChildIndex(this.nameText, this.children.length - 3)
+    this.setChildIndex(this.valueCircle, this.children.length - 2)
+    this.setChildIndex(this.buffText, this.children.length - 1)
   }
   
   drawDebugFrame() {
@@ -170,8 +182,13 @@ export class Card extends PIXI.Container {
       const scale = Math.max(this.cardWidth / texture.width, this.cardHeight / texture.height)
       this.bgImage.scale.set(scale)
       
-      // Добавляем на слой 2 (после bg, перед heroImage)
-      this.addChildAt(this.bgImage, 1)
+      // Добавляем после bg
+      this.addChild(this.bgImage)
+      
+      // Пересортируем: nameText, valueCircle, buffText наверх
+      this.setChildIndex(this.nameText, this.children.length - 3)
+      this.setChildIndex(this.valueCircle, this.children.length - 2)
+      this.setChildIndex(this.buffText, this.children.length - 1)
     }
   }
 
@@ -188,11 +205,16 @@ export class Card extends PIXI.Container {
       const scale = Math.min(maxW / texture.width, maxH / texture.height)
       this.heroImage.scale.set(scale)
       
-      // Добавляем на слой 3
-      this.addChildAt(this.heroImage, 2)
+      // Добавляем на самый верх (поверх бордера)
+      this.addChild(this.heroImage)
       
       // Обновить позицию после загрузки
       this.updateChildPositions()
+      
+      // Пересортируем: nameText, valueCircle, buffText наверх
+      this.setChildIndex(this.nameText, this.children.length - 3)
+      this.setChildIndex(this.valueCircle, this.children.length - 2)
+      this.setChildIndex(this.buffText, this.children.length - 1)
     }
   }
 
@@ -339,6 +361,37 @@ export class Card extends PIXI.Container {
   }
 
   update() {
+    // Анимация тени (пульсация при выборе)
+    if (this.isSelected && this.shadow) {
+      this.shadow.visible = true
+      // Минимум 0.5, максимум 0.8 (в 2 раза медленнее)
+      this.shadow.alpha = 0.65 + Math.sin(Date.now() * 0.0025) * 0.15
+      
+      // Рисуем тень
+      this.shadow.clear()
+      this.shadow.beginFill(0xEE40D7, this.shadow.alpha * 0.6)
+      this.shadow.drawRoundedRect(
+        -this.cardWidth/2 + 5,
+        -this.cardHeight/2 + 10,
+        this.cardWidth,
+        this.cardHeight,
+        CARD_CONFIG.cornerRadius
+      )
+      this.shadow.endFill()
+      
+      // Применяем blur фильтр
+      if (!this.shadow.filters || this.shadow.filters.length === 0) {
+        const blurFilter = new BlurFilter(50)
+        blurFilter.quality = 4
+        this.shadow.filters = [blurFilter]
+      }
+    } else if (this.shadow) {
+      this.shadow.visible = false
+      if (this.shadow.filters) {
+        this.shadow.filters = []
+      }
+    }
+    
     // Плавная анимация scale
     const prevScale = this.scale.x
     if (Math.abs(this.scale.x - this.targetScale) > 0.001) {
