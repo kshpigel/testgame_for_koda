@@ -21,6 +21,53 @@
 - Сборка (`npm run build`) автоматически генерирует версию в формате v{package.json.version}-{git-hash}
 - Логи: использовать `log()` из config.js (работает только при debug: true), `console.log()` только для временной отладки
 
+### UINode - базовый класс для UI компонентов
+
+**Зачем:** Единая система координат (pivot по центру), автоматические debug рамки, scale анимация.
+
+**Структура:**
+```javascript
+import { UINode } from './ui_node.js'
+
+export class MyComponent extends UINode {
+  constructor(app, options = {}) {
+    // width/height - для pivot по центру и debug рамки
+    super({
+      width: 300,
+      height: 350,
+      app: app,           // для scale анимации через ticker
+      scaleSpeed: 0.15   // скорость lerp анимации scale
+    })
+    
+    // Своя инициализация
+    this.create()
+    this.updateDebug() // Рисует debug рамку если debug: true
+  }
+  
+  create() {
+    // Добавляем children
+    // Позиции от центра (благодаря pivot)
+    this.addChild(someElement) // someElement.x = 0 - центр
+  }
+}
+```
+
+**Важно:**
+1. Вызывать `create()` или всю логику рендера В КОНСТРУКТОРЕ (как Portal), НЕ отдельно через render()
+2. Не использовать `render()` как отдельный метод — это путает (как было с EnemyDisplay)
+3. setX/setY учитывают pivot: `x = visualX + pivotX`, поэтому визуальная позиция = центр элемента
+4. При позиционировании через battle.js: `enemyDisplay.setX(screen.width/2)` — это ЦЕНТР, не левый край
+
+**Пример использования в battle.js:**
+```javascript
+this.enemyDisplay = new EnemyDisplay(this.app, this.enemyData, this.assets)
+this.enemyDisplay.setX(this.app.screen.width / 2) // Центр экрана
+this.enemyDisplay.setY(280)
+this.container.addChild(this.enemyDisplay)
+```
+
+**Компоненты на UINode:** Button, Circle, Portal, MapNode, EnemyDisplay
+
 ---
 
 ## Текущий контекст
@@ -58,6 +105,10 @@
 - Добавлен класс Player (data/player.js) с localStorage
   - deckCode, gold, crystals, name, wins, maps, baseLevel, cards
   - Методы: load(), save(), reset(), addGold(), addCrystals(), addWin(), addMap()
+- UINode базовый класс с auto-pivot, setX/setY, setScale, auto-zIndex
+- Система zIndex слоёв (data/z_index.js): BG 0-99, GAME 1000-9999, UI 10000+
+- Debug сетка (50px) поверх всех экранов при debug: true
+- Portal переписан на UINode
 - Добавлены 3 колоды в data/deck.js (ID 1-3)
 - Интеграция Player в game.js
 - При победе над боссом: +золото, +1 победа, +1 пройденый портал

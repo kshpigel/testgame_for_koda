@@ -647,10 +647,12 @@ export class Battle extends EventEmitter {
   }
 
   renderEnemy() {
-    // Используем EnemyDisplay
+    // Используем EnemyDisplay (UINode)
     this.enemyDisplay = new EnemyDisplay(this.app, this.enemyData, this.assets)
-    this.enemyDisplay.render()
-    this.container.addChild(this.enemyDisplay.getContainer())
+    this.enemyDisplay.setX(this.app.screen.width / 2)
+    this.enemyDisplay.setY(280)
+    this.enemyDisplay.zIndex = 1000
+    this.container.addChild(this.enemyDisplay)
     this.updateEnemyHealthDisplay()
   }
 
