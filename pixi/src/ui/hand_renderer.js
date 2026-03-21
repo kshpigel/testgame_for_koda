@@ -16,15 +16,28 @@ export class HandRenderer {
     const handAreaY = this.app.screen.height - 160
     const startX = (this.app.screen.width - totalWidth) / 2 + 80
     const selectedOffset = cardHeight * 0.1
+    
+    // Угол: чтобы края были ниже центра (разворачиваем веер)
     const maxAngle = 12 * (Math.PI / 180)
     const centerIndex = (this.cards.length - 1) / 2
+    
+    // Смещение по Y для краёв (чтобы были ниже центра)
+    const edgeYOffset = 30
 
     this.cards.forEach((card, index) => {
       card.targetX = startX + index * (cardWidth - 20)
-      card.targetY = card.isSelected ? handAreaY - selectedOffset : handAreaY
       
       const distFromCenter = index - centerIndex
-      card.targetRotation = distFromCenter * maxAngle / Math.max(1, centerIndex)
+      const normalizedDist = distFromCenter / Math.max(1, centerIndex)
+      
+      // Угол: края ниже центра
+      card.targetRotation = normalizedDist * maxAngle
+      
+      // Y: края ниже центра на edgeYOffset + небольшой наклон дуги
+      const yOffset = Math.abs(normalizedDist) * edgeYOffset
+      // Наклон: правая сторона ниже (плюс X * коэффициент)
+      const tiltOffset = (index - centerIndex) * 4
+      card.targetY = card.isSelected ? handAreaY - selectedOffset : handAreaY + yOffset + tiltOffset
     })
   }
   
