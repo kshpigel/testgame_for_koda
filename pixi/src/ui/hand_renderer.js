@@ -14,7 +14,7 @@ export class HandRenderer {
     const cardHeight = CARD_CONFIG.height
     const totalWidth = this.cards.length * cardWidth + (this.cards.length - 1) * (-20)
     const handAreaY = this.app.screen.height - 160
-    const startX = (this.app.screen.width - totalWidth) / 2 + 80
+    const startX = (this.app.screen.width - totalWidth) / 2 + 160
     const selectedOffset = 40
     
     // Угол: чтобы края были ниже центра (разворачиваем веер)
