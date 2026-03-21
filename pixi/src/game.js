@@ -122,7 +122,7 @@ export class Game {
     
     const step = 50
     const color = 0xFFFFFF
-    const alpha = 0.3
+    const alpha = 0.2
     
     // Вертикальные линии
     for (let x = 0; x < this.app.screen.width; x += step) {

@@ -114,7 +114,7 @@ const colorsData = {
   
   // Map
   map: {
-    grid: '#4a6b5c',
+    grid: '#FF00FF', // magenta для отличия от debug сетки
     platform: {
       defeated: '#666666',
       active: '#00ff00',

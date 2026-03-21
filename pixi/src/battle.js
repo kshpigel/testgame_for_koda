@@ -8,6 +8,8 @@ import { soundManager } from './audio/sound_manager.js'
 import { Card, CARD_CONFIG } from './ui/card.js'
 import { Circle } from './ui/circle.js'
 import { Button } from './ui/button.js'
+import { Modal } from './ui/modal.js'
+import { TextNode } from './ui/text_node.js'
 import { EnemyDisplay } from './ui/enemy_display.js'
 import { HandRenderer } from './ui/hand_renderer.js'
 import { DeckMenu } from './ui/deck_menu.js'
@@ -376,21 +378,9 @@ export class Battle extends EventEmitter {
     setTimeout(() => {
       if (this.enemyHealth <= 0) {
         this.enemyHealth = 0
-        if (this.battleEffects) {
-          this.battleEffects.showVictory(() => {
-            this.setBlocked(false)
-            this.emit('victory', this.enemyData.health + this.cntSteps * 10)
-            this.emit('end')
-          })
-        }
+        this.showVictory()
       } else if (this.cntSteps <= 0) {
-        if (this.battleEffects) {
-          this.battleEffects.showDefeat(() => {
-            this.setBlocked(false)
-            this.emit('defeat')
-            this.emit('end')
-          })
-        }
+        this.showDefeat()
       } else {
         // Выполняем отложенный сброс карт из колоды (Берсерк и т.п.)
         if (this.pendingDiscards) {
@@ -530,90 +520,102 @@ export class Battle extends EventEmitter {
   showVictory() {
     const points = this.enemyData.health + this.cntSteps * 10
     
-    // Затемнение
-    const overlay = new PIXI.Graphics()
-    overlay.beginFill(colors.ui.text.primary, 0.7)
-    overlay.drawRect(0, 0, this.app.screen.width, this.app.screen.height)
-    overlay.endFill()
-    this.container.addChild(overlay)
-    
-    // Изображение победы
-    if (this.assets && this.assets.victory && this.assets.victory.texture) {
-      const victorySprite = new PIXI.Sprite(this.assets.victory.texture)
-      victorySprite.anchor.set(0.5)
-      victorySprite.x = this.app.screen.width / 2
-      victorySprite.y = this.app.screen.height / 2
-      const maxW = this.app.screen.width * 0.8
-      const maxH = this.app.screen.height * 0.8
-      victorySprite.scale.set(Math.min(maxW / victorySprite.texture.width, maxH / victorySprite.texture.height))
-      this.container.addChild(victorySprite)
-    }
-    
-    // Текст победы
-    const style = new PIXI.TextStyle({
-      fontFamily: FONT,
-      fontSize: 64,
-      fontWeight: 'bold',
-      fill: '#00ff00',
-      stroke: '#000000',
-      strokeThickness: 4
+    // Модальное окно победы
+    this.victoryModal = new Modal(this.app, {
+      title: 'ПОБЕДА!',
+      width: 500,
+      height: 400,
+      bgColor: '#1a3a2a',
+      onClose: () => {}
     })
-    const text = new PIXI.Text('ПОБЕДА!', style)
-    text.anchor.set(0.5)
-    text.x = this.app.screen.width / 2
-    text.y = this.app.screen.height / 2 - 100
-    this.container.addChild(text)
     
-    soundManager.play('battleVictory')
+    // Текст очков
+    const pointsText = new TextNode({
+      text: `Очки: ${points}`,
+      width: 400,
+      height: 40,
+      fontSize: 28,
+      color: '#00ff00',
+      align: 'center',
+      shadow: true,
+      app: this.app
+    })
+    pointsText.setX(0) // Центр окна
+    pointsText.y = -50
+    this.victoryModal.addChild(pointsText)
     
-    setTimeout(() => {
-      this.setBlocked(false)
+    // Кнопка продолжения
+    const continueBtn = new Button('Продолжить', {
+      width: 200,
+      height: 60,
+      fontSize: 24,
+      color: colors.ui.button.play,
+      app: this.app
+    })
+    continueBtn.setX(0) // Центр окна
+    continueBtn.setY(80)
+    continueBtn.onClick = () => {
+      this.victoryModal.hide()
+      this.app.stage.removeChild(this.victoryModal.container)
       this.emit('victory', points)
       this.emit('end')
-    }, 2000)
+    }
+    this.victoryModal.addChild(continueBtn)
+    
+    this.victoryModal.addToStage(this.app.stage)
+    this.victoryModal.show()
+    
+    soundManager.play('battleVictory')
   }
 
   showDefeat() {
-    soundManager.play('battleFail')
-    const overlay = new PIXI.Graphics()
-    overlay.beginFill(colors.ui.text.primary, 0.7)
-    overlay.drawRect(0, 0, this.app.screen.width, this.app.screen.height)
-    overlay.endFill()
-    this.container.addChild(overlay)
-    
-    // Изображение поражения
-    if (this.assets && this.assets.fail && this.assets.fail.texture) {
-      const failSprite = new PIXI.Sprite(this.assets.fail.texture)
-      failSprite.anchor.set(0.5)
-      failSprite.x = this.app.screen.width / 2
-      failSprite.y = this.app.screen.height / 2
-      const maxW = this.app.screen.width * 0.8
-      const maxH = this.app.screen.height * 0.8
-      failSprite.scale.set(Math.min(maxW / failSprite.texture.width, maxH / failSprite.texture.height))
-      this.container.addChild(failSprite)
-    }
-    
-    const style = new PIXI.TextStyle({
-      fontFamily: FONT,
-      fontSize: 64,
-      fontWeight: 'bold',
-      fill: '#ff0000',
-      stroke: '#000000',
-      strokeThickness: 4
+    // Модальное окно поражения
+    this.defeatModal = new Modal(this.app, {
+      title: 'ПОРАЖЕНИЕ',
+      width: 500,
+      height: 400,
+      bgColor: '#3a1a1a',
+      onClose: () => {}
     })
-    const text = new PIXI.Text('ПОРАЖЕНИЕ', style)
-    text.anchor.set(0.5)
-    text.x = this.app.screen.width / 2
-    text.y = this.app.screen.height / 2 - 100
-    this.container.addChild(text)
     
-    setTimeout(() => {
-      this.setBlocked(false)
-      this.emit('defeat')
+    // Текст
+    const msgText = new TextNode({
+      text: 'Не расстраивайся!',
+      width: 400,
+      height: 40,
+      fontSize: 28,
+      color: '#ff6666',
+      align: 'center',
+      shadow: true,
+      app: this.app
+    })
+    msgText.setX(0) // Центр окна
+    msgText.y = -50
+    this.defeatModal.addChild(msgText)
+    
+    // Кнопка продолжения
+    const continueBtn = new Button('На базу', {
+      width: 200,
+      height: 60,
+      fontSize: 24,
+      color: colors.ui.button.reset,
+      app: this.app
+    })
+    continueBtn.setX(0) // Центр окна
+    continueBtn.setY(80)
+    continueBtn.onClick = () => {
+      this.defeatModal.hide()
+      this.app.stage.removeChild(this.defeatModal.container)
       this.emit('end')
-    }, 2000)
+    }
+    this.defeatModal.addChild(continueBtn)
+    
+    this.defeatModal.addToStage(this.app.stage)
+    this.defeatModal.show()
+    
+    soundManager.play('battleFail')
   }
-
+  
   render() {
     this.container.removeChildren()
     
