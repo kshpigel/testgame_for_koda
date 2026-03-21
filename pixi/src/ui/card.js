@@ -11,7 +11,7 @@ const CARD_CONFIG = {
   width: 150,
   height: 213,
   cornerRadius: 10,
-  selectedScale: 1.05,
+  selectedScale: 1,
   hoverScale: 1.05,
   colors: {
     normal: colors.card.background.normal,

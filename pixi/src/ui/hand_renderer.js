@@ -15,7 +15,7 @@ export class HandRenderer {
     const totalWidth = this.cards.length * cardWidth + (this.cards.length - 1) * (-20)
     const handAreaY = this.app.screen.height - 160
     const startX = (this.app.screen.width - totalWidth) / 2 + 80
-    const selectedOffset = cardHeight * 0.1
+    const selectedOffset = 40
     
     // Угол: чтобы края были ниже центра (разворачиваем веер)
     const maxAngle = 12 * (Math.PI / 180)
@@ -37,7 +37,11 @@ export class HandRenderer {
       const yOffset = Math.abs(normalizedDist) * edgeYOffset
       // Наклон: правая сторона ниже (плюс X * коэффициент)
       const tiltOffset = (index - centerIndex) * 4
-      card.targetY = card.isSelected ? handAreaY - selectedOffset : handAreaY + yOffset + tiltOffset
+      
+      // Подъём при выборе: чем ближе к центру, тем выше (от 40 до 60px)
+      const selectedLift = 60 - Math.abs(normalizedDist) * 20
+      
+      card.targetY = card.isSelected ? handAreaY + yOffset + tiltOffset - selectedLift : handAreaY + yOffset + tiltOffset
     })
   }
   
