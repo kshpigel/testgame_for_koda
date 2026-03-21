@@ -31,6 +31,7 @@ export class BaseScreen extends EventEmitter {
     await this.loadAssets()
     this.render()
     this.app.stage.addChild(this.container)
+    this.app.stage.sortChildren()
     this.container.alpha = 0
     this.fadeIn()
   }

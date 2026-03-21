@@ -24,7 +24,7 @@ export const LAYERS = {
  UI_OVERLAY: 11000,
   
  // Debug
- DEBUG: 99999,
+ DEBUG: 999999,
   
  // Геттеры для автоматической выдачи
  getBg: () => bgCounter++,

@@ -45,7 +45,7 @@ export class Game {
     
     // Контейнер для debug (поверх всех экранов)
     this.debugContainer = new PIXI.Container()
-    this.debugContainer.zIndex = 100
+    this.debugContainer.zIndex = Z.DEBUG
     this.app.stage.addChild(this.debugContainer)
     
     // Инициализация стартового экрана (без init - будет вызвано при показе)
@@ -112,12 +112,13 @@ export class Game {
   drawDebugGrid() {
     if (!config.debug) return
     
-    // Удаляем старую сетку
-    const old = this.debugContainer.getChildByName('debugGrid')
-    if (old) this.debugContainer.removeChild(old)
+    // Удаляем старую сетку из stage
+    const oldGrid = this.app.stage.getChildByName('debugGrid')
+    if (oldGrid) this.app.stage.removeChild(oldGrid)
     
     const grid = new PIXI.Graphics()
     grid.name = 'debugGrid'
+    grid.zIndex = 1000 // Высокий zIndex для сетки
     
     const step = 50
     const color = 0xFFFFFF
@@ -137,8 +138,10 @@ export class Game {
       grid.lineTo(this.app.screen.width, y)
     }
     
-    // Добавляем в debugContainer ПОВЕРХ всех экранов
-    this.debugContainer.addChild(grid)
+    // Добавляем напрямую в stage
+    this.app.stage.addChild(grid)
+    // Сортируем после добавления
+    this.app.stage.sortChildren()
     
     if (this.mainBg && this.mainBg.texture) {
       const bg = new PIXI.Sprite(this.mainBg.texture)
@@ -167,7 +170,7 @@ export class Game {
     this.showBase()
   }
 
-  showBase() {
+  async showBase() {
     log('[Game] showBase() called, completedPortals:', [...this.completedPortals])
     Z.reset() // Сбрасываем счётчики zIndex
     this.hideCurrentScreen()
@@ -192,8 +195,11 @@ export class Game {
     
     // Передаём список пройденных порталов
     log('[Game] Calling baseScreen.init with:', [...this.completedPortals])
-    baseScreen.init(this.completedPortals || [])
+    await baseScreen.init(this.completedPortals || [])
     this.currentScreen = baseScreen
+    
+    // Рисуем сетку ПОСЛЕ BaseScreen
+    this.drawDebugGrid()
   }
 
   showMap(portalId) {
@@ -220,6 +226,7 @@ export class Game {
     }
     this.currentScreen = mapScreen
     mapScreen.show()
+    this.drawDebugGrid()
   }
 
   initBattle(enemyData) {
@@ -286,6 +293,7 @@ export class Game {
     this.screens['battle'] = battle
     this.currentScreen = battle
     battle.start()
+    this.drawDebugGrid()
     
     // Добавляем кнопку выхода после загрузки ассетов
     battle.on('ready', () => {
