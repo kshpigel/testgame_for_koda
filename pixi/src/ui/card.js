@@ -110,8 +110,8 @@ export class Card extends PIXI.Container {
       fill: '#66ff66'
     })
     this.buffText.anchor.set(0.5)
-    this.buffText.xRatio = 0.12 // 12% от ширины слева
-    this.buffText.yRatio = 0.24 // 24% от высоты сверху
+    this.buffText.xRatio = -0.45 // слева
+    this.buffText.yRatio = 0 // по центру по вертикали
     this.addChild(this.buffText)
     
     // Интерактивность
