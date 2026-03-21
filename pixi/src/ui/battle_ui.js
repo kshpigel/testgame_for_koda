@@ -37,8 +37,8 @@ export class BattleUI {
       app: this.app,
       onClick: onPlay
     })
-    this.playBtn.x = this.app.screen.width / 2 - 100
-    this.playBtn.y = btnY
+    this.playBtn.setX(this.app.screen.width / 2 - 100)
+    this.playBtn.setY(btnY)
     this.container.addChild(this.playBtn)
     
     // Кнопка "Сброс"
@@ -50,8 +50,8 @@ export class BattleUI {
       app: this.app,
       onClick: onReset
     })
-    this.resetBtn.x = this.app.screen.width / 2 + 100
-    this.resetBtn.y = btnY
+    this.resetBtn.setX(this.app.screen.width / 2 + 100)
+    this.resetBtn.setY(btnY)
     this.container.addChild(this.resetBtn)
     
     // Счетчики

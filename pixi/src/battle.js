@@ -668,14 +668,14 @@ export class Battle extends EventEmitter {
     
     // Кнопка "Ход"
     this.playBtn = this.createButton('Сделать ход!', colors.ui.button.play, () => this.playCards())
-    this.playBtn.x = this.app.screen.width / 2 - 100
-    this.playBtn.y = btnY
+    this.playBtn.setX(this.app.screen.width / 2 - 100)
+    this.playBtn.setY(btnY)
     this.container.addChild(this.playBtn)
     
     // Кнопка "Сброс"
     this.resetBtn = this.createButton('Сброс', colors.ui.button.reset, () => this.resetCards())
-    this.resetBtn.x = this.app.screen.width / 2 + 100
-    this.resetBtn.y = btnY
+    this.resetBtn.setX(this.app.screen.width / 2 + 100)
+    this.resetBtn.setY(btnY)
     this.container.addChild(this.resetBtn)
     
     // Счетчики

@@ -107,8 +107,8 @@ export class StartScreen {
 
   resize(width, height, scale = 1) {
     if (this.button) {
-      this.button.x = width / 2
-      this.button.y = height / 2
+      this.button.setX(width / 2)
+      this.button.setY(height / 2)
     }
     if (this.loadingText) {
       this.loadingText.x = width / 2
