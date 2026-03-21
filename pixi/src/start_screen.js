@@ -49,8 +49,8 @@ export class StartScreen {
       app: this.app
     })
     
-    this.button.x = this.app.screen.width / 2
-    this.button.y = this.app.screen.height / 2
+    this.button.setX(this.app.screen.width / 2)
+    this.button.setY(this.app.screen.height / 2)
     this.button.onClick = () => {
       if (this.isLoading) return
       this.isLoading = true

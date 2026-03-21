@@ -2,6 +2,7 @@ import * as PIXI from 'pixi.js'
 import { FONT } from '../data/fonts.js'
 import { soundManager } from '../audio/sound_manager.js'
 import { config } from '../data/config.js'
+import { addDebugBounds } from './ui_node.js'
 import { colors } from '../data/colors.js'
 import { Circle } from './circle.js'
 
@@ -118,6 +119,13 @@ export class Card extends PIXI.Container {
     
     // Установить начальные позиции
     this.updateChildPositions()
+    
+    // Debug рамка
+    this.drawDebugFrame()
+  }
+  
+  drawDebugFrame() {
+    addDebugBounds(this, CARD_CONFIG.width, CARD_CONFIG.height)
   }
 
   drawBg(color) {

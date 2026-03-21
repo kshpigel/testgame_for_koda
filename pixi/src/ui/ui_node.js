@@ -2,17 +2,35 @@ import * as PIXI from 'pixi.js'
 import { config, log } from '../data/config.js'
 
 // Базовый класс для всех UI элементов
-// Рисует рамку в debug режиме
+// - Единая система координат (pivot по центру)
+// - Автоматические debug рамки
+// - Универсальный sizing
 export class UINode extends PIXI.Container {
   constructor(options = {}) {
     super()
     
     this._width = options.width || 0
     this._height = options.height || 0
-    this._debugColor = 0xFF00FF // magenta
+    this._debugColor = options.debugColor || 0xFF00FF // magenta
     
-    // Подписываемся на изменения debug
+    // Scale анимация
+    this._scale = 1
+    this._targetScale = 1
+    this._scaleSpeed = options.scaleSpeed || 0.2
+    
+    // Pivot по умолчанию - по центру
+    if (this._width > 0) this.pivot.x = this._width / 2
+    if (this._height > 0) this.pivot.y = this._height / 2
+    
     this._debugDirty = true
+    this._app = options.app || null
+    this._visualX = 0
+    this._visualY = 0
+    
+    // Подключаем tick если есть app
+    if (this._app) {
+      this._app.ticker.add(this.updateScale, this)
+    }
   }
 
   get width() { return this._width }
@@ -20,22 +38,61 @@ export class UINode extends PIXI.Container {
 
   set width(v) { 
     this._width = v
+    this.pivot.x = v / 2
     this._debugDirty = true
   }
 
   set height(v) { 
     this._height = v
+    this.pivot.y = v / 2
     this._debugDirty = true
   }
-
-  // Переопределить в потомках для расчёта размеров
-  calculateSize() {
-    // По умолчанию - bounds дочерних элементов
-    if (this.children.length > 0) {
-      const bounds = this.getBounds()
-      this._width = bounds.width
-      this._height = bounds.height
+  
+  get scaleValue() { return this._scale }
+  set scaleValue(v) { this.setScale(v) }
+  
+  // Установить целевой scale для анимации
+  setScale(v) {
+    this._targetScale = v
+    this._debugDirty = true
+  }
+  
+  // Обновление scale (вызывается из ticker)
+  updateScale() {
+    const diff = Math.abs(this._scale - this._targetScale)
+    if (diff > 0.001) {
+      this._scale += (this._targetScale - this._scale) * this._scaleSpeed
+      this.scale.set(this._scale)
+    } else if (diff > 0.0001) {
+      this._scale = this._targetScale
+      this.scale.set(this._scale)
     }
+    
+    // Компенсируем смещение при scale - пересчитываем позицию
+    if (this._visualX !== undefined && Math.abs(this._scale - 1) > 0.001) {
+      const scaleRatio = this._scale
+      // Позиция с учётом scale должна быть: визуальная позиция + компенсация
+      this.x = this._visualX + this.pivot.x * scaleRatio
+      this.y = this._visualY + this.pivot.y * scaleRatio
+    }
+  }
+  
+  // Установить размеры и обновить pivot
+  setSize(width, height) {
+    this._width = width
+    this._height = height
+    this.pivot.set(width / 2, height / 2)
+    this._debugDirty = true
+  }
+  
+  // Позиционирование с учётом pivot (стандарт для всех UINode)
+  setX(v) { 
+    this._visualX = v
+    this.x = v + this.pivot.x
+  }
+  setY(v) { 
+    this._visualY = v
+    this.y = v + this.pivot.y
   }
 
   // Отрисовка debug рамки
@@ -51,16 +108,19 @@ export class UINode extends PIXI.Container {
       const debug = new PIXI.Graphics()
       debug.name = 'debugFrame'
       
-      // Рамка
-      debug.lineStyle(2, this._debugColor, 1)
-      debug.drawRect(0, 0, this._width, this._height)
+      // Рамка от центра (с учетом pivot)
+      const x = -this._width / 2
+      const y = -this._height / 2
       
-      // Центр
+      debug.lineStyle(2, this._debugColor, 1)
+      debug.drawRect(x, y, this._width, this._height)
+      
+      // Центр (крест)
       debug.lineStyle(1, this._debugColor, 0.5)
-      debug.moveTo(this._width / 2, 0)
-      debug.lineTo(this._width / 2, this._height)
-      debug.moveTo(0, this._height / 2)
-      debug.lineTo(this._width, this._height / 2)
+      debug.moveTo(0, y)
+      debug.lineTo(0, y + this._height)
+      debug.moveTo(x, 0)
+      debug.lineTo(x + this._width, 0)
       
       this.addChild(debug)
     }
@@ -68,7 +128,7 @@ export class UINode extends PIXI.Container {
     this._debugDirty = false
   }
 
-  // Вызывать после изменения размеров или при show()
+  // Вызвать после создания/изменения размеров
   updateDebug() {
     if (this._debugDirty || config.debug) {
       this.drawDebugFrame()
@@ -82,15 +142,40 @@ export class UINode extends PIXI.Container {
       this.removeChild(oldDebug)
     }
   }
+  
+  // Очистка (удаление из ticker)
+  destroy(options) {
+    if (this._app) {
+      this._app.ticker.remove(this.updateScale, this)
+    }
+    super.destroy(options)
+  }
 }
 
 // Утилита для создания debug рамки на любом container
 export function addDebugBounds(container, width, height, color = 0xFF00FF) {
   if (!config.debug) return
   
+  // Удаляем старую рамку
+  const old = container.getChildByName('debugBounds')
+  if (old) container.removeChild(old)
+  
   const debug = new PIXI.Graphics()
   debug.name = 'debugBounds'
   debug.lineStyle(2, color, 1)
-  debug.drawRect(0, 0, width, height)
+  
+  // Учитываем pivot - рисуем от центра
+  const x = container.pivot.x !== 0 ? -container.pivot.x : -width / 2
+  const y = container.pivot.y !== 0 ? -container.pivot.y : -height / 2
+  
+  debug.drawRect(x, y, width, height)
+  
+  // Центр
+  debug.lineStyle(1, color, 0.5)
+  debug.moveTo(0, y)
+  debug.lineTo(0, y + height)
+  debug.moveTo(x, 0)
+  debug.lineTo(x + width, 0)
+  
   container.addChild(debug)
 }

@@ -2,6 +2,8 @@ import * as PIXI from 'pixi.js'
 import { ColorMatrixFilter } from 'pixi.js'
 import { FONT } from '../data/fonts.js'
 import { soundManager } from '../audio/sound_manager.js'
+import { config } from '../data/config.js'
+import { addDebugBounds } from './ui_node.js'
 
 export class Portal extends PIXI.Container {
   constructor(options = {}) {
@@ -62,6 +64,9 @@ export class Portal extends PIXI.Container {
     }
 
     this.scale.set(this.scale_)
+    
+    // Debug рамка
+    this.drawDebugFrame()
   }
 
   setupInteraction() {
@@ -117,5 +122,9 @@ export class Portal extends PIXI.Container {
         portalSprite.filters = null
       }
     }
+  }
+  
+  drawDebugFrame() {
+    addDebugBounds(this, this.width_, this.height_)
   }
 }

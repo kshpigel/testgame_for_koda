@@ -85,8 +85,8 @@ export class MapScreen extends EventEmitter {
       }
     })
     
-    exitBtn.x = this.app.screen.width - 140
-    exitBtn.y = 50
+    exitBtn.setX(this.app.screen.width - 140)
+    exitBtn.setY(50)
     
     this.container.addChild(exitBtn)
   }

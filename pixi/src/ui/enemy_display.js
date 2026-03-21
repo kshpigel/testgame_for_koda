@@ -1,6 +1,8 @@
 import * as PIXI from 'pixi.js'
 import { FONT } from '../data/fonts.js'
 import { colors } from '../data/colors.js'
+import { config } from '../data/config.js'
+import { addDebugBounds } from './ui_node.js'
 
 export class EnemyDisplay {
   constructor(app, enemyData, assets) {
@@ -12,6 +14,11 @@ export class EnemyDisplay {
   
   render() {
     this.renderEnemy()
+    
+    // Debug рамка
+    const bounds = this.container.getBounds()
+    addDebugBounds(this.container, bounds.width, bounds.height)
+    
     return this.container
   }
   

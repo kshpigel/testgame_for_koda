@@ -4,6 +4,8 @@ import { mapConfig, hexToPixi } from '../data/map_config.js'
 import { colors } from '../data/colors.js'
 import { FONT } from '../data/fonts.js'
 import { soundManager } from '../audio/sound_manager.js'
+import { config } from '../data/config.js'
+import { addDebugBounds } from './ui_node.js'
 
 export class MapNode {
   constructor(enemy, index, currentEnemyIndex, assets, app) {
@@ -270,5 +272,13 @@ export class MapNode {
       this.ring.drawCircle(0, ringY, 53) // platform.radius + 8 = 45 + 8
       this.container.addChildAt(this.ring, 0)
     }
+    
+    // Debug рамка
+    this.drawDebugFrame()
+  }
+  
+  drawDebugFrame() {
+    const bounds = this.container.getBounds()
+    addDebugBounds(this.container, bounds.width, bounds.height)
   }
 }
