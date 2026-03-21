@@ -366,10 +366,10 @@ export class Card extends PIXI.Container {
     
     if (this.valueCircle) {
       if (this.valueCircle.xRatio !== null) {
-        this.valueCircle.x = -w/2 + w * (0.5 + this.valueCircle.xRatio)
+        this.valueCircle.setX(-w/2 + w * (0.5 + this.valueCircle.xRatio))
       }
       if (this.valueCircle.yRatio !== null) {
-        this.valueCircle.y = -h/2 + h * (0.5 + this.valueCircle.yRatio)
+        this.valueCircle.setY(-h/2 + h * (0.5 + this.valueCircle.yRatio))
       }
     }
     

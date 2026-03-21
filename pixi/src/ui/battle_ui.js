@@ -105,7 +105,8 @@ export class BattleUI {
       radius: 22,
       bgColor: colors.card.circle.normal,
       borderColor: colors.card.circle.border,
-      text: `${currentDeckLength}`
+      text: `${currentDeckLength}`,
+      app: this.app
     })
     this.deckContainer.addChild(this.deckCountCircle)
     
