@@ -5,6 +5,7 @@ import { CARD_CONFIG } from './card.js'
 import { Button } from './button.js'
 import { Circle } from './circle.js'
 import { DeckDisplay } from './deck_display.js'
+import { TextNode } from './text_node.js'
 import { soundManager } from '../audio/sound_manager.js'
 
 export class BattleUI {
@@ -54,23 +55,33 @@ export class BattleUI {
     this.resetBtn.setY(btnY)
     this.container.addChild(this.resetBtn)
     
-    // Счетчики
-    const infoStyle = new PIXI.TextStyle({
-      fontFamily: FONT,
+    // Счетчики через TextNode
+    this.stepsText = new TextNode({
+      text: `Ходы: ${cntSteps}`,
+      width: 150,
+      height: 30,
       fontSize: 20,
-      fill: colors.ui.text.primary
+      color: colors.ui.text.primary,
+      align: 'right',
+      shadow: true,
+      app: this.app
     })
-    
-    this.stepsText = new PIXI.Text(`Ходы: ${cntSteps}`, infoStyle)
-    this.stepsText.anchor.set(0.5)
-    this.stepsText.x = this.app.screen.width / 2 + 70
-    this.stepsText.y = btnY - 50
+    this.stepsText.setX(this.app.screen.width / 2 - 105)
+    this.stepsText.setY(btnY - 50)
     this.container.addChild(this.stepsText)
     
-    this.resetsText = new PIXI.Text(`Сбросы: ${cntReset}`, infoStyle)
-    this.resetsText.anchor.set(0.5)
-    this.resetsText.x = this.app.screen.width / 2 - 80
-    this.resetsText.y = btnY - 50
+    this.resetsText = new TextNode({
+      text: `Сбросы: ${cntReset}`,
+      width: 150,
+      height: 30,
+      fontSize: 20,
+      color: colors.ui.text.primary,
+      align: 'left',
+      shadow: true,
+      app: this.app
+    })
+    this.resetsText.setX(this.app.screen.width / 2 + 105)
+    this.resetsText.setY(btnY - 50)
     this.container.addChild(this.resetsText)
   }
   
@@ -85,13 +96,13 @@ export class BattleUI {
   
   updateSteps(cntSteps) {
     if (this.stepsText) {
-      this.stepsText.text = `Ходы: ${cntSteps}`
+      this.stepsText.setText(`Ходы: ${cntSteps}`)
     }
   }
   
   updateResets(cntReset) {
     if (this.resetsText) {
-      this.resetsText.text = `Сбросы: ${cntReset}`
+      this.resetsText.setText(`Сбросы: ${cntReset}`)
     }
   }
   

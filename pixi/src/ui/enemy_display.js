@@ -2,6 +2,7 @@ import * as PIXI from 'pixi.js'
 import { FONT } from '../data/fonts.js'
 import { colors } from '../data/colors.js'
 import { UINode } from './ui_node.js'
+import { TextNode } from './text_node.js'
 
 export class EnemyDisplay extends UINode {
   constructor(app, enemyData, assets) {
@@ -42,27 +43,21 @@ export class EnemyDisplay extends UINode {
       this.addChild(enemySprite)
     }
     
-    // Имя врага с тенью
-    const nameShadow = new PIXI.Text(this.enemyData.name, {
-      fontFamily: FONT,
+    // Имя врага через TextNode
+    this.nameText = new TextNode({
+      text: this.enemyData.name,
+      width: 300,
+      height: 50,
       fontSize: 40,
-      fontWeight: 'bold',
-      fill: '#000000'
+      color: colors.ui.text.primary,
+      align: 'center',
+      shadow: true,
+      bold: true,
+      app: this._app
     })
-    nameShadow.anchor.set(0.5, 1)
-    nameShadow.x = 2
-    nameShadow.y = nameY + 2
-    this.addChild(nameShadow)
-    
-    const name = new PIXI.Text(this.enemyData.name, {
-      fontFamily: FONT,
-      fontSize: 40,
-      fontWeight: 'bold',
-      fill: colors.ui.text.primary
-    })
-    name.anchor.set(0.5, 1)
-    name.y = nameY
-    this.addChild(name)
+    this.nameText.x = 150
+    this.nameText.y = nameY + 50
+    this.addChild(this.nameText)
     
     // Здоровье врага
     const healthBg = new PIXI.Graphics()
