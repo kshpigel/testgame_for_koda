@@ -24,8 +24,9 @@ export class Modal {
     this.title = options.title || ''
     this.width = options.width || 400
     this.height = options.height || 300
-    this.bgColor = options.bgColor || colors.ui.panel.bg || '#1a1a2e'
+    this.bgColor = options.bgColor || colors.ui.panel.bg
     this.onClose = options.onClose || null
+    this.showCloseButton = options.showCloseButton !== false // по умолчанию показываем
     
     // Ограничения
     const maxW = this.app.screen.width - 100
@@ -64,7 +65,7 @@ export class Modal {
     
     // Фон окна с бордером
     const bg = new PIXI.Graphics()
-    bg.lineStyle(2, colors.ui.border || '#ffffff')
+    bg.lineStyle(2, colors.ui.text.primary) // бордер цвета текста
     bg.beginFill(this.bgColor)
     bg.drawRoundedRect(-this.width/2, -this.height/2, this.width, this.height, 10)
     bg.endFill()
@@ -83,23 +84,32 @@ export class Modal {
       this.window.addChild(titleText)
     }
     
-    // Кнопка закрытия
-    this.closeBtn = new Button('✕', {
-      width: 40,
-      height: 40,
-      color: colors.ui.button.reset || '#aa0000',
-      fontSize: 20,
-      app: this.app
-    })
-    this.closeBtn.setX(this.width/2 - 25)
-    this.closeBtn.setY(-this.height/2 + 25)
-    this.closeBtn.onClick = () => this.hide()
-    this.window.addChild(this.closeBtn)
+    // Кнопка закрытия (опционально)
+    if (this.showCloseButton) {
+      this.closeBtn = new Button('✕', {
+        width: 40,
+        height: 40,
+        color: colors.ui.button.reset || '#aa0000',
+        fontSize: 20,
+        app: this.app
+      })
+      this.closeBtn.setX(this.width/2 - 25)
+      this.closeBtn.setY(-this.height/2 + 25)
+      this.closeBtn.onClick = () => this.hide()
+      this.window.addChild(this.closeBtn)
+    }
     
     // Контейнер для контента (дочерние элементы добавлять сюда)
     this.content = new PIXI.Container()
     this.content.y = 30 // Отступ от заголовка
     this.window.addChild(this.content)
+  }
+  
+  // Установить контент (принимает функцию которая получает container)
+  setContent(callback) {
+    if (callback && typeof callback === 'function') {
+      callback(this.content)
+    }
   }
   
   show() {

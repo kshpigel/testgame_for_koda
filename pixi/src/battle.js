@@ -525,7 +525,7 @@ export class Battle extends EventEmitter {
       title: 'ПОБЕДА!',
       width: 500,
       height: 400,
-      bgColor: '#1a3a2a',
+      showCloseButton: false,
       onClose: () => {}
     })
     
@@ -574,7 +574,7 @@ export class Battle extends EventEmitter {
       title: 'ПОРАЖЕНИЕ',
       width: 500,
       height: 400,
-      bgColor: '#3a1a1a',
+      showCloseButton: false,
       onClose: () => {}
     })
     

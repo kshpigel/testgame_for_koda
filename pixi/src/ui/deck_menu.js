@@ -4,6 +4,7 @@ import { colors } from '../data/colors.js'
 import { CARD_CONFIG } from './card.js'
 import { Card } from './card.js'
 import { Circle } from './circle.js'
+import { Modal } from './modal.js'
 import { soundManager } from '../audio/sound_manager.js'
 
 export class DeckMenu {
@@ -13,61 +14,30 @@ export class DeckMenu {
     this.cardTypes = cardTypes
     this.assets = assets
     this.container = container
+    
+    // Создаём модальное окно (2/4 экрана по ширине)
+    this.modal = new Modal(app, {
+      title: 'Колода',
+      width: app.screen.width * 0.5,
+      height: 500
+    })
   }
   
   show() {
-    const menuContainer = new PIXI.Container()
-    menuContainer.x = this.app.screen.width / 2
-    menuContainer.y = this.app.screen.height / 2
-    
-    // Затемнение фона
-    const overlay = new PIXI.Graphics()
-    overlay.beginFill(colors.ui.text.primary, 0.8)
-    overlay.drawRect(-this.app.screen.width/2, -this.app.screen.height/2, this.app.screen.width, this.app.screen.height)
-    overlay.endFill()
-    menuContainer.addChild(overlay)
-    
-    // Панель меню
-    const panelW = 660
-    const panelH = 550
-    const panel = new PIXI.Graphics()
-    panel.beginFill(colors.ui.panel.bg)
-    panel.lineStyle(3, colors.ui.panel.border)
-    panel.drawRoundedRect(-panelW/2, -panelH/2, panelW, panelH, 20)
-    panel.endFill()
-    menuContainer.addChild(panel)
-    
-    // Заголовок
-    const title = new PIXI.Text('Колода', {
-      fontFamily: FONT,
-      fontSize: 28,
-      fontWeight: 'bold',
-      fill: colors.ui.text.primary
+    // Добавляем контент в модальное окно
+    this.modal.setContent((content) => {
+      this.renderContent(content)
     })
-    title.anchor.set(0.5)
-    title.y = -panelH/2 + 30
-    menuContainer.addChild(title)
     
-    // Кнопка закрытия
-    const closeBtn = new PIXI.Container()
-    closeBtn.x = panelW/2 - 30
-    closeBtn.y = -panelH/2 + 30
-    closeBtn.eventMode = 'static'
-    closeBtn.cursor = 'pointer'
+    this.modal.onClose = () => {
+      this.container.removeChild(this.modal.container)
+    }
     
-    const closeX = new PIXI.Text('✕', {
-      fontFamily: FONT,
-      fontSize: 24,
-      fill: '#ff6666'
-    })
-    closeBtn.addChild(closeX)
-    
-    closeBtn.on('pointerdown', () => {
-      soundManager.play('click')
-      this.container.removeChild(menuContainer)
-    })
-    menuContainer.addChild(closeBtn)
-    
+    this.modal.show()
+    this.container.addChild(this.modal.container)
+  }
+  
+  renderContent(content) {
     // Подсчёт количества каждого типа карты
     const cardCounts = {}
     this.currentDeck.forEach(card => {
@@ -78,8 +48,8 @@ export class DeckMenu {
     const cardScale = 0.8
     const cardW = CARD_CONFIG.width * cardScale
     const cardH = CARD_CONFIG.height * cardScale
-    const startX = -panelW/2 + 60
-    const startY = -panelH/2 + 110
+    const startX = -330 // center - 50px
+    const startY = -150 // +40px вниз
     const cols = 6
     const spacingX = 8
     const spacingY = 8
@@ -122,25 +92,17 @@ export class DeckMenu {
       })
       card.addChild(countCircle)
       
-      menuContainer.addChild(card)
+      content.addChild(card)
     })
     
     // Статистика
     const statsText = new PIXI.Text(`Всего карт: ${this.currentDeck.length} | В руке: ${this.cardsInHand || 0}`, {
       fontFamily: FONT,
       fontSize: 18,
-      fill: '#aaaaaa'
+      fill: colors.ui.text.secondary
     })
     statsText.anchor.set(0.5)
-    statsText.y = panelH/2 - 40
-    menuContainer.addChild(statsText)
-    
-    // Закрытие по клику вне панели
-    overlay.eventMode = 'static'
-    overlay.on('pointerdown', () => {
-      this.container.removeChild(menuContainer)
-    })
-    
-    this.container.addChild(menuContainer)
+    statsText.y = 190 // +40px вверх
+    content.addChild(statsText)
   }
 }
