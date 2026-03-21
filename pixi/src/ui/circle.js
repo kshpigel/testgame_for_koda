@@ -1,6 +1,6 @@
 import * as PIXI from 'pixi.js'
 import { FONT } from '../data/fonts.js'
-import { colors } from '../data/colors.js'
+import { colors, gradientColors } from '../data/colors.js'
 import { UINode } from './ui_node.js'
 
 export class Circle extends UINode {
@@ -17,6 +17,10 @@ export class Circle extends UINode {
     this.bgColor = options.bgColor || colors.ui.circle.bg
     this.borderColor = options.borderColor || colors.ui.circle.border
     this.borderWidth = options.borderWidth || 1
+    
+    // Градиент: центр и края (по умолчанию из gradientColors)
+    this.gradientCenter = options.gradientCenter || gradientColors.card.circle.normal.center
+    this.gradientEdge = options.gradientEdge || gradientColors.card.circle.normal.edge
     this.text = options.text || ''
     this.fontSize = options.fontSize || 16
     
@@ -32,9 +36,16 @@ export class Circle extends UINode {
   }
 
   create() {
-    this.bg = new PIXI.Graphics()
+    // Градиентный спрайт
+    this.bgSprite = new PIXI.Sprite()
+    this.bgSprite.anchor.set(0.5)
+    this.addChild(this.bgSprite)
+    
+    // Графический слой для бордера
+    this.border = new PIXI.Graphics()
+    this.addChild(this.border)
+    
     this.draw()
-    this.addChild(this.bg)
     
     this.textObj = new PIXI.Text(this.text, {
       fontFamily: FONT,
@@ -49,11 +60,60 @@ export class Circle extends UINode {
   }
 
   draw() {
-    this.bg.clear()
-    this.bg.lineStyle(this.borderWidth, this.borderColor)
-    this.bg.beginFill(this.bgColor)
-    this.bg.drawCircle(0, 0, this.radius)
-    this.bg.endFill()
+    const canvas = document.createElement('canvas')
+    const size = this.radius * 2
+    canvas.width = size
+    canvas.height = size
+    const ctx = canvas.getContext('2d')
+    
+    // Радиальный градиент: центр (светлый) -> края (тёмный)
+    const gradient = ctx.createRadialGradient(
+      this.radius, this.radius, 0,
+      this.radius, this.radius, this.radius
+    )
+    
+    gradient.addColorStop(0, this.gradientCenter)
+    gradient.addColorStop(1, this.gradientEdge)
+    
+    ctx.fillStyle = gradient
+    ctx.beginPath()
+    ctx.arc(this.radius, this.radius, this.radius, 0, Math.PI * 2)
+    ctx.fill()
+    
+    // Удаляем старую текстуру перед созданием новой
+    if (this.bgSprite.texture) {
+      this.bgSprite.texture.destroy(true)
+    }
+    const texture = PIXI.Texture.from(canvas)
+    this.bgSprite.texture = texture
+    this.bgSprite.width = this.radius * 2
+    this.bgSprite.height = this.radius * 2
+    
+    // Бордер
+    this.border.clear()
+    this.border.lineStyle(this.borderWidth, this.borderColor)
+    this.border.drawCircle(0, 0, this.radius)
+  }
+
+  setGradient(center, edge) {
+    this.gradientCenter = center
+    this.gradientEdge = edge
+    this.draw()
+  }
+
+  setSelectedStyle() {
+    const g = gradientColors.card.circle.selected
+    this.setGradient(g.center, g.edge)
+  }
+
+  setNormalStyle() {
+    const g = gradientColors.card.circle.normal
+    this.setGradient(g.center, g.edge)
+  }
+
+  setBuffedStyle() {
+    const g = gradientColors.card.circle.buffed
+    this.setGradient(g.center, g.edge)
   }
 
   setText(text, animate = true) {

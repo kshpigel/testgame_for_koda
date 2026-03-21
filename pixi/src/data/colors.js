@@ -21,6 +21,20 @@ function convertColors(obj) {
   return result
 }
 
+// Градиенты храним как строки (не конвертируем в числа Pixi)
+const gradientColorsData = {
+  card: {
+    circle: {
+      normal: { center: '#67B560', edge: '#0C1B11' },
+      selected: { center: '#EE40D7', edge: '#3B0C32' },
+      buffed: { center: '#EE40D7', edge: '#3B0C32' }
+    }
+  }
+}
+
+// Экспортируем градиенты отдельно (как строки)
+export const gradientColors = gradientColorsData
+
 const colorsData = {
   // Фоны
   background: {

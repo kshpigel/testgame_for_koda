@@ -250,10 +250,10 @@ export class Card extends PIXI.Container {
     this.buffValue = value
     if (value > 0) {
       this.buffText.text = `+${value}`
-      this.valueCircle.setBgColor(colors.card.circle.buffed)
+      this.valueCircle.setBuffedStyle()
     } else {
       this.buffText.text = ''
-      this.valueCircle.setBgColor(colors.card.circle.normal)
+      this.valueCircle.setNormalStyle()
     }
   }
 
@@ -261,7 +261,7 @@ export class Card extends PIXI.Container {
     this.buffs = {}
     this.buffValue = 0
     this.buffText.text = ''
-    this.valueCircle.setBgColor(colors.card.circle.normal)
+    this.valueCircle.setNormalStyle()
     this.updateValue()
   }
 
@@ -320,10 +320,10 @@ export class Card extends PIXI.Container {
     
     if (this.buffValue > 0) {
       this.buffText.text = `+${this.buffValue}`
-      this.valueCircle.setBgColor(colors.card.circle.buffed)
+      this.valueCircle.setBuffedStyle()
     } else {
       this.buffText.text = ''
-      this.valueCircle.setBgColor(colors.card.circle.normal)
+      this.valueCircle.setNormalStyle()
     }
     
     this.updateValue()
