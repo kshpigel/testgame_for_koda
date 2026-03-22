@@ -4,7 +4,7 @@ import { FONT } from '../data/fonts.js'
 import { soundManager } from '../audio/sound_manager.js'
 import { config } from '../data/config.js'
 import { addDebugBounds } from './ui_node.js'
-import { colors, gradientColors } from '../data/colors.js'
+import { colors } from '../data/colors.js'
 import { Circle } from './circle.js'
 
 // Настройки карты
@@ -55,7 +55,13 @@ export class Card extends PIXI.Container {
     // Анимация покачивания
     this.wobbleOffset = Math.random() * Math.PI * 2 // Случайная фаза
     this.wobbleSpeed = 0.015
-    this.wobbleAmount = 3 // Амплитуда в пикселях
+    this.wobbleAmount = 3 // Амплитуда в пикселей
+    
+    // Счётчик кадров для стабильной анимации (не зависит от FPS)
+    this.frameCount = 0
+    
+    // Анимация glow - случайный offset для разнобоя
+    this.glowOffset = Math.random() * Math.PI * 2
     
     // Scale для heroImageContainer при выборе
     this.targetHeroScale = 1
@@ -167,48 +173,68 @@ export class Card extends PIXI.Container {
     const offsetX = 5
     const offsetY = 5
     
-    // Центр градиента - низ по середине
+    // Создаём 2 текстуры с разными цветами
+    const textures = this.createGlowTextures()
+    
+    // Создаём 2 спрайта для плавного перехода
+    const sprite1 = new PIXI.Sprite(textures[0])
+    sprite1.anchor.set(0.5)
+    sprite1.x = -this.cardWidth / 2 + offsetX + glowW / 2
+    sprite1.y = -this.cardHeight / 2 + offsetY + glowH / 2 - 5
+    
+    const sprite2 = new PIXI.Sprite(textures[1])
+    sprite2.anchor.set(0.5)
+    sprite2.x = sprite1.x
+    sprite2.y = sprite1.y
+    sprite2.alpha = 0
+    
+    glowContainer.addChild(sprite1)
+    glowContainer.addChild(sprite2)
+    
+    // Сохраняем ссылки для анимации
+    glowContainer.sprite1 = sprite1
+    glowContainer.sprite2 = sprite2
+    
+    return glowContainer
+  }
+
+  // Создание 2 текстур с разными цветами
+  createGlowTextures() {
+    const glowW = 140
+    const glowH = 150
     const centerX = glowW / 2
     const centerY = glowH
     
-    // Создаём текстуру с градиентом через canvas
-    const canvas = document.createElement('canvas')
-    canvas.width = glowW
-    canvas.height = glowH
-    const ctx = canvas.getContext('2d')
+    // Цвета для анимации
+    const colors = ['#D60404', '#FF6B00'] // красный, оранжевый
     
-    // Радиальный градиент: от цвета glow в центре (внизу) к прозрачному
-    const glowColor = gradientColors.card.glow // '#D60404'
-    const r = parseInt(glowColor.slice(1, 3), 16)
-    const g = parseInt(glowColor.slice(3, 5), 16)
-    const b = parseInt(glowColor.slice(5, 7), 16)
+    const textures = []
     
-    const gradient = ctx.createRadialGradient(
-      centerX, centerY, 0,           // start circle
-      centerX, centerY, glowH        // end circle
-    )
-    gradient.addColorStop(0, glowColor)                           // Центр - цвет из colors
-    gradient.addColorStop(0.4, `rgba(${r}, ${g}, ${b}, 0.6)`)     // 40% - полупрозрачный
-    gradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`)         // Края - прозрачный
+    colors.forEach(color => {
+      const canvas = document.createElement('canvas')
+      canvas.width = glowW
+      canvas.height = glowH
+      const ctx = canvas.getContext('2d')
+      
+      const r = parseInt(color.slice(1, 3), 16)
+      const g = parseInt(color.slice(3, 5), 16)
+      const b = parseInt(color.slice(5, 7), 16)
+      
+      const gradient = ctx.createRadialGradient(
+        centerX, centerY, 0,
+        centerX, centerY, glowH
+      )
+      gradient.addColorStop(0, color)
+      gradient.addColorStop(0.4, `rgba(${r}, ${g}, ${b}, 0.6)`)
+      gradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`)
+      
+      ctx.fillStyle = gradient
+      ctx.fillRect(0, 0, glowW, glowH)
+      
+      textures.push(PIXI.Texture.from(canvas))
+    })
     
-    ctx.fillStyle = gradient
-    ctx.fillRect(0, 0, glowW, glowH)
-    
-    // Создаём PIXI текстуру из canvas
-    const glowTexture = PIXI.Texture.from(canvas)
-    const glowSprite = new PIXI.Sprite(glowTexture)
-    
-    // Позиционируем относительно центра карты
-    glowSprite.anchor.set(0.5)
-    glowSprite.x = -this.cardWidth / 2 + offsetX + glowW / 2
-    glowSprite.y = -this.cardHeight / 2 + offsetY + glowH / 2 - 5
-    
-    glowContainer.addChild(glowSprite)
-    
-    // Сохраняем ссылку на спрайт для анимации
-    glowContainer.glowSprite = glowSprite
-    
-    return glowContainer
+    return textures
   }
 
   // Показать/скрыть glow эффект
@@ -455,11 +481,14 @@ export class Card extends PIXI.Container {
   }
 
   update() {
+    // Увеличиваем счётчик кадров
+    this.frameCount++
+    
     // Анимация тени (пульсация при выборе)
     if (this.isSelected && this.shadow) {
       this.shadow.visible = true
-      // Минимум 0.5, максимум 0.8 (в 2 раза медленнее)
-      this.shadow.alpha = 0.65 + Math.sin(Date.now() * 0.0025) * 0.15
+      // Минимум 0.5, максимум 0.8
+      this.shadow.alpha = 0.65 + Math.sin(this.frameCount * 0.025) * 0.15
       
       // Рисуем тень
       this.shadow.clear()
@@ -513,11 +542,20 @@ export class Card extends PIXI.Container {
       this.y = this.targetY + wobble
     }
     
-    // Анимация glow-слоя (плавное затухание/разгорание)
-    if (this.glowLayer && this.glowLayer.visible && this.glowLayer.glowSprite) {
-      // Плавная пульсация от 0.3 до 1.0 (медленная)
-      const glowAlpha = 0.3 + (Math.sin(Date.now() * 0.0015) + 1) / 2 * 0.7
-      this.glowLayer.glowSprite.alpha = glowAlpha
+    // Анимация glow-слоя (плавный переход между 2 цветами)
+    if (this.glowLayer && this.glowLayer.visible) {
+      // Синусоида 0...1 для плавного перехода
+      const colorMix = (Math.sin(this.frameCount * 0.01 + this.glowOffset) + 1) / 2
+      
+      // Sprite1 - первый цвет (красный), уменьшается когда colorMix растет
+      // Sprite2 - второй цвет (оранжевый), увеличивается когда colorMix растет
+      this.glowLayer.sprite1.alpha = (1 - colorMix) * 0.8
+      this.glowLayer.sprite2.alpha = colorMix * 0.8
+      
+      // Общая alpha пульсация для обоих
+      const pulseAlpha = 0.3 + (Math.sin(this.frameCount * 0.015 + this.glowOffset) + 1) / 2 * 0.7
+      this.glowLayer.sprite1.alpha *= pulseAlpha / 0.8
+      this.glowLayer.sprite2.alpha *= pulseAlpha / 0.8
     }
   }
 

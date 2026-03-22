@@ -24,8 +24,9 @@ function convertColors(obj) {
 // Градиенты храним как строки (не конвертируем в числа Pixi)
 const gradientColorsData = {
   card: {
-    // Glow эффект карты (первая точка градиента, вторая всегда прозрачная)
-    glow: '#D60404',
+    // Glow эффект карты (для анимации перелива) - предустановленные цвета
+    glow1: '#D60404', // красный
+    glow2: '#FF6B00', // оранжевый (вернул)
     circle: {
       normal: { center: '#67B560', edge: '#0C1B11' },
       selected: { center: '#EE40D7', edge: '#3B0C32' },
