@@ -46,6 +46,9 @@ export class Card extends PIXI.Container {
     // Pivot по центру
     this.pivot.set(this.cardWidth / 2, this.cardHeight / 2)
     
+    // Scale (если передан в options)
+    if (options.scale) this.scale.set(options.scale)
+    
     // Позиция в руке
     this.handIndex = options.handIndex || 0
     this.targetX = 0
