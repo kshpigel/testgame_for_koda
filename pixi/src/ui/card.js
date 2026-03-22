@@ -4,7 +4,7 @@ import { FONT } from '../data/fonts.js'
 import { soundManager } from '../audio/sound_manager.js'
 import { config } from '../data/config.js'
 import { addDebugBounds } from './ui_node.js'
-import { colors } from '../data/colors.js'
+import { colors, gradientColors } from '../data/colors.js'
 import { Circle } from './circle.js'
 
 // Настройки карты
@@ -56,6 +56,9 @@ export class Card extends PIXI.Container {
     this.wobbleOffset = Math.random() * Math.PI * 2 // Случайная фаза
     this.wobbleSpeed = 0.015
     this.wobbleAmount = 3 // Амплитуда в пикселях
+    
+    // Scale для heroImageContainer при выборе
+    this.targetHeroScale = 1
     
     this.create()
   }
@@ -174,14 +177,19 @@ export class Card extends PIXI.Container {
     canvas.height = glowH
     const ctx = canvas.getContext('2d')
     
-    // Радиальный градиент: от #D60404 в центре (внизу) к прозрачному
+    // Радиальный градиент: от цвета glow в центре (внизу) к прозрачному
+    const glowColor = gradientColors.card.glow // '#D60404'
+    const r = parseInt(glowColor.slice(1, 3), 16)
+    const g = parseInt(glowColor.slice(3, 5), 16)
+    const b = parseInt(glowColor.slice(5, 7), 16)
+    
     const gradient = ctx.createRadialGradient(
       centerX, centerY, 0,           // start circle
       centerX, centerY, glowH        // end circle
     )
-    gradient.addColorStop(0, '#D60404')          // Центр - красный
-    gradient.addColorStop(0.4, 'rgba(214, 4, 4, 0.6)')  // 40% - полупрозрачный
-    gradient.addColorStop(1, 'rgba(214, 4, 4, 0)')      // Края - прозрачный
+    gradient.addColorStop(0, glowColor)                           // Центр - цвет из colors
+    gradient.addColorStop(0.4, `rgba(${r}, ${g}, ${b}, 0.6)`)     // 40% - полупрозрачный
+    gradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`)         // Края - прозрачный
     
     ctx.fillStyle = gradient
     ctx.fillRect(0, 0, glowW, glowH)
@@ -268,9 +276,17 @@ export class Card extends PIXI.Container {
   // Загрузить изображение героя (image)
   loadHeroImage(texture) {
     if (texture) {
+      // Создаём контейнер для heroImage с pivot внизу по центру
+      this.heroImageContainer = new PIXI.Container()
+      this.heroImageContainer.sortableChildren = true
+      this.heroImageContainer.zIndex = 4
+      
+      // Pivot внизу по центру контейнера
+      this.heroImageContainer.pivot.set(0, this.cardHeight / 2)
+      
+      // Создаём sprite
       this.heroImage = new PIXI.Sprite(texture)
       this.heroImage.anchor.set(0.5)
-      // Позиция устанавливается в updateChildPositions через heroImageYRatio
       
       // Вписать в область
       const maxW = this.cardWidth
@@ -278,14 +294,16 @@ export class Card extends PIXI.Container {
       const scale = Math.min(maxW / texture.width, maxH / texture.height)
       this.heroImage.scale.set(scale)
       
-      // Добавляем на самый верх (поверх бордера)
-      this.heroImage.zIndex = 4
-      this.addChild(this.heroImage)
+      // Позиционируем heroImage относительно центра контейнера
+      this.heroImage.y = 0
       
-      // Обновить позицию после загрузки
+      this.heroImageContainer.addChild(this.heroImage)
+      this.addChild(this.heroImageContainer)
+      
+      // Обновить позиции
       this.updateChildPositions()
       
-      // Пересортируем: nameText, valueCircle, buffText поверх heroImage
+      // Пересортируем: nameText, valueCircle, buffText поверх heroImageContainer
       this.setChildIndex(this.nameText, this.children.length - 1)
       this.setChildIndex(this.valueCircle, this.children.length - 1)
       this.setChildIndex(this.buffText, this.children.length - 1)
@@ -327,12 +345,14 @@ export class Card extends PIXI.Container {
   select() {
     this.isSelected = true
     this.targetScale = CARD_CONFIG.selectedScale
+    this.targetHeroScale = 1.1
     this.drawBg(CARD_CONFIG.colors.selected)
   }
 
   deselect() {
     this.isSelected = false
     this.targetScale = 1
+    this.targetHeroScale = 1
     this.drawBg(CARD_CONFIG.colors.normal)
   }
 
@@ -478,6 +498,14 @@ export class Card extends PIXI.Container {
       }
     }
     
+    // Анимация scale heroImageContainer при выборе
+    if (this.heroImageContainer) {
+      if (Math.abs(this.heroImageContainer.scale.x - this.targetHeroScale) > 0.001) {
+        const diff = this.targetHeroScale - this.heroImageContainer.scale.x
+        this.heroImageContainer.scale.set(this.heroImageContainer.scale.x + diff * 0.1)
+      }
+    }
+    
     // Анимация покачивания (добавляем к targetY, не перезаписываем y напрямую)
     this.wobbleOffset += this.wobbleSpeed
     const wobble = Math.sin(this.wobbleOffset) * this.wobbleAmount
@@ -512,9 +540,11 @@ export class Card extends PIXI.Container {
       this.nameText.y = -h/2 + h * (0.5 + this.nameText.yRatio)
     }
     
-    // heroImage
-    if (this.heroImage && this.heroImageYRatio !== undefined) {
-      this.heroImage.y = -h/2 + h * (0.5 + this.heroImageYRatio)
+    // heroImageContainer (с учётом pivot внизу)
+    if (this.heroImageContainer && this.heroImageYRatio !== undefined) {
+      const baseY = -h/2 + h * (0.5 + this.heroImageYRatio)
+      // Компенсируем pivot (сдвиг вверх на pivot.y)
+      this.heroImageContainer.y = baseY + this.heroImageContainer.pivot.y
     }
     
     // buffText

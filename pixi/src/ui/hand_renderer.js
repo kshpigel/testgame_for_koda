@@ -49,11 +49,12 @@ export class HandRenderer {
     this.cards.forEach(card => {
       card.update()
       
+      // Анимация перемещения (быстрее для X, медленнее для Y - подъём)
       if (card.targetX !== undefined && Math.abs(card.x - card.targetX) > 0.5) {
-        card.x += (card.targetX - card.x) * 0.15
+        card.x += (card.targetX - card.x) * 0.2
       }
       if (card.targetY !== undefined && Math.abs(card.y - card.targetY) > 0.5) {
-        card.y += (card.targetY - card.y) * 0.15
+        card.y += (card.targetY - card.y) * 0.12
       }
       if (card.targetRotation !== undefined && Math.abs(card.rotation - card.targetRotation) > 0.002) {
         card.rotation += (card.targetRotation - card.rotation) * 0.1
