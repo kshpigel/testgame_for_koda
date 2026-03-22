@@ -2,6 +2,7 @@ import * as PIXI from 'pixi.js'
 import { ColorMatrixFilter } from 'pixi.js'
 import { FONT } from '../data/fonts.js'
 import { colors } from '../data/colors.js'
+import { config } from '../data/config.js'
 import { CARD_CONFIG } from './card.js'
 import { Card } from './card.js'
 import { Circle } from './circle.js'
@@ -125,63 +126,94 @@ export class DeckMenu {
   }
   
   showCardDetails(cardType, count) {
-    // Создаём детальное модальное окно
+    // Создаём детальное модальное окно (выше основного)
     const detailModal = new Modal(this.app, {
       title: cardType.name || 'Карта',
-      width: 400,
+      width: 500,
       height: 350,
       showCloseButton: true
     })
+    detailModal.container.zIndex = 20000
     
-    // Контент
-    const detailContent = new PIXI.Container()
+    // Константы для позиционирования (относительно центра content)
+    const heroW = 200
+    const heroH = heroW * 1.5
+    const contentH = 320 // высота контента (350 - 30 заголовок)
     
-    // Большая карта
-    const cardScale = 1.2
-    const cardW = CARD_CONFIG.width
-    const cardH = CARD_CONFIG.height
+    // Слева 30px: от центра -250 + 30 = -220
+    const heroX = -220
+    // По низу: от центра + (160 - 300) = -140
+    const heroY = contentH / 2 - heroH - 16
     
-    const card = new Card(cardType, {
-      width: cardW,
-      height: cardH,
-      scale: cardScale
-    })
-    card.x = 0
-    card.y = -30
+    // Текст: отодвинуть от правого края на 30px
+    // От центра 250 - 30 - 200(ширина текста) = 20
+    const textX = 20
+    const topY = -90 // отступ от заголовка
     
-    if (this.assets && this.assets[`card_bg_${cardType.type}`]) {
-      card.loadBgImage(this.assets[`card_bg_${cardType.type}`].texture)
+    // Картинка героя (слева) с бордером
+    const heroContainer = new PIXI.Container()
+    heroContainer.x = heroX
+    heroContainer.y = heroY
+    
+    // Бордер (только в debug)
+    if (config.debug) {
+      const heroBorder = new PIXI.Graphics()
+      heroBorder.lineStyle(1, 0xFF00FF, 1)
+      heroBorder.drawRect(0, 0, heroW, heroW * 1.5)
+      heroContainer.addChild(heroBorder)
     }
+    
     if (this.assets && this.assets[`card_${cardType.type}`]) {
-      card.loadHeroImage(this.assets[`card_${cardType.type}`].texture)
+      const heroSprite = new PIXI.Sprite(this.assets[`card_${cardType.type}`].texture)
+      heroSprite.anchor.set(0.5)
+      heroSprite.width = heroW
+      heroSprite.height = heroW * 1.5
+      // Позиционируем по центру контейнера
+      heroSprite.x = heroW / 2
+      heroSprite.y = (heroW * 1.5) / 2
+      heroContainer.addChild(heroSprite)
     }
     
-    detailContent.addChild(card)
+    detailModal.content.addChild(heroContainer)
     
-    // Описание
-    const descText = new PIXI.Text(cardType.description || 'Описание отсутствует', {
+    // Текст блок - динамический размер
+    // Биография (справа)
+    const bioText = new PIXI.Text(cardType.bio || '', {
+      fontFamily: FONT,
+      fontSize: 14,
+      fill: colors.ui.text.secondary,
+      wordWrap: true,
+      wordWrapWidth: 200,
+      align: 'left',
+      fontStyle: 'italic'
+    })
+    bioText.x = textX
+    bioText.y = topY
+    detailModal.content.addChild(bioText)
+    
+    // Механика (ниже биографии, динамически)
+    const mechanicText = new PIXI.Text(cardType.mechanic || 'Механика отсутствует', {
       fontFamily: FONT,
       fontSize: 16,
       fill: colors.ui.text.primary,
       wordWrap: true,
-      wordWrapWidth: 350,
-      align: 'center'
+      wordWrapWidth: 200,
+      align: 'left'
     })
-    descText.anchor.set(0.5)
-    descText.y = 120
-    detailContent.addChild(descText)
+    mechanicText.x = textX
+    mechanicText.y = topY + bioText.height + 10 // +10px отступ
+    detailModal.content.addChild(mechanicText)
     
-    // Количество в колоде
+    // Количество в колоде (ниже механики, динамически)
     const countText = new PIXI.Text(`В колоде: ${count}`, {
       fontFamily: FONT,
       fontSize: 18,
       fill: colors.ui.text.secondary
     })
-    countText.anchor.set(0.5)
-    countText.y = 160
-    detailContent.addChild(countText)
+    countText.x = textX
+    countText.y = topY + bioText.height + 10 + mechanicText.height + 10
+    detailModal.content.addChild(countText)
     
-    detailModal.setContent(() => detailContent)
     detailModal.show()
     
     // Добавляем поверх текущего модального окна

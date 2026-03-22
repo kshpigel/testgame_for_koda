@@ -8,6 +8,8 @@ export const card_types = cardsData.cards.map(card => {
     type: card.type,
     name: card.name,
     description: card.description,
+    bio: card.bio,
+    mechanic: card.mechanic,
     value: card.value,
     image: card.image,
     image_bg: card.image_bg,
