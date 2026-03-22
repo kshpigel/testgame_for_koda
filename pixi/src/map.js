@@ -156,9 +156,59 @@ export class MapScreen extends EventEmitter {
     
     // Массив для анимации
     this.animatableEnemies = []
+    
+    // Распределяем врагов по places
+    const places = this.mapData.places
+    const enemyCount = this.enemies.length
+    const placeCount = places.length
+    
+    // Первый враг - всегда place0, последний (босс) - всегда place9
+    // Остальные равномерно между ними с ±1 random
+    const step = (placeCount - 1) / (enemyCount - 1)
+
+    // Множество занятых мест
+    const usedPlaces = new Set()
 
     this.enemies.forEach((enemy, index) => {
-      const cellId = this.mapData.places[index]
+      let placeIndex
+      
+      if (index === 0) {
+        // Первый враг - place0
+        placeIndex = 0
+      } else if (index === enemyCount - 1) {
+        // Последний враг (босс) - place9
+        placeIndex = placeCount - 1
+      } else {
+        // Остальные равномерно с ±1 random, но без дубликатов
+        const baseIndex = Math.floor(index * step)
+        
+        // Пробуем найти свободное место
+        const offsets = [0, -1, 1, -2, 2] // порядок: сначала без смещения, потом ±1, ±2
+        placeIndex = -1
+        
+        for (const offset of offsets) {
+          const candidate = baseIndex + offset
+          if (candidate > 0 && candidate < placeCount - 1 && !usedPlaces.has(candidate)) {
+            placeIndex = candidate
+            break
+          }
+        }
+        
+        // Если все заняты, берём любое свободное
+        if (placeIndex === -1) {
+          for (let i = 1; i < placeCount - 1; i++) {
+            if (!usedPlaces.has(i)) {
+              placeIndex = i
+              break
+            }
+          }
+        }
+      }
+      
+      // Запоминаем занятое место
+      usedPlaces.add(placeIndex)
+      
+      const cellId = places[placeIndex]
       if (!cellId) return
       
       const cellNum = parseInt(cellId.replace('cell_', ''))

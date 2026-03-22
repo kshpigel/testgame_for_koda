@@ -42,6 +42,7 @@ export class Battle extends EventEmitter {
     
     // HandRenderer для управления картами в руке
     this.handRenderer = null
+    this._tickerCallback = null
     
     // BattleUI для кнопок и счётчиков
     this.battleUI = null
@@ -742,7 +743,8 @@ export class Battle extends EventEmitter {
     animate()
     
     // Запускаем игровой цикл для анимаций карт
-    this.app.ticker.add(() => this.gameLoop())
+    this._tickerCallback = () => this.gameLoop()
+    this.app.ticker.add(this._tickerCallback)
   }
 
   gameLoop() {
@@ -759,7 +761,10 @@ export class Battle extends EventEmitter {
 
   fadeOut(callback) {
     // Останавливаем тикер
-    this.app.ticker.remove(() => this.gameLoop())
+    if (this._tickerCallback) {
+      this.app.ticker.remove(this._tickerCallback)
+      this._tickerCallback = null
+    }
     
     const animate = () => {
       this.container.alpha -= 0.05

@@ -23,6 +23,7 @@ export class BaseScreen extends EventEmitter {
     this.container = new PIXI.Container()
     this.container.zIndex = Z.bgBase
     this.assets = {}
+    this._tickerCallback = null
   }
 
   async init(completedPortals = []) {
@@ -208,11 +209,17 @@ export class BaseScreen extends EventEmitter {
       }
     }
     animate()
-    this.app.ticker.add(() => this.update())
+    
+    // Сохраняем ссылку на функцию для корректного удаления
+    this._tickerCallback = () => this.update()
+    this.app.ticker.add(this._tickerCallback)
   }
 
   hide() {
-    this.app.ticker.remove(() => this.update())
+    if (this._tickerCallback) {
+      this.app.ticker.remove(this._tickerCallback)
+      this._tickerCallback = null
+    }
     const animate = () => {
       this.container.alpha -= 0.05
       if (this.container.alpha <= 0) {
