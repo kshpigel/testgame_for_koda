@@ -46,13 +46,16 @@ export class DeckMenu {
     })
     
     // Сетка карт
-    const cardScale = 0.8
+    const cardScale = 0.75
     const cardW = CARD_CONFIG.width
     const cardH = CARD_CONFIG.height
-    const startX = -330 // center - 50px
-    const startY = -150 // +40px вниз
+    
+    // Центрируем по горизонтали: 6 колонок
     const cols = 6
-    const spacingX = 8
+    const totalWidth = cols * cardW * cardScale + (cols - 1) * 10 // gap 10px
+    const startX = -totalWidth / 2 + cardW * cardScale / 2
+    const startY = -130 // +20px вниз
+    const spacingX = 10
     const spacingY = 8
     
     // Показываем ВСЕ типы карт (даже с count=0), сортируем по силе (value) по убыванию
