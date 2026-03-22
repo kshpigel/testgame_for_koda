@@ -60,10 +60,10 @@ export class MapRenderer {
     if (!config.debug) return
     
     const segments = this.mapData.segments
-    const cellW = (this.app.screen.width - 100) / segments
-    const cellH = (this.app.screen.height - 150) / segments
-    const startX = 50
-    const startY = 80
+    const cellW = this.app.screen.width / segments
+    const cellH = this.app.screen.height / segments
+    const startX = 0
+    const startY = 0
 
     const grid = new PIXI.Graphics()
     grid.lineStyle(2, colors.map.grid, 0.5)

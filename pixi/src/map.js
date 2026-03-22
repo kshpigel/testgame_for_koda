@@ -145,10 +145,10 @@ export class MapScreen extends EventEmitter {
     }
     
     const segments = this.mapData.segments
-    const cellW = (this.app.screen.width - 100) / segments
-    const cellH = (this.app.screen.height - 150) / segments
-    const startX = 50
-    const startY = 80
+    const cellW = this.app.screen.width / segments
+    const cellH = this.app.screen.height / segments
+    const startX = 0
+    const startY = 0
     
     // Массив для анимации
     this.animatableEnemies = []
