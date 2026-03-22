@@ -71,7 +71,7 @@ export class BaseScreen extends EventEmitter {
     this.container.addChild(this.birds.container)
     
     // Облака на фоне
-    this.clouds = new Clouds(this.app, { count: 6, speed: 0.15 })
+    this.clouds = new Clouds(this.app, { count: 8, speed: 0.15 })
     this.container.addChild(this.clouds.container)
 
     // База (по центру горизонтально, 2/3 сверху)
@@ -193,8 +193,8 @@ export class BaseScreen extends EventEmitter {
       const portal = new Portal({
         texture: texture,
         scale: 1,
-        width: 200,
-        height: 200,
+        width: 160,
+        height: 160,
         app: this.app,
         onClick: () => {
           this.emit('start_game', pos.id)

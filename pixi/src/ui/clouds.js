@@ -46,8 +46,8 @@ export class Clouds {
       cloud.drawEllipse(20, -12, 28, 16)
       cloud.endFill()
       
-      // Применяем blur 1 раз
-      const blurFilter = new BlurFilter(25)
+      // Применяем blur (уменьшено с 25 до 12)
+      const blurFilter = new BlurFilter(12)
       cloud.filters = [blurFilter]
       
       // Рендерим в текстуру

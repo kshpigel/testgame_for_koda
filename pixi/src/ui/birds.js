@@ -45,7 +45,7 @@ export class Birds {
 
   createBird() {
     const bird = new PIXI.Graphics()
-    const size = 3 + Math.random() * 2 // 3-5px от центра до конца крыла
+    const size = 5 + Math.random() * 2 // 5-7px от центра до конца крыла
     
     // Рисуем птицу "галочкой" с анимацией махания
     const draw = (wingOffset) => {

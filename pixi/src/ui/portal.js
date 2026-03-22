@@ -8,8 +8,8 @@ import { UINode } from './ui_node.js'
 export class Portal extends UINode {
   constructor(options = {}) {
     super({
-      width: options.width || 200,
-      height: options.height || 200,
+      width: options.width || 160,
+      height: options.height || 160,
       app: options.app || null,
       scaleSpeed: 0.15
     })
@@ -23,6 +23,10 @@ export class Portal extends UINode {
     this.wobbleOffset = Math.random() * Math.PI * 2
     this.wobbleSpeed = 0.007
     this.wobbleAmount = 0.03 // 3% scale амплитуда
+    
+    // Вращение (циклическое по часовой стрелке)
+    this.rotationOffset = Math.random() * Math.PI * 2
+    this.rotationSpeed = 0.0025 // Очень медленное вращение
     
     this.glowFilter = new ColorMatrixFilter()
     this.glowFilter.brightness(1.5, false)
@@ -156,14 +160,21 @@ export class Portal extends UINode {
       }
     }
 
-    // Применяем фильтр - с защитой от null
+    // Получаем sprite и применяем фильтр + вращение
     const portalSprite = this.getChildByName('portalSprite')
-    if (portalSprite && this.glowFilter) {
-      if (this.targetBrightness > 1 || (this.glowFilter.brightness !== undefined && Math.abs(this.glowFilter.brightness - 1) > 0.01)) {
-        portalSprite.filters = [this.glowFilter]
-      } else {
-        portalSprite.filters = null
+    if (portalSprite) {
+      // Фильтр
+      if (this.glowFilter) {
+        if (this.targetBrightness > 1 || (this.glowFilter.brightness !== undefined && Math.abs(this.glowFilter.brightness - 1) > 0.01)) {
+          portalSprite.filters = [this.glowFilter]
+        } else {
+          portalSprite.filters = null
+        }
       }
+      
+      // Вращение по часовой стрелке
+      this.rotationOffset += this.rotationSpeed
+      portalSprite.rotation = this.rotationOffset
     }
   }
 }
