@@ -1,4 +1,5 @@
 import * as PIXI from 'pixi.js'
+import { ColorMatrixFilter } from 'pixi.js'
 import { FONT } from '../data/fonts.js'
 import { colors } from '../data/colors.js'
 import { CARD_CONFIG } from './card.js'
@@ -54,8 +55,12 @@ export class DeckMenu {
     const spacingX = 8
     const spacingY = 8
     
-    // Показываем ВСЕ типы карт (даже с count=0)
-    const allCardTypes = this.cardTypes
+    // Показываем ВСЕ типы карт (даже с count=0), сортируем по силе (value) по убыванию
+    const allCardTypes = [...this.cardTypes].sort((a, b) => (b.value || 0) - (a.value || 0))
+    
+    // Grayscale фильтр для карт с count=0
+    const grayFilter = new ColorMatrixFilter()
+    grayFilter.grayscale(0.5)
     
     allCardTypes.forEach((cardType, i) => {
       const col = i % cols
@@ -72,9 +77,9 @@ export class DeckMenu {
       card.x = startX + col * (cardW * cardScale + spacingX) + cardW * cardScale / 2
       card.y = startY + row * (cardH * cardScale + spacingY) + cardH * cardScale / 2
       
-      // Если карт этого типа нет - полупрозрачность и count = 0
+      // Если карт этого типа нет - grayscale 50%
       if (count === 0) {
-        card.alpha = 0.4
+        card.filters = [grayFilter]
       }
       
       // Обработчик клика - открыть детальное окно
