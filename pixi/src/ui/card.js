@@ -29,6 +29,9 @@ export class Card extends PIXI.Container {
   constructor(cardData, options = {}) {
     super()
     
+    // Включить сортировку по zIndex
+    this.sortableChildren = true
+    
     this.cardData = cardData
     this.isSelected = false
     this.isDisabled = false
@@ -62,10 +65,12 @@ export class Card extends PIXI.Container {
     this.shadow = new PIXI.Graphics()
     this.shadow.name = 'shadow'
     this.shadow.visible = false
+    this.shadow.zIndex = 0
     this.addChild(this.shadow)
     
     // === СЛОЙ 1: Фон (цветной прямоугольник) ===
     this.bg = new PIXI.Graphics()
+    this.bg.zIndex = 1
     this.drawBg(CARD_CONFIG.colors.normal)
     this.addChild(this.bg)
     
@@ -74,6 +79,12 @@ export class Card extends PIXI.Container {
     
     // === СЛОЙ 3: Картинка героя (image) ===
     this.heroImage = null
+    
+    // === СЛОЙ 1.5: Glow-слой с радиальным градиентом (ПОСЛЕ bg, перед героем) ===
+    this.glowLayer = this.createGlowLayer()
+    this.glowLayer.visible = true
+    this.glowLayer.zIndex = 3
+    this.addChild(this.glowLayer)
     this.heroImageYRatio = -0.27 // 27% от высоты сверху
     
     // Перерисовываем фон с правильными размерами
@@ -89,6 +100,7 @@ export class Card extends PIXI.Container {
     })
     this.nameText.anchor.set(0.5, 1)
     this.nameText.yRatio = 0.38 // 38% от высоты сверху
+    this.nameText.zIndex = 5
     this.addChild(this.nameText)
     
     // === СЛОЙ 5: Кружочек с силой (относительно ширины карты) ===
@@ -100,6 +112,7 @@ export class Card extends PIXI.Container {
       borderColor: colors.card.circle.border,
       text: `${this.cardData.value}`
     })
+    this.valueCircle.zIndex = 6
     this.addChild(this.valueCircle)
     
     // === СЛОЙ 6: Бафф (относительно размеров карты) ===
@@ -112,6 +125,7 @@ export class Card extends PIXI.Container {
     this.buffText.anchor.set(0.5)
     this.buffText.xRatio = -0.45 // слева
     this.buffText.yRatio = 0 // по центру по вертикали
+    this.buffText.zIndex = 7
     this.addChild(this.buffText)
     
     // Интерактивность
@@ -138,6 +152,70 @@ export class Card extends PIXI.Container {
   
   drawDebugFrame() {
     addDebugBounds(this, CARD_CONFIG.width, CARD_CONFIG.height)
+  }
+
+  // Создание glow-слоя с радиальным градиентом
+  createGlowLayer() {
+    const glowContainer = new PIXI.Container()
+    
+    // Размеры glow-области
+    const glowW = 140
+    const glowH = 150
+    const offsetX = 5
+    const offsetY = 5
+    
+    // Центр градиента - низ по середине
+    const centerX = glowW / 2
+    const centerY = glowH
+    
+    // Создаём текстуру с градиентом через canvas
+    const canvas = document.createElement('canvas')
+    canvas.width = glowW
+    canvas.height = glowH
+    const ctx = canvas.getContext('2d')
+    
+    // Радиальный градиент: от #D60404 в центре (внизу) к прозрачному
+    const gradient = ctx.createRadialGradient(
+      centerX, centerY, 0,           // start circle
+      centerX, centerY, glowH        // end circle
+    )
+    gradient.addColorStop(0, '#D60404')          // Центр - красный
+    gradient.addColorStop(0.4, 'rgba(214, 4, 4, 0.6)')  // 40% - полупрозрачный
+    gradient.addColorStop(1, 'rgba(214, 4, 4, 0)')      // Края - прозрачный
+    
+    ctx.fillStyle = gradient
+    ctx.fillRect(0, 0, glowW, glowH)
+    
+    // Создаём PIXI текстуру из canvas
+    const glowTexture = PIXI.Texture.from(canvas)
+    const glowSprite = new PIXI.Sprite(glowTexture)
+    
+    // Позиционируем относительно центра карты
+    glowSprite.anchor.set(0.5)
+    glowSprite.x = -this.cardWidth / 2 + offsetX + glowW / 2
+    glowSprite.y = -this.cardHeight / 2 + offsetY + glowH / 2 - 5
+    
+    glowContainer.addChild(glowSprite)
+    
+    // Сохраняем ссылку на спрайт для анимации
+    glowContainer.glowSprite = glowSprite
+    
+    return glowContainer
+  }
+
+  // Показать/скрыть glow эффект
+  setGlowVisible(visible) {
+    this.glowLayer.visible = visible
+  }
+
+  // Включить glow эффект (для использования извне)
+  enableGlow() {
+    this.setGlowVisible(true)
+  }
+
+  // Выключить glow эффект
+  disableGlow() {
+    this.setGlowVisible(false)
   }
 
   drawBg(color) {
@@ -201,6 +279,7 @@ export class Card extends PIXI.Container {
       this.heroImage.scale.set(scale)
       
       // Добавляем на самый верх (поверх бордера)
+      this.heroImage.zIndex = 4
       this.addChild(this.heroImage)
       
       // Обновить позицию после загрузки
@@ -404,6 +483,13 @@ export class Card extends PIXI.Container {
     const wobble = Math.sin(this.wobbleOffset) * this.wobbleAmount
     if (this.y !== this.targetY + wobble) {
       this.y = this.targetY + wobble
+    }
+    
+    // Анимация glow-слоя (плавное затухание/разгорание)
+    if (this.glowLayer && this.glowLayer.visible && this.glowLayer.glowSprite) {
+      // Плавная пульсация от 0.3 до 1.0 (медленная)
+      const glowAlpha = 0.3 + (Math.sin(Date.now() * 0.0015) + 1) / 2 * 0.7
+      this.glowLayer.glowSprite.alpha = glowAlpha
     }
   }
 
