@@ -4,7 +4,7 @@ import { FONT } from '../data/fonts.js'
 import { soundManager } from '../audio/sound_manager.js'
 import { config } from '../data/config.js'
 import { addDebugBounds } from './ui_node.js'
-import { colors } from '../data/colors.js'
+import { colors, gradientColors } from '../data/colors.js'
 import { Circle } from './circle.js'
 
 // Настройки карты
@@ -205,12 +205,15 @@ export class Card extends PIXI.Container {
     const centerX = glowW / 2
     const centerY = glowH
     
-    // Цвета для анимации
-    const colors = ['#D60404', '#FF6B00'] // красный, оранжевый
+    // Цвета для анимации из colors.js
+    const glowColors = [
+      gradientColors.card.glow1,
+      gradientColors.card.glow2
+    ]
     
     const textures = []
     
-    colors.forEach(color => {
+    glowColors.forEach(color => {
       const canvas = document.createElement('canvas')
       canvas.width = glowW
       canvas.height = glowH
