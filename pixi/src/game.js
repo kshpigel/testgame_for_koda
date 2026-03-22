@@ -216,7 +216,14 @@ export class Game {
       const enemies = allEnemies.slice(0, config.enemiesCount || allEnemies.length)
       mapScreen = new MapScreen(this.app, randomMap, enemies, this)
       mapScreen.on('enemy_click', (enemyData) => this.initBattle(enemyData))
-      mapScreen.on('exit_to_base', () => this.showBase())
+      mapScreen.on('exit_to_base', () => {
+        // При выходе добавляем портал в пройденные
+        const portalId = mapScreen.portalId
+        if (portalId && !this.completedPortals.includes(portalId)) {
+          this.completedPortals.push(portalId)
+        }
+        this.showBase()
+      })
       this.screens['map'] = mapScreen
     }
     
