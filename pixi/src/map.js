@@ -95,11 +95,17 @@ export class MapScreen extends EventEmitter {
   }
 
   hide() {
+    // Защита от повторного вызова
+    if (this._isHiding) return
+    this._isHiding = true
+    
     // Останавливаем тикер анимации
     if (this.tickerCallback) {
       this.app.ticker.remove(this.tickerCallback)
+      this.tickerCallback = null
     }
     this.fadeOut(() => {
+      this._isHiding = false
       this.app.stage.removeChild(this.container)
       this.cleanup()
     })
@@ -328,8 +334,26 @@ export class MapScreen extends EventEmitter {
   }
 
   cleanup() {
-    this.container.removeChildren()
+    log('[MapScreen] cleanup() START')
+    // Удаляем все children с вызовом destroy() (чтобы остановить tickers)
+    const children = this.container.children.slice() // копия массива
+    log('[MapScreen] cleanup() children count:', children.length)
+    
+    children.forEach((child, i) => {
+      try {
+        // Проверяем что child ещё не уничтожен
+        if (child && !child._destroyed) {
+          this.container.removeChild(child)
+          if (child.destroy) {
+            child.destroy({ children: true })
+          }
+        }
+      } catch (e) {
+        log('[MapScreen] cleanup() error on child', i, e.message)
+      }
+    })
     this.enemySprites = []
+    log('[MapScreen] cleanup() DONE')
   }
 
   scaleToCover(sprite, targetWidth, targetHeight) {

@@ -72,20 +72,53 @@ export class Portal extends UINode {
     this.cursor = 'pointer'
 
     this.on('pointerover', () => {
+      if (this._destroyed || this._isDestroyed) return
       this.setScale(1.05)
       this.targetBrightness = 1.5
       soundManager.play('hover')
     })
 
     this.on('pointerout', () => {
+      if (this._destroyed || this._isDestroyed) return
       this.setScale(1)
       this.targetBrightness = 1
     })
 
     this.on('pointerdown', () => {
+      if (this._destroyed || this._isDestroyed) return
       soundManager.play('click')
       if (this.onClick) this.onClick()
     })
+  }
+  
+  destroy(options) {
+    // Защита от повторного destroy
+    if (this._destroyed) {
+      console.warn('[Portal] destroy: already destroyed, skipping')
+      return
+    }
+    this._destroyed = true
+    console.log('[Portal] destroy: called for', this.portalId)
+    
+    // Очищаем фильтр ДО вызова super.destroy()
+    if (this.glowFilter) {
+      this.glowFilter.destroy()
+      this.glowFilter = null
+    }
+    
+    // Очищаем filters на sprite
+    const portalSprite = this.getChildByName('portalSprite')
+    if (portalSprite && portalSprite.filters) {
+      portalSprite.filters.forEach(f => {
+        if (f.destroy) f.destroy()
+      })
+      portalSprite.filters = null
+    }
+    
+    // Очищаем обработчики событий
+    this.removeAllListeners()
+    
+    super.destroy(options)
   }
 
   // Alias для совместимости с base_screen
@@ -95,6 +128,9 @@ export class Portal extends UINode {
   
   // Переопределяем updateScale для добавления wobble эффекта
   updateScale() {
+    // Защита от вызова после destroy()
+    if (this._destroyed || this._isDestroyed) return
+    
     // Сначала базовый scale от UINode (включая компенсацию позиции)
     super.updateScale()
     
@@ -111,17 +147,19 @@ export class Portal extends UINode {
       this.y = this._visualY + this.pivot.y * finalScale
     }
 
-    // Brightness анимация (плавная)
-    const brightnessDiff = this.targetBrightness - (this.glowFilter.brightness || 1)
-    if (Math.abs(brightnessDiff) > 0.01) {
-      const newBrightness = (this.glowFilter.brightness || 1) + brightnessDiff * 0.1
-      this.glowFilter.brightness(newBrightness, false)
+    // Brightness анимация (плавная) - с защитой от null
+    if (this.glowFilter && this.glowFilter.brightness !== undefined) {
+      const brightnessDiff = this.targetBrightness - (this.glowFilter.brightness || 1)
+      if (Math.abs(brightnessDiff) > 0.01) {
+        const newBrightness = (this.glowFilter.brightness || 1) + brightnessDiff * 0.1
+        this.glowFilter.brightness(newBrightness, false)
+      }
     }
 
-    // Применяем фильтр
+    // Применяем фильтр - с защитой от null
     const portalSprite = this.getChildByName('portalSprite')
-    if (portalSprite) {
-      if (this.targetBrightness > 1 || Math.abs(this.glowFilter.brightness - 1) > 0.01) {
+    if (portalSprite && this.glowFilter) {
+      if (this.targetBrightness > 1 || (this.glowFilter.brightness !== undefined && Math.abs(this.glowFilter.brightness - 1) > 0.01)) {
         portalSprite.filters = [this.glowFilter]
       } else {
         portalSprite.filters = null

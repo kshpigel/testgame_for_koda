@@ -784,7 +784,15 @@ export class Battle extends EventEmitter {
   }
 
   cleanup() {
-    this.container.removeChildren()
+    // Удаляем все children с вызовом destroy() (чтобы остановить tickers)
+    const children = this.container.children.slice()
+    children.forEach(child => {
+      if (child.destroy) {
+        child.destroy({ children: true })
+      } else {
+        this.container.removeChild(child)
+      }
+    })
     this.cards = []
     this.selectedCards = []
   }

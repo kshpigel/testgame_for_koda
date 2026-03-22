@@ -7,6 +7,8 @@ import { log } from './data/config.js'
 import { soundManager } from './audio/sound_manager.js'
 import { player } from './data/player.js'
 import { Portal } from './ui/portal.js'
+import { Birds } from './ui/birds.js'
+import { Clouds } from './ui/clouds.js'
 
 const ASSETS = {
   bg: '/assets/img/base_bg.png',
@@ -63,6 +65,14 @@ export class BaseScreen extends EventEmitter {
       bg.endFill()
       this.container.addChild(bg)
     }
+
+    // Птицы на фоне
+    this.birds = new Birds(this.app, { count: 12, speed: 0.6 })
+    this.container.addChild(this.birds.container)
+    
+    // Облака на фоне
+    this.clouds = new Clouds(this.app, { count: 6, speed: 0.15 })
+    this.container.addChild(this.clouds.container)
 
     // База (по центру горизонтально, 2/3 сверху)
     if (this.assets.base && this.assets.base.texture) {
@@ -185,6 +195,7 @@ export class BaseScreen extends EventEmitter {
         scale: 1,
         width: 200,
         height: 200,
+        app: this.app,
         onClick: () => {
           this.emit('start_game', pos.id)
         }
@@ -216,22 +227,52 @@ export class BaseScreen extends EventEmitter {
   }
 
   hide() {
+    log('[BaseScreen] hide() called')
+    
+    // Флаг для защиты от обновлений во время fadeOut
+    this._isHiding = true
+    
+    // Останавливаем тикер СРАЗУ, чтобы не вызывать update() во время fadeOut
     if (this._tickerCallback) {
+      log('[BaseScreen] removing ticker')
       this.app.ticker.remove(this._tickerCallback)
       this._tickerCallback = null
     }
-    const animate = () => {
-      this.container.alpha -= 0.05
-      if (this.container.alpha <= 0) {
-        this.app.stage.removeChild(this.container)
-      } else {
-        requestAnimationFrame(animate)
-      }
+    
+    // Удаляем птиц и облака
+    if (this.birds) {
+      log('[BaseScreen] destroying birds')
+      this.birds.destroy()
+      this.birds = null
     }
-    animate()
+    if (this.clouds) {
+      log('[BaseScreen] destroying clouds')
+      this.clouds.destroy()
+      this.clouds = null
+    }
+    
+    // Удаляем порталы (критично!)
+    if (this.portals) {
+      log('[BaseScreen] destroying portals, count:', this.portals.length)
+      this.portals.forEach((p, i) => {
+        log('[BaseScreen] destroying portal', i)
+        if (p.destroy) p.destroy()
+      })
+      this.portals = []
+    }
+    
+    // Синхронно скрываем контейнер (без анимации для надёжности)
+    log('[BaseScreen] removing container from stage')
+    this.container.alpha = 0
+    this._isHiding = false
+    this.app.stage.removeChild(this.container)
+    log('[BaseScreen] hide() done')
   }
 
   update() {
+    // Защита от вызова после hide()
+    if (this._isHiding) return
+    
     if (this.portals) {
       this.portals.forEach(p => p.update())
     }

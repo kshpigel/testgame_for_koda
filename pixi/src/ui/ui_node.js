@@ -107,6 +107,9 @@ export class UINode extends PIXI.Container {
   
   // Обновление scale (вызывается из ticker)
   updateScale() {
+    // Защита от вызова после destroy
+    if (this._destroyed || this._isDestroyed) return
+    
     const diff = Math.abs(this._scale - this._targetScale)
     if (diff > 0.001) {
       this._scale += (this._targetScale - this._scale) * this._scaleSpeed
@@ -213,10 +216,21 @@ export class UINode extends PIXI.Container {
   
   // Очистка (удаление из ticker)
   destroy(options) {
-    if (this._app) {
-      this._app.ticker.remove(this.updateScale, this)
+    // Защита от повторного destroy
+    if (this._isDestroyed) {
+      console.warn('[UINode] destroy: already destroyed')
+      return
     }
-    super.destroy(options)
+    this._isDestroyed = true
+    
+    try {
+      if (this._app) {
+        this._app.ticker.remove(this.updateScale, this)
+      }
+      super.destroy(options)
+    } catch (e) {
+      console.error('[UINode] destroy error:', e)
+    }
   }
 }
 
