@@ -12,9 +12,14 @@ export class HandRenderer {
   layoutCards() {
     const cardWidth = CARD_CONFIG.width
     const cardHeight = CARD_CONFIG.height
-    const totalWidth = this.cards.length * cardWidth + (this.cards.length - 1) * (-20)
+    const cardOverlap = 20
     const handAreaY = this.app.screen.height - 160
-    const startX = (this.app.screen.width - totalWidth) / 2 + 160
+    // Центр руки по центру экрана
+    // centerOffset = (n-1) * 130 / 2 - смещение от центров до центров
+    // +80 - поправка для визуальной центровки
+    const centerOffset = (this.cards.length - 1) * (cardWidth - cardOverlap) / 2
+    const startX = this.app.screen.width / 2 - centerOffset + 80
+    
     const selectedOffset = 40
     
     // Угол: чтобы края были ниже центра (разворачиваем веер)
@@ -25,7 +30,8 @@ export class HandRenderer {
     const edgeYOffset = 30
 
     this.cards.forEach((card, index) => {
-      card.targetX = startX + index * (cardWidth - 20)
+      const cardOverlap = 20
+      card.targetX = startX + index * (cardWidth - cardOverlap)
       
       const distFromCenter = index - centerIndex
       const normalizedDist = distFromCenter / Math.max(1, centerIndex)
