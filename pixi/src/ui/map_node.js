@@ -8,7 +8,7 @@ import { config } from '../data/config.js'
 import { UINode } from './ui_node.js'
 
 export class MapNode extends UINode {
-  constructor(enemy, index, currentEnemyIndex, assets, app) {
+  constructor(enemy, index, currentEnemyIndex, assets, app, options = {}) {
     // Определяем размеры ноды
     const cfg = mapConfig ? mapConfig.enemy : {
       maxHeight: 90, offsetY: 30, spriteOffsetY: 20,
@@ -22,7 +22,8 @@ export class MapNode extends UINode {
       width: size,
       height: size,
       app: app,
-      scaleSpeed: 0.15
+      scaleSpeed: 0.15,
+      layer: options.layer || 'gameObject'
     })
     
     this.enemy = enemy

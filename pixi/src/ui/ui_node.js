@@ -59,6 +59,7 @@ export class UINode extends PIXI.Container {
     
     this._debugDirty = true
     this._app = options.app || null
+    this._layer = options.layer || 'ui'
     this._visualX = 0
     this._visualY = 0
     
@@ -66,9 +67,9 @@ export class UINode extends PIXI.Container {
     // Можно переопределить через options.zIndex или options.layer
     if (options.zIndex !== undefined) {
       this.zIndex = options.zIndex
-    } else if (options.layer === 'bg') {
+    } else if (this._layer === 'bg') {
       this.zIndex = Z.getBg()
-    } else if (options.layer === 'gameObject') {
+    } else if (this._layer === 'gameObject') {
       this.zIndex = Z.getGameObject()
     } else {
       this.zIndex = Z.getUi()

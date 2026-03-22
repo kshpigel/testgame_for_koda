@@ -18,6 +18,7 @@ export class MapScreen extends EventEmitter {
     this.enemies = enemies
     this.game = game
     this.container = new PIXI.Container()
+    this.container.sortableChildren = true
     this.container.zIndex = Z.BG_MAP
     this.enemySprites = []
     this.currentEnemyIndex = 0
@@ -136,6 +137,9 @@ export class MapScreen extends EventEmitter {
     
     // Враги
     this.renderEnemies()
+    
+    // Линии пути (после врагов, чтобы были выше фона)
+    this.renderPathLines()
   }
 
   renderEnemies() {
@@ -170,7 +174,7 @@ export class MapScreen extends EventEmitter {
       // Используем difficulty из enemies (уже рассчитан относительно HP)
       const difficulty = enemy.difficulty || 'medium'
       
-      const mapNode = new MapNode(enemy, index, this.currentEnemyIndex, this.assets, this.app)
+      const mapNode = new MapNode(enemy, index, this.currentEnemyIndex, this.assets, this.app, { layer: 'gameObject' })
       mapNode.isBoss = isBoss
       mapNode.setDifficulty(difficulty)
       mapNode.setPosition(x, y)
@@ -190,6 +194,69 @@ export class MapScreen extends EventEmitter {
     // Запускаем тикер для плавной анимации
     this.tickerCallback = () => this.updateEnemies()
     this.app.ticker.add(this.tickerCallback)
+  }
+  
+  renderPathLines() {
+    // Удаляем старые линии
+    const oldLines = this.container.getChildByName('pathLines')
+    if (oldLines) this.container.removeChild(oldLines)
+    
+    if (this.enemySprites.length < 2) return
+    
+    const lines = new PIXI.Graphics()
+    lines.name = 'pathLines'
+    lines.zIndex = 500 // Между фоном (2) и врагами (1000)
+    
+    const lineColor = colors.ui.text.primary
+    const lineWidth = 3
+    const lineAlpha = 0.5
+    
+    for (let i = 0; i < this.enemySprites.length - 1; i++) {
+      const from = this.enemySprites[i]
+      const to = this.enemySprites[i + 1]
+      
+      // Используем _visualX/_visualY для получения центра (без pivot)
+      const fromX = from._visualX || from.x
+      const fromY = from._visualY || from.y
+      const toX = to._visualX || to.x
+      const toY = to._visualY || to.y
+      
+      // Рисуем пунктирную линию от центра врагов
+      this.drawDashedLine(lines, fromX, fromY, toX, toY, lineColor, lineWidth, lineAlpha)
+    }
+    
+    this.container.addChildAt(lines, 0)
+  }
+  
+  drawDashedLine(graphics, x1, y1, x2, y2, color, width, alpha = 1) {
+    const dashLength = 15
+    const gapLength = 15
+    const dx = x2 - x1
+    const dy = y2 - y1
+    const dist = Math.sqrt(dx * dx + dy * dy)
+    const ux = dx / dist
+    const uy = dy / dist
+    
+    let currentX = x1
+    let currentY = y1
+    let drawn = 0
+    let isDash = true
+    
+    while (drawn < dist) {
+      const segmentLength = isDash ? dashLength : gapLength
+      const len = Math.min(segmentLength, dist - drawn)
+      
+      if (isDash) {
+        graphics.lineStyle(width, color, alpha)
+        graphics.moveTo(currentX, currentY)
+        graphics.lineTo(currentX + ux * len, currentY + uy * len)
+      }
+      
+      currentX += ux * len
+      currentY += uy * len
+      drawn += len
+      isDash = !isDash
+    }
   }
   
   updateEnemies() {
