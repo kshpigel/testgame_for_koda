@@ -51,7 +51,7 @@
       "mechanic": "Баффается +25 ед.силы когда выбраны 3 карты Берсерк (при первом ходе +5)",
       "value": 5,
       "image": "/assets/img/cards/type4.png",
-      "image_bg": "/assets/img/card.png",
+      "image_bg": "/assets/img/card_elf.png",
       "kind": "base",
       "faction": "neutral",
       "maxInDeck": 10,
@@ -78,8 +78,8 @@
       "bio": "Мастерница меткой стрельбы из лука. Бьёт врагов на расстоянии.",
       "mechanic": "Если лучниц 4 или больше, рука прибавляет 1 ход",
       "value": 7,
-      "image": "/assets/img/cards/type6.png",
-      "image_bg": "/assets/img/card.png",
+      "image": "/assets/img/cards/elf_archer.png",
+      "image_bg": "/assets/img/card_elf.png",
       "kind": "base",
       "faction": "dwarves",
       "maxInDeck": 11,
@@ -127,7 +127,7 @@
       "mechanic": "Боевая единица.",
       "value": 14,
       "image": "/assets/img/cards/type9.png",
-      "image_bg": "/assets/img/card.png",
+      "image_bg": "/assets/img/card_elf.png",
       "kind": "base",
       "faction": "neutral",
       "maxInDeck": 3
@@ -158,6 +158,22 @@
       "buff": {
         "type": "SelectedRandomIfNotSelected",
         "params": { "min": 1, "max": 5 }
+      }
+    },
+    {
+      "type": 12,
+      "name": "Паладин",
+      "bio": "Паладин из рассы эльфов...",
+      "mechanic": "Баффает Эльфов увеличивая их силу +3",
+      "value": 9,
+      "image": "/assets/img/cards/elf_knight.png",
+      "image_bg": "/assets/img/card_elf.png",
+      "kind": "base",
+      "faction": "dwarves",
+      "maxInDeck": 10,
+      "buff": {
+        "type": "FactionHp",
+        "params": { "faction": "dwarves", "value": 3 }
       }
     }
   ]

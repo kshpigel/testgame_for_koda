@@ -113,13 +113,38 @@ export class Clouds {
     if (this._destroyed) return
     this._destroyed = true
     
-    this.app.ticker.remove(this.update)
-    // Сначала уничтожаем container с children (спрайты используют текстуры)
-    this.container.destroy({ children: true })
-    // Потом уничтожаем текстуры
-    this.cloudTextures.forEach(t => t.destroy(true))
-    if (this._renderTexture) {
-      this._renderTexture.destroy(true)
+    try {
+      this.app.ticker.remove(this.update)
+    } catch (e) {}
+    
+    // Сначала очищаем clouds массив (спрайты)
+    if (this.clouds) {
+      this.clouds = []
     }
+    
+    // Удаляем children из container вручную
+    if (this.container && this.container.children) {
+      const children = this.container.children.slice()
+      children.forEach(child => {
+        try {
+          this.container.removeChild(child)
+        } catch (e) {}
+      })
+    }
+    
+    // Уничтожаем container
+    try {
+      if (this.container) {
+        this.container.destroy({ children: true })
+        this.container = null
+      }
+    } catch (e) {
+      console.warn('[Clouds] container.destroy error:', e)
+    }
+    
+    // Текстуры НЕ уничтожаем здесь - они создаются из renderTexture один раз
+    // и могут использоваться в других местах (хотя в данном случае нет)
+    this.cloudTextures = []
+    this._renderTexture = null
   }
 }

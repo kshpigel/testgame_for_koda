@@ -239,26 +239,44 @@ export class BaseScreen extends EventEmitter {
       this._tickerCallback = null
     }
     
-    // Удаляем птиц и облака
-    if (this.birds) {
-      log('[BaseScreen] destroying birds')
-      this.birds.destroy()
-      this.birds = null
-    }
-    if (this.clouds) {
-      log('[BaseScreen] destroying clouds')
-      this.clouds.destroy()
-      this.clouds = null
+    // Удаляем порталы ПЕРЕД birds/clouds (чтобы остановить их update первыми)
+    if (this.portals && this.portals.length > 0) {
+      log('[BaseScreen] destroying portals, count:', this.portals.length)
+      // Копируем массив чтобы не модифицировать во время итерации
+      const portalsCopy = [...this.portals]
+      this.portals = []
+      portalsCopy.forEach((p, i) => {
+        log('[BaseScreen] destroying portal', i)
+        if (p && p.destroy) {
+          try {
+            p.destroy()
+          } catch (e) {
+            console.error('[BaseScreen] error destroying portal:', e)
+          }
+        }
+      })
     }
     
-    // Удаляем порталы (критично!)
-    if (this.portals) {
-      log('[BaseScreen] destroying portals, count:', this.portals.length)
-      this.portals.forEach((p, i) => {
-        log('[BaseScreen] destroying portal', i)
-        if (p.destroy) p.destroy()
-      })
-      this.portals = []
+    // Удаляем птиц
+    if (this.birds) {
+      log('[BaseScreen] destroying birds')
+      try {
+        this.birds.destroy()
+      } catch (e) {
+        console.error('[BaseScreen] error destroying birds:', e)
+      }
+      this.birds = null
+    }
+    
+    // Удаляем облака
+    if (this.clouds) {
+      log('[BaseScreen] destroying clouds')
+      try {
+        this.clouds.destroy()
+      } catch (e) {
+        console.error('[BaseScreen] error destroying clouds:', e)
+      }
+      this.clouds = null
     }
     
     // Синхронно скрываем контейнер (без анимации для надёжности)

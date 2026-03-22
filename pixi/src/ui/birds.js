@@ -97,7 +97,18 @@ export class Birds {
     this._destroyed = true
     
     this.app.ticker.remove(this.update)
-    // Container уничтожает все children (Graphics)
-    this.container.destroy({ children: true })
+    
+    // Удаляем все bird Graphics из контейнера вручную
+    this.birds.forEach(bird => {
+      if (bird && this.container.children.includes(bird)) {
+        this.container.removeChild(bird)
+      }
+    })
+    this.birds = []
+    
+    // Теперь уничтожаем container
+    if (this.container) {
+      this.container.destroy({ children: true })
+    }
   }
 }
