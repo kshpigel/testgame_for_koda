@@ -138,7 +138,9 @@ export class MapNode extends UINode {
     if (this.isDefeated && enemySprite) {
       const grayscaleFilter = new ColorMatrixFilter()
       grayscaleFilter.grayscale()
-      enemySprite.filters = [grayscaleFilter]
+      const darkenFilter = new ColorMatrixFilter()
+      darkenFilter.brightness(0.5, false) // Затемнение до 50%
+      enemySprite.filters = [grayscaleFilter, darkenFilter]
     }
     
     this.enemySprite = enemySprite
@@ -210,7 +212,15 @@ export class MapNode extends UINode {
       this.setScale(1)
       this.platform.alpha = this.isActive ? 0.8 : 0.7
       if (this.enemySprite) {
-        this.enemySprite.filters = this.isDefeated ? [grayscaleFilter] : null
+        if (this.isDefeated) {
+          const gs = new ColorMatrixFilter()
+          gs.grayscale()
+          const dark = new ColorMatrixFilter()
+          dark.brightness(0.5, false)
+          this.enemySprite.filters = [gs, dark]
+        } else {
+          this.enemySprite.filters = null
+        }
       }
     })
     
