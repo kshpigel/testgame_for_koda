@@ -30,8 +30,17 @@ const gradientColorsData = {
     circle: {
       normal: { center: '#67B560', edge: '#0C1B11' },
       selected: { center: '#EE40D7', edge: '#3B0C32' },
-      buffed: { center: '#EE40D7', edge: '#3B0C32' }
+      buffed: { center: '#EE40D7', edge: '#3B0C32' },
+      debuffed: { center: '#C02828', edge: '#600808' },
+      dark: { center: '#3C3C44', edge: '#1C1C22' }
     }
+  },
+  button: {
+    // Радиальные градиенты кнопок: center -> mid -> edge
+    red: { center: '#C02828', mid: '#801818', edge: '#600808' },
+    green: { center: '#4a9c4a', mid: '#2d5a2d', edge: '#1a3a1a' },
+    redHover: { center: '#901818', mid: '#701010', edge: '#400606' },
+    greenHover: { center: '#2d5a2d', mid: '#1a3a1a', edge: '#0a1a0a' }
   }
 }
 
@@ -100,7 +109,7 @@ const colorsData = {
       play: '#39751b',
       reset: '#8c1300',
       exit: '#8c1300',
-      hover: '#a52a2a',
+      hover: '#255a25',
       shadow: '#000000',
       white: '#F5E7CF'
     },

@@ -598,6 +598,16 @@ export class Card extends PIXI.Container {
       this.buffText.x = -w/2 + w * (0.5 + this.buffText.xRatio)
       this.buffText.y = -h/2 + h * (0.5 + this.buffText.yRatio)
     }
+    
+    // countCircle (для deck_menu)
+    if (this.countCircle) {
+      if (this.countCircle.xRatio !== null) {
+        this.countCircle.setX(-w/2 + w * (0.5 + this.countCircle.xRatio))
+      }
+      if (this.countCircle.yRatio !== null) {
+        this.countCircle.setY(-h/2 + h * (0.5 + this.countCircle.yRatio))
+      }
+    }
   }
 
   // Клонировать карту

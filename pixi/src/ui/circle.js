@@ -116,6 +116,16 @@ export class Circle extends UINode {
     this.setGradient(g.center, g.edge)
   }
 
+  setDebuffedStyle() {
+    const g = gradientColors.card.circle.debuffed
+    this.setGradient(g.center, g.edge)
+  }
+
+  setDarkStyle() {
+    const g = gradientColors.card.circle.dark
+    this.setGradient(g.center, g.edge)
+  }
+
   setText(text, animate = true) {
     const shouldAnimate = animate && String(this.text) !== String(text)
     

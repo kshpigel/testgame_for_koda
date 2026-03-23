@@ -104,16 +104,22 @@ export class DeckMenu {
         card.loadHeroImage(this.assets[`card_${cardType.type}`].texture)
       }
       
+      // Кружок с количеством - внутри card (чтобы был поверх)
       const countCircle = new Circle({
-        x: cardW * cardScale / 2 - 5,
-        y: -cardH * cardScale / 2 + 10,
+        xRatio: 0.4,
+        yRatio: -0.4,
         radius: 12,
-        bgColor: count === 0 ? colors.ui.circle.bg : colors.ui.circle.border,
+        bgColor: colors.ui.circle.bg,
         borderColor: colors.ui.circle.border,
         text: `${count}`,
         fontSize: 12
       })
+      countCircle.setDarkStyle()
+      card.countCircle = countCircle
       card.addChild(countCircle)
+      // Компенсируем scale карты (0.8)
+      countCircle.scale.set(1 / cardScale)
+      card.updateChildPositions()
       
       content.addChild(card)
     })
