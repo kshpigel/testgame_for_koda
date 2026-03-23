@@ -57,11 +57,6 @@ export class MapNode extends UINode {
     // Здоровье
     this.renderHealth(cfg, spriteY)
     
-    // Статус "Побежден"
-    if (this.isDefeated) {
-      this.renderDefeated(cfg, spriteY)
-    }
-    
     // Интерактивность
     if (!this.isDefeated) {
       this.setupInteraction(cfg, spriteY)
@@ -136,11 +131,9 @@ export class MapNode extends UINode {
     }
     
     if (this.isDefeated && enemySprite) {
-      const grayscaleFilter = new ColorMatrixFilter()
-      grayscaleFilter.grayscale()
-      const darkenFilter = new ColorMatrixFilter()
-      darkenFilter.brightness(0.5, false) // Затемнение до 50%
-      enemySprite.filters = [grayscaleFilter, darkenFilter]
+      const grayFilter = new ColorMatrixFilter()
+      grayFilter.grayscale(0.5)
+      enemySprite.filters = [grayFilter]
     }
     
     this.enemySprite = enemySprite
@@ -160,6 +153,8 @@ export class MapNode extends UINode {
   }
   
   renderHealth(cfg, spriteY) {
+    if (this.isDefeated) return
+    
     const healthBg = new PIXI.Graphics()
     healthBg.beginFill(colors.enemy.healthBg, 0.6)
     healthBg.drawRoundedRect(-cfg.health.bg.width/2, spriteY + cfg.health.bg.offsetY, cfg.health.bg.width, cfg.health.bg.height, 5)
@@ -169,24 +164,12 @@ export class MapNode extends UINode {
     const healthStyle = new PIXI.TextStyle({
       fontFamily: FONT,
       fontSize: 12,
-      fill: this.isDefeated ? '#666666' : '#ff6666'
+      fill: '#ff6666'
     })
     this.health = new PIXI.Text('~' + this.enemy.health, healthStyle)
     this.health.anchor.set(0.5)
     this.health.y = spriteY + cfg.health.text.offsetY
     this.addChild(this.health)
-  }
-  
-  renderDefeated(cfg, spriteY) {
-    const defeatedText = new PIXI.Text('Побежден', {
-      fontFamily: FONT,
-      fontSize: 16,
-      fontWeight: 'bold',
-      fill: '#666666'
-    })
-    defeatedText.anchor.set(0.5)
-    defeatedText.y = spriteY + cfg.defeated.offsetY
-    this.addChild(defeatedText)
   }
   
   setupInteraction(cfg, spriteY) {
@@ -213,11 +196,9 @@ export class MapNode extends UINode {
       this.platform.alpha = this.isActive ? 0.8 : 0.7
       if (this.enemySprite) {
         if (this.isDefeated) {
-          const gs = new ColorMatrixFilter()
-          gs.grayscale()
-          const dark = new ColorMatrixFilter()
-          dark.brightness(0.5, false)
-          this.enemySprite.filters = [gs, dark]
+          const grayFilter = new ColorMatrixFilter()
+          grayFilter.grayscale(0.5)
+          this.enemySprite.filters = [grayFilter]
         } else {
           this.enemySprite.filters = null
         }
