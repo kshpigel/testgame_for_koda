@@ -3,6 +3,7 @@ import { ColorMatrixFilter } from 'pixi.js'
 import { FONT } from '../data/fonts.js'
 import { colors } from '../data/colors.js'
 import { config } from '../data/config.js'
+import { getCardStyle } from '../data/card_styles.js'
 import { CARD_CONFIG } from './card.js'
 import { Card } from './card.js'
 import { Circle } from './circle.js'
@@ -72,10 +73,13 @@ export class DeckMenu {
       
       const count = cardCounts[cardType.type] || 0
       
+      const cardStyle = getCardStyle(cardType.style)
+      
       const card = new Card(cardType, { 
         width: cardW, 
         height: cardH,
-        scale: cardScale
+        scale: cardScale,
+        style: cardStyle
       })
       
       card.x = startX + col * (cardW * cardScale + spacingX) + cardW * cardScale / 2

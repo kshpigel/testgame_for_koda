@@ -119,6 +119,8 @@ this.container.addChild(this.enemyDisplay)
   - Защита в Portal.setupInteraction() и Portal.updateScale()
   - Очистка фильтров и событий в Portal.destroy()
 - Увеличены облака: count 6->12, size 200x100->300x150, scale 1.0-1.5->1.5-2.5
+- Добавлены стили карт (card_styles.json): ID, image_bg, glow_color1, glow_color2
+- cards.json использует "style": "default" | "elf" вместо прямого image_bg
 
 ---
 

@@ -69,6 +69,9 @@ export class Card extends PIXI.Container {
     // Scale для heroImageContainer при выборе
     this.targetHeroScale = 1
     
+    // Стиль карты (для glow цветов)
+    this.cardStyle = options.style || null
+    
     this.create()
   }
 
@@ -208,11 +211,10 @@ export class Card extends PIXI.Container {
     const centerX = glowW / 2
     const centerY = glowH
     
-    // Цвета для анимации из colors.js
-    const glowColors = [
-      gradientColors.card.glow1,
-      gradientColors.card.glow2
-    ]
+    // Цвета: из стиля карты или дефолтные из colors.js
+    const glowColors = this.cardStyle 
+      ? [this.cardStyle.glow_color1, this.cardStyle.glow_color2]
+      : [gradientColors.card.glow1, gradientColors.card.glow2]
     
     const textures = []
     

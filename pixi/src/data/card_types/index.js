@@ -12,7 +12,7 @@ export const card_types = cardsData.cards.map(card => {
     mechanic: card.mechanic,
     value: card.value,
     image: card.image,
-    image_bg: card.image_bg,
+    style: card.style || 'default',
     kind: card.kind,
     faction: card.faction,
     maxInDeck: card.maxInDeck

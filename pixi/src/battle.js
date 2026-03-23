@@ -18,6 +18,8 @@ import { CardAnimator } from './ui/card_animator.js'
 import { BattleEffects } from './ui/battle_effects.js'
 
 // Импорт ассетов
+import { cardStyles, getCardStyle } from './data/card_styles.js'
+
 const assets = {
   cardBack: '/assets/img/card_back.png',
   battleBg: '/assets/img/battle_bg/bg2.png',
@@ -96,7 +98,9 @@ export class Battle extends EventEmitter {
     
     this.cardTypes.forEach(type => {
       if (type.image) urls.add(type.image)
-      if (type.image_bg) urls.add(type.image_bg)
+      // Загружаем image_bg из стиля
+      const style = getCardStyle(type.style)
+      if (style && style.image_bg) urls.add(style.image_bg)
     })
     
     if (this.enemyData.image) urls.add(this.enemyData.image)
@@ -114,9 +118,16 @@ export class Battle extends EventEmitter {
       enemy: this.enemyData.image ? { texture: PIXI.Assets.get(this.enemyData.image) } : null
     }
     
+    // Сохраняем маппинг стилей для карт
+    this.cardStylesMap = {}
     this.cardTypes.forEach(type => {
       if (type.image) this.assets[`card_${type.type}`] = { texture: PIXI.Assets.get(type.image) }
-      if (type.image_bg) this.assets[`card_bg_${type.type}`] = { texture: PIXI.Assets.get(type.image_bg) }
+      // Получаем стиль для карты
+      const style = getCardStyle(type.style)
+      if (style && style.image_bg) {
+        this.assets[`card_bg_${type.type}`] = { texture: PIXI.Assets.get(style.image_bg) }
+        this.cardStylesMap[type.type] = style
+      }
     })
     
     this.onAssetsLoaded()
@@ -165,10 +176,14 @@ export class Battle extends EventEmitter {
   }
 
   addCard(cardData) {
+    // Получаем стиль для карты
+    const cardStyle = this.cardStylesMap[cardData.type] || getCardStyle(cardData.style)
+    
     const card = new Card(cardData, {
       handIndex: this.cards.length,
       width: CARD_CONFIG.width,
-      height: CARD_CONFIG.height
+      height: CARD_CONFIG.height,
+      style: cardStyle
     })
     
     // Загружаем фоновое изображение (image_bg)

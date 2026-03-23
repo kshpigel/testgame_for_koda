@@ -1,0 +1,18 @@
+{
+  "styles": {
+    "default": {
+      "id": "default",
+      "name": "Стандартный",
+      "image_bg": "/assets/img/card.png",
+      "glow_color1": "#ff6b6b",
+      "glow_color2": "#4ecdc4"
+    },
+    "elf": {
+      "id": "elf",
+      "name": "Эльфийский",
+      "image_bg": "/assets/img/card_elf.png",
+      "glow_color1": "#a8e6cf",
+      "glow_color2": "#dcedc1"
+    }
+  }
+}
