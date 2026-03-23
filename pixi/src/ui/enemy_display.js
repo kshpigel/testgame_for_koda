@@ -77,11 +77,46 @@ export class EnemyDisplay extends UINode {
     this.healthText.anchor.set(0.5)
     this.healthText.y = healthY
     this.addChild(this.healthText)
+    
+    // Сила атаки (отображается при выборе карт)
+    const attackY = healthY + 50
+    const attackBg = new PIXI.Graphics()
+    attackBg.lineStyle(1, colors.ui.text.primary)
+    attackBg.beginFill(colors.ui.button.play)
+    attackBg.drawRoundedRect(-80, attackY - 20, 160, 40, 10)
+    attackBg.endFill()
+    attackBg.visible = false
+    this.attackBg = attackBg
+    this.addChild(attackBg)
+    
+    const attackStyle = new PIXI.TextStyle({
+      fontFamily: FONT,
+      fontSize: 28,
+      fontWeight: 'bold',
+      fill: colors.ui.text.primary
+    })
+    this.attackText = new PIXI.Text('', attackStyle)
+    this.attackText.anchor.set(0.5)
+    this.attackText.y = attackY
+    this.attackText.visible = false
+    this.addChild(this.attackText)
   }
   
   updateHealth(health) {
     if (this.healthText) {
       this.healthText.text = `${health}`
+    }
+  }
+  
+  // Показать силу атаки (при выборе карт)
+  showAttack(power) {
+    if (power > 0) {
+      this.attackText.text = `${power}`
+      this.attackText.visible = true
+      this.attackBg.visible = true
+    } else {
+      this.attackText.visible = false
+      this.attackBg.visible = false
     }
   }
 }

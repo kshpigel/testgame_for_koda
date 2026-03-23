@@ -746,6 +746,12 @@ export class Battle extends EventEmitter {
     }
     
     this.selectedCards.forEach(card => card.updateValue())
+    
+    // Обновить силу атаки
+    if (this.enemyDisplay) {
+      const attackPower = this.selectedCards.reduce((sum, card) => sum + card.getValue(), 0)
+      this.enemyDisplay.showAttack(attackPower)
+    }
   }
 
   fadeIn() {
