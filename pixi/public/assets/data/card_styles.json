@@ -4,8 +4,8 @@
       "id": "default",
       "name": "Стандартный",
       "image_bg": "/assets/img/card.png",
-      "glow_color1": "#ff6b6b",
-      "glow_color2": "#4ecdc4"
+      "glow_color1": "#C01517",
+      "glow_color2": "#C03115"
     },
     "elf": {
       "id": "elf",

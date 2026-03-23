@@ -4,7 +4,7 @@
       "type": 1,
       "name": "Копейщица",
       "bio": "Опытная воительница из народного ополчения. Служит своему народу верой и правдой.",
-      "mechanic": "Баффает Ополченцев, Рыцарей и Князя, увеличивая их силу x2",
+      "mechanic": "Баффает Ополченцев, Рыцарей и Князя, увеличивая их силу +3",
       "value": 2,
       "image": "/assets/img/cards/type1.png",
       "style": "default",
@@ -13,7 +13,7 @@
       "maxInDeck": 5,
       "buff": {
         "type": "FactionHp",
-        "params": { "faction": "people", "value": 2 }
+        "params": { "faction": "people", "value": 3 }
       }
     },
     {
