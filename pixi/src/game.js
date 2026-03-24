@@ -15,6 +15,7 @@ import { colors } from './data/colors.js'
 import { GAME_VERSION } from './data/version.js'
 import { soundManager } from './audio/sound_manager.js'
 import { Button } from './ui/button.js'
+import { Dialog } from './ui/dialog.js'
 
 // Главный фон
 const MAIN_BG = '/assets/img/bg_full.jpg'
@@ -47,6 +48,9 @@ export class Game {
     this.debugContainer = new PIXI.Container()
     this.debugContainer.zIndex = Z.DEBUG
     this.app.stage.addChild(this.debugContainer)
+
+    // Диалог (глобальный)
+    this.dialog = new Dialog(this.app, this.app.stage)
     
     // Инициализация стартового экрана (без init - будет вызвано при показе)
     this.startScreen = new StartScreen(this.app, () => this.runLoading())
@@ -197,6 +201,9 @@ export class Game {
     log('[Game] Calling baseScreen.init with:', [...this.completedPortals])
     await baseScreen.init(this.completedPortals || [])
     this.currentScreen = baseScreen
+
+    // ТЕСТ: показать диалог Короля Эльфов
+    this.testDialog()
     
     // Рисуем сетку ПОСЛЕ BaseScreen
     this.drawDebugGrid()
@@ -334,9 +341,21 @@ export class Game {
   }
 
   hideCurrentScreen() {
+    // Закрываем диалог перед переходом
+    if (this.dialog) {
+      this.dialog.hide()
+    }
     if (this.currentScreen) {
       this.currentScreen.hide()
     }
+  }
+
+  // Показать диалог с героем
+  // heroImage: PIXI.Texture - текстура картинки героя
+  // text: string - полный текст диалога
+  // onClose: function - коллбэк при закрытии
+  showDialog(heroImage, text, onClose = null) {
+    this.dialog.show(heroImage, text, onClose)
   }
 
   showMessage(text, color = colors.ui.text.primary) {
@@ -407,5 +426,22 @@ export class Game {
     sprite.scale.set(scale)
     sprite.x = (targetWidth - sprite.texture.width * scale) / 2
     sprite.y = (targetHeight - sprite.texture.height * scale) / 2
+  }
+
+  // ТЕСТ: показать диалог Копейщицы
+  async testDialog() {
+    try {
+      const texture = await PIXI.Assets.load('/assets/img/cards/type1.png')
+      const text = `Приветствую, путник! Я — Копейщица, воительница народного ополчения. Служу своему народу верой и правдой уже много лет. Мы защищаем нашу землю от всех врагов, кто посмеет на нас напасть. Наши копья непоколебимы, как горы, и наши сердца чисты, как родниковая вода.
+
+Мои боевые товарищи — ополченцы, рыцари и сам Князь — все они получают силу от моего руководства. Вместе мы непобедимы! Но враг силён, и нам нужна твоя помощь. Каждый воин, вставший под знамя народного ополчения, становится частью чего-то большего.
+
+Когда я паду в бою, моя сила не исчезнет — она перельётся в моих соратников. Каждый воин народного ополчения станет сильнее на три единицы! Это мой дар защитникам родины. Даже смерть не остановит меня от служения народу.
+
+Готов ли ты сражаться вместе с нами? Времени мало, враг уже близко. Вперёд, за народ! Наша земля — наша святыня, и мы защитим её любой ценой. Пусть враги знают, что народное ополчение не сдаётся!`
+      this.showDialog(texture, text)
+    } catch (e) {
+      console.warn('[Game] testDialog: failed to load texture', e)
+    }
   }
 }
