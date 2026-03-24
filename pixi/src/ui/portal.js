@@ -74,22 +74,23 @@ export class Portal extends UINode {
   setupInteraction() {
     this.eventMode = 'static'
     this.cursor = 'pointer'
+    this._isDestroying = false
 
     this.on('pointerover', () => {
-      if (this._destroyed || this._isDestroyed) return
+      if (this._destroyed || this._isDestroyed || this._isDestroying) return
       this.setScale(1.05)
       this.targetBrightness = 1.5
       soundManager.play('hover')
     })
 
     this.on('pointerout', () => {
-      if (this._destroyed || this._isDestroyed) return
+      if (this._destroyed || this._isDestroyed || this._isDestroying) return
       this.setScale(1)
       this.targetBrightness = 1
     })
 
     this.on('pointerdown', () => {
-      if (this._destroyed || this._isDestroyed) return
+      if (this._destroyed || this._isDestroyed || this._isDestroying) return
       soundManager.play('click')
       if (this.onClick) this.onClick()
     })
@@ -102,6 +103,7 @@ export class Portal extends UINode {
       return
     }
     this._destroyed = true
+    this._isDestroying = true
     console.log('[Portal] destroy: called for', this.portalId)
     
     // Очищаем фильтр ДО вызова super.destroy()
