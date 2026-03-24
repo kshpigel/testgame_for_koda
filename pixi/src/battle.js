@@ -446,6 +446,9 @@ export class Battle extends EventEmitter {
       setTimeout(() => {
         if (this.cardAnimator) {
           this.cardAnimator.animateCardOut(card, () => {
+            // Событие onDiscard — карта уходит из руки
+            this.emit('onDiscard', card, this.cards, this)
+
             this.cards = this.cards.filter(c => c !== card)
             this.container.removeChild(card)
             removedCount++
@@ -480,6 +483,9 @@ export class Battle extends EventEmitter {
       setTimeout(() => {
         if (this.cardAnimator) {
           this.cardAnimator.animateCardOut(card, () => {
+            // Событие onDiscard — карта уходит из руки
+            this.emit('onDiscard', card, this.cards, this)
+
             this.cards = this.cards.filter(c => c !== card)
             this.container.removeChild(card)
             removedCount++

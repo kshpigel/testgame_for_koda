@@ -6,6 +6,7 @@ import { SelectedRandomIfNotSelected } from './selected_random_if_not_selected.j
 import { DeckCount } from './deck_count.js'
 import { KeepSteps } from './keep_steps.js'
 import { ExactTypeAndDiscard } from './exact_type_and_discard.js'
+import { DiscardBuff } from './discard_buff.js'
 
 // Маппинг имен классов баффов
 export const BuffClasses = {
@@ -14,7 +15,8 @@ export const BuffClasses = {
   SelectedRandomIfNotSelected,
   DeckCount,
   KeepSteps,
-  ExactTypeAndDiscard
+  ExactTypeAndDiscard,
+  DiscardBuff
 }
 
 // Создать экземпляр баффа по имени класса и параметрам

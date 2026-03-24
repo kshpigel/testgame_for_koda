@@ -1,4 +1,4 @@
-// Реестр дебаффов — подписка на события battle
+// Реестр дебаффов и специальных баффов — подписка на события battle
 import { apply as weakenSelected } from './weaken_selected.js'
 import { apply as blockBuff } from './block_buff.js'
 
@@ -8,7 +8,7 @@ const debuffHandlers = {
   block_buff: blockBuff
 }
 
-// Регистрация всех дебаффов в battle
+// Регистрация всех дебаффов и special баффов в battle
 export function registerDebuffs(battle) {
   // Подписка на beforeBuffs — для дебаффов блокировки
   battle.on('beforeBuffs', (selectedCards, allCards, battle) => {
@@ -49,5 +49,16 @@ export function registerDebuffs(battle) {
         })
       }
     })
+  })
+
+  // Подписка на onDiscard — для DiscardBuff карты
+  battle.on('onDiscard', (discardedCard, allCards, battle) => {
+    // Проверяем: есть ли у сброшенной карты DiscardBuff (по buffType)
+    const cardType = battle.cardTypes.find(t => t.type === discardedCard.cardData.type)
+
+    if (!cardType || cardType.buffType !== 'DiscardBuff') return
+
+    // Применяем бафф
+    cardType.buff.onDiscard(discardedCard, allCards, battle)
   })
 }

@@ -136,13 +136,17 @@
       "type": 10,
       "name": "Башня",
       "bio": "Древнее сооружение, хранящее память о былых битвах.",
-      "mechanic": "Просто башня.",
+      "mechanic": "При сбросе — всем dwarf +3 в руке",
       "value": 1,
       "image": "/assets/img/cards/type10.png",
       "style": "default",
       "kind": "unique",
       "faction": "neutral",
-      "maxInDeck": 2
+      "maxInDeck": 2,
+      "buff": {
+        "type": "DiscardBuff",
+        "params": { "faction": "dwarves", "value": 3 }
+      }
     },
     {
       "type": 11,
