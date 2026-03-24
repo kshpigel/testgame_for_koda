@@ -8,7 +8,8 @@
       "image_bg": "/assets/img/battle_bg/bg1.png",
       "debuffs": [
         { "type": "weaken_selected", "params": { "faction": "people", "value": -4 } }
-      ]
+      ],
+      "dialog": "Ха! Ещё один глупец решил сразиться с нами. Мы бандиты, мы не знаем пощады! Забирайте всё, что у него есть. Народное ополчение? Да мы их в порошок сотрём! Нападаем все вместе!"
     },
     {
       "type": 2,
@@ -18,63 +19,72 @@
       "image_bg": "/assets/img/battle_bg/bg2.png",
       "debuffs": [
         { "type": "block_buff", "params": { "id": 4, "buffType": 4 } }
-      ]
+      ],
+      "dialog": "Стой! Никто не пройдёт через эти стены. Я — Крепость, непоколебимая защита! Мои стены выдержат любой удар, а мои воины не пропустят врага. Берсерки? Не смешите меня — я видел и не таких!"
     },
     {
       "type": 3,
       "name": "Эльфы",
       "description": "Лесные эльфы",
       "image": "/assets/img/cards/type6.png",
-      "image_bg": "/assets/img/battle_bg/bg3.png"
+      "image_bg": "/assets/img/battle_bg/bg3.png",
+      "dialog": "Приветствую, путник. Я — Эльф, хранитель леса. Мои стрелы метки, а глаза остры. Но я не враг — я защитник древнего леса. Если ты пришёл с миром, мы подружимся. А если с мечом — встретишь смерть среди деревьев."
     },
     {
       "type": 4,
       "name": "Берсерки",
       "description": "Яростные воины",
       "image": "/assets/img/cards/type4.png",
-      "image_bg": "/assets/img/battle_bg/bg1.png"
+      "image_bg": "/assets/img/battle_bg/bg1.png",
+      "dialog": "РРРРААА! Я — Берсерк! Я не знаю страха, я не знаю пощады! Моя ярость бесконечна, мой гнев не знает границ! Сразись со мной — и познай силу ярости севера! ХВА!"
     },
     {
       "type": 5,
       "name": "Варвар",
       "description": "Сильный варвар",
       "image": "/assets/img/enemies/barbarian.png",
-      "image_bg": "/assets/img/battle_bg/bg2.png"
+      "image_bg": "/assets/img/battle_bg/bg2.png",
+      "dialog": "Хмм... Ты храбрец, раз решился меня атаковать. Я — Варвар, сильнейший из сильных. Мои мускулы раздавят любого, мой топор разрубит любой доспех. Но ты заслуживаешь уважения — умри достойно!"
     },
     {
       "type": 6,
       "name": "Тёмный маг",
       "description": "Мастер тёмной магии",
       "image": "/assets/img/enemies/dark_mage.png",
-      "image_bg": "/assets/img/battle_bg/bg3.png"
+      "image_bg": "/assets/img/battle_bg/bg3.png",
+      "dialog": "Оооо... ещё один глупец явился. Я — Тёмный маг, повелитель тьмы и теней. Моя магия сильнее любого меча, мой разум опаснее любого клинка. Приготовься познать ужас — я уже начал читать заклинание."
     },
     {
       "type": 7,
       "name": "Друид",
       "description": "Хранитель леса",
       "image": "/assets/img/enemies/druid.png",
-      "image_bg": "/assets/img/battle_bg/bg1.png"
+      "image_bg": "/assets/img/battle_bg/bg1.png",
+      "dialog": "Приветствую, путник. Я — Друид, хранитель древнего леса. Природа — мой союзник, звери — мои братья. Тот, кто причинит вред лесу, познает гнев самой природы. Но ты можешь уйти — я не враг тем, кто с миром."
     },
     {
       "type": 8,
       "name": "Тёмный рыцарь",
       "description": "Рыцарь тьмы",
       "image": "/assets/img/cards/type8.png",
-      "image_bg": "/assets/img/battle_bg/bg2.png"
+      "image_bg": "/assets/img/battle_bg/bg2.png",
+      "dialog": "Ты пришёл убить меня? Как... трогательно. Я — Тёмный рыцарь, слуга тьмы. Мой меч жаждет крови, моя броня крепка как скала. Сразившись со мной, ты обречён. Но может, ты достаточно силён, чтобы изменить свою судьбу?"
     },
     {
       "type": 9,
       "name": "Золотой рыцарь",
       "description": "Элитный рыцарь",
       "image": "/assets/img/enemies/gold_knight.png",
-      "image_bg": "/assets/img/battle_bg/bg3.png"
+      "image_bg": "/assets/img/battle_bg/bg3.png",
+      "dialog": "Стой, воин. Я — Золотой рыцарь, элита королевской гвардии. Моя броня блестит на солнце, мой меч сияет справедливостью. Ты сражаешься за правое дело? Тогда докажи это! Покажи мне свою силу!"
     },
     {
       "type": 10,
       "name": "Дракон",
       "description": "Древний дракон",
       "image": "/assets/img/enemies/dragon.png",
-      "image_bg": "/assets/img/battle_bg/bg1.png"
+      "image_bg": "/assets/img/battle_bg/bg1.png",
+      "dialog": "ХАААРРР! Ты осмелился побеспокоить меня, древнего Дракона! Я жил тысячи лет, я видел рождение и падение королевств! Мой огонь сожжёт тебя дотла, мои когти разорвут твою плоть! Беги, пока цел!"
     }
   ]
 }

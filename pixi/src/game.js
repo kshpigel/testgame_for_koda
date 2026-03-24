@@ -201,9 +201,6 @@ export class Game {
     log('[Game] Calling baseScreen.init with:', [...this.completedPortals])
     await baseScreen.init(this.completedPortals || [])
     this.currentScreen = baseScreen
-
-    // ТЕСТ: показать диалог Короля Эльфов
-    this.testDialog()
     
     // Рисуем сетку ПОСЛЕ BaseScreen
     this.drawDebugGrid()
@@ -257,6 +254,9 @@ export class Game {
     // Получаем колоду по коду игрока
     const playerDeck = getDeckByCode(player.deckCode)
     const battle = new Battle(this.app, playerDeck.cards, card_types, enemyData, this)
+
+    // Показываем диалог врага перед боем
+    this.showEnemyDialog(enemyData)
     
     battle.on('end', () => {
       this.isBattleActive = false
@@ -358,6 +358,18 @@ export class Game {
     this.dialog.show(heroImage, text, onClose)
   }
 
+  // Показать диалог врага перед боем
+  async showEnemyDialog(enemyData) {
+    if (!enemyData || !enemyData.dialog) return
+    
+    try {
+      const texture = await PIXI.Assets.load(enemyData.image)
+      this.showDialog(texture, enemyData.dialog)
+    } catch (e) {
+      console.warn('[Game] showEnemyDialog: failed to load texture', e)
+    }
+  }
+
   showMessage(text, color = colors.ui.text.primary) {
     const style = new PIXI.TextStyle({
       fontFamily: FONT,
@@ -426,22 +438,5 @@ export class Game {
     sprite.scale.set(scale)
     sprite.x = (targetWidth - sprite.texture.width * scale) / 2
     sprite.y = (targetHeight - sprite.texture.height * scale) / 2
-  }
-
-  // ТЕСТ: показать диалог Копейщицы
-  async testDialog() {
-    try {
-      const texture = await PIXI.Assets.load('/assets/img/cards/type1.png')
-      const text = `Приветствую, путник! Я — Копейщица, воительница народного ополчения. Служу своему народу верой и правдой уже много лет. Мы защищаем нашу землю от всех врагов, кто посмеет на нас напасть. Наши копья непоколебимы, как горы, и наши сердца чисты, как родниковая вода.
-
-Мои боевые товарищи — ополченцы, рыцари и сам Князь — все они получают силу от моего руководства. Вместе мы непобедимы! Но враг силён, и нам нужна твоя помощь. Каждый воин, вставший под знамя народного ополчения, становится частью чего-то большего.
-
-Когда я паду в бою, моя сила не исчезнет — она перельётся в моих соратников. Каждый воин народного ополчения станет сильнее на три единицы! Это мой дар защитникам родины. Даже смерть не остановит меня от служения народу.
-
-Готов ли ты сражаться вместе с нами? Времени мало, враг уже близко. Вперёд, за народ! Наша земля — наша святыня, и мы защитим её любой ценой. Пусть враги знают, что народное ополчение не сдаётся!`
-      this.showDialog(texture, text)
-    } catch (e) {
-      console.warn('[Game] testDialog: failed to load texture', e)
-    }
   }
 }

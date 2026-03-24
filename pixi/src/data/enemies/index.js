@@ -45,7 +45,8 @@ export function initEnemies() {
       health: health,
       isBoss: isBoss,
       debuffs: enemy.debuffs,
-      buffs: enemy.buffs
+      buffs: enemy.buffs,
+      dialog: enemy.dialog
     }
   })
 
@@ -87,7 +88,8 @@ export function initEnemies() {
       health: enemy.health,
       difficulty: difficulty,
       debuffs: enemy.debuffs,
-      buffs: enemy.buffs
+      buffs: enemy.buffs,
+      dialog: enemy.dialog
     }
   })
 
