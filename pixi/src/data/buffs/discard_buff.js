@@ -11,7 +11,7 @@ export class DiscardBuff extends Buff {
   onDiscard(discardedCard, allCards, battle) {
     const { faction = null, kind = null, id = null, value = 0 } = this.params
 
-    // Баффаем все карты в руке (кроме сброшенной и выбранных)
+    // Баффаем все карты в руке (кроме сброшенной и выбранных) — permanent бафф
     allCards.forEach(card => {
       if (card === discardedCard) return
       if (card.isSelected) return // не баффам выбранные
@@ -21,8 +21,8 @@ export class DiscardBuff extends Buff {
       if (kind && card.cardData?.kind !== kind) return
       if (id && card.cardData?.type !== id) return
 
-      // Применяем бафф
-      card.addBuff('discard_buff', 'discard', value)
+      // Применяем PERMANENT бафф (не сбрасывается при выборе карты)
+      card.addPermanentBuff(value)
     })
 
     // Добавляем в permanentBuffs для будущих карт из колоды

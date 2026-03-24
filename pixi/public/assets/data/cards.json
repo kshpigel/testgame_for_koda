@@ -136,17 +136,13 @@
       "type": 10,
       "name": "Башня",
       "bio": "Древнее сооружение, хранящее память о былых битвах.",
-      "mechanic": "При сбросе — всем dwarf +3 в руке",
+      "mechanic": "Просто башня.",
       "value": 1,
       "image": "/assets/img/cards/type10.png",
       "style": "default",
       "kind": "unique",
       "faction": "neutral",
-      "maxInDeck": 2,
-      "buff": {
-        "type": "DiscardBuff",
-        "params": { "faction": "dwarves", "value": 3 }
-      }
+      "maxInDeck": 2
     },
     {
       "type": 11,
@@ -178,6 +174,22 @@
       "buff": {
         "type": "FactionHp",
         "params": { "faction": "dwarves", "value": 3 }
+      }
+    },
+    {
+      "type": 13,
+      "name": "Король эльфов",
+      "bio": "Владыка эльфийского народа.",
+      "mechanic": "При сбросе — всем dwarf +7 в руке",
+      "value": 1,
+      "image": "/assets/img/cards/elf_leader.png",
+      "style": "elf",
+      "kind": "unique",
+      "faction": "dwarves",
+      "maxInDeck": 1,
+      "buff": {
+        "type": "DiscardBuff",
+        "params": { "faction": "dwarves", "value": 7 }
       }
     }
   ]
