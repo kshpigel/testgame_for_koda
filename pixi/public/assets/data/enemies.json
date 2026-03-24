@@ -15,7 +15,10 @@
       "name": "Крепость",
       "description": "Охрана крепости",
       "image": "/assets/img/cards/type10.png",
-      "image_bg": "/assets/img/battle_bg/bg2.png"
+      "image_bg": "/assets/img/battle_bg/bg2.png",
+      "debuffs": [
+        { "type": "block_buff", "params": { "id": 4, "buffType": 4 } }
+      ]
     },
     {
       "type": 3,

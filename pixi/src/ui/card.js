@@ -39,6 +39,7 @@ export class Card extends PIXI.Container {
     this.buffs = {} // { [buffId]: { type, value } }
     this.debuffValue = 0
     this.debuffs = {} // { [debuffId]: { type, value } }
+    this.blockedBuffs = new Set() // заблокированные баффы (по типу карты-источника)
     this._cachedId = null // Кешируем ID карты
     
     // Используем cardWidth/cardHeight чтобы не переопределять встроенные PIXI свойства
@@ -445,6 +446,19 @@ export class Card extends PIXI.Container {
   addDebuff(debuffId, type, value) {
     this.debuffs[debuffId] = { type, value }
     this.updateDebuffDisplay()
+  }
+
+  blockBuff(buffType) {
+    // buffType - это type карты-источника баффа
+    this.blockedBuffs.add(buffType)
+  }
+
+  isBuffBlocked(buffType) {
+    return this.blockedBuffs.has(buffType)
+  }
+
+  clearBlockedBuffs() {
+    this.blockedBuffs.clear()
   }
 
   updateDebuffDisplay() {

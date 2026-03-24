@@ -19,7 +19,7 @@ import { BattleEffects } from './ui/battle_effects.js'
 
 // Импорт ассетов
 import { cardStyles, getCardStyle } from './data/card_styles.js'
-import { applyDebuff } from './data/debuffs/index.js'
+import { registerDebuffs } from './data/debuffs/registry.js'
 
 const assets = {
   cardBack: '/assets/img/card_back.png',
@@ -71,6 +71,9 @@ export class Battle extends EventEmitter {
     
     // Счётчик сыгранных карт за бой
     this.cardsPlayedThisBattle = 0
+
+    // Регистрируем дебаффы (подписка на события)
+    registerDebuffs(this)
   }
 
   setBlocked(blocked) {
@@ -305,14 +308,29 @@ export class Battle extends EventEmitter {
   applyBuffs() {
     // Полностью очищаем все баффы
     this.cards.forEach(card => card.clearBuffs())
-    
+
+    // Сбрасываем заблокированые баффы
+    this.cards.forEach(card => card.clearBlockedBuffs())
+
+    // Сбрасываем дебаффы (ослабление)
+    this.cards.forEach(card => card.clearDebuffs())
+
     // Сбрасываем флаг keepSteps
     this.keepStepsActive = false
-    
+
+    // === ЭТАП 1: Событие "beforeBuffs" — для дебаффов блокировки ===
+    this.emit('beforeBuffs', this.selectedCards, this.cards, this)
+
+    // === ЭТАП 2: Применяем баффы ===
     // Применяем баффы от всех карт в руке
     this.cards.forEach(card => {
       const cardType = this.cardTypes.find(t => t.type === card.cardData.type)
       if (cardType && cardType.buff) {
+        // Проверяем, не заблокирован ли бафф этой карты
+        if (card.isBuffBlocked(card.cardData.type)) {
+          return // Пропускаем этот бафф
+        }
+
         // Используем новую систему баффов
         const results = cardType.buff.apply(card, this.selectedCards, this.cards, this)
         
@@ -333,7 +351,7 @@ export class Battle extends EventEmitter {
         }
       }
     })
-    
+
     // Сохраняем баффы для сброса после хода
     this.pendingDiscards = []
     this.cards.forEach(card => {
@@ -349,32 +367,8 @@ export class Battle extends EventEmitter {
       }
     })
 
-    // Применяем дебаффы врага к выбранным картам
-    this.applyDebuffs()
-  }
-
-  applyDebuffs() {
-    console.log('[DEBUFF] applyDebuffs called, enemyData.debuffs:', this.enemyData.debuffs)
-
-    // Очищаем дебаффы у ВСЕХ карт (включая deselected)
-    this.cards.forEach(card => {
-      card.clearDebuffs()
-      card.valueCircle?.setNormalStyle()
-    })
-
-    // Применяем дебаффы врага только к выбранным картам
-    if (this.enemyData.debuffs && this.selectedCards.length > 0) {
-      console.log('[DEBUFF] applying to', this.selectedCards.length, 'cards')
-      this.enemyData.debuffs.forEach(debuff => {
-        applyDebuff(debuff.type, this.selectedCards, debuff.params)
-      })
-
-      // Обновляем визуал для дебафнутых карт
-      this.selectedCards.forEach(card => {
-        console.log('[DEBUFF] card value:', card.getValue())
-        card.updateValue()
-      })
-    }
+    // === ЭТАП 3: Событие "afterBuffs" — для дебаффов ослабления ===
+    this.emit('afterBuffs', this.selectedCards, this.cards, this)
   }
 
   applySkills() {
