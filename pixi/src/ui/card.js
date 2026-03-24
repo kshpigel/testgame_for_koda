@@ -37,6 +37,8 @@ export class Card extends PIXI.Container {
     this.isDisabled = false
     this.buffValue = 0
     this.buffs = {} // { [buffId]: { type, value } }
+    this.debuffValue = 0
+    this.debuffs = {} // { [debuffId]: { type, value } }
     this._cachedId = null // Кешируем ID карты
     
     // Используем cardWidth/cardHeight чтобы не переопределять встроенные PIXI свойства
@@ -142,6 +144,19 @@ export class Card extends PIXI.Container {
     this.buffText.yRatio = 0 // по центру по вертикали
     this.buffText.zIndex = 7
     this.addChild(this.buffText)
+
+    // === СЛОЙ 7: Дебафф ===
+    this.debuffText = new PIXI.Text('', {
+      fontFamily: FONT,
+      fontSize: 20,
+      fontWeight: 'bold',
+      fill: '#ff6666'
+    })
+    this.debuffText.anchor.set(0.5)
+    this.debuffText.xRatio = -0.45 // слева (как бафф)
+    this.debuffText.yRatio = -0.08 // выше баффа
+    this.debuffText.zIndex = 7
+    this.addChild(this.debuffText)
     
     // Интерактивность
     this.eventMode = 'static'
@@ -159,10 +174,11 @@ export class Card extends PIXI.Container {
     // Debug рамка
     this.drawDebugFrame()
     
-    // Пересортируем: nameText, valueCircle, buffText наверх
-    this.setChildIndex(this.nameText, this.children.length - 3)
-    this.setChildIndex(this.valueCircle, this.children.length - 2)
-    this.setChildIndex(this.buffText, this.children.length - 1)
+    // Пересортируем: nameText, valueCircle, buffText, debuffText наверх
+    this.setChildIndex(this.nameText, this.children.length - 4)
+    this.setChildIndex(this.valueCircle, this.children.length - 3)
+    this.setChildIndex(this.buffText, this.children.length - 2)
+    this.setChildIndex(this.debuffText, this.children.length - 1)
   }
   
   drawDebugFrame() {
@@ -337,10 +353,11 @@ export class Card extends PIXI.Container {
       // Обновить позиции
       this.updateChildPositions()
       
-      // Пересортируем: nameText, valueCircle, buffText поверх heroImageContainer
+      // Пересортируем: nameText, valueCircle, buffText, debuffText поверх heroImageContainer
       this.setChildIndex(this.nameText, this.children.length - 1)
       this.setChildIndex(this.valueCircle, this.children.length - 1)
       this.setChildIndex(this.buffText, this.children.length - 1)
+      this.setChildIndex(this.debuffText, this.children.length - 1)
     }
   }
 
@@ -415,8 +432,50 @@ export class Card extends PIXI.Container {
     this.updateValue()
   }
 
+  clearDebuffs() {
+    this.debuffs = {}
+    this.debuffValue = 0
+    if (this.debuffText) {
+      this.debuffText.text = ''
+    }
+    this.updateDebuffDisplay()
+    this.updateValue()
+  }
+
+  addDebuff(debuffId, type, value) {
+    this.debuffs[debuffId] = { type, value }
+    this.updateDebuffDisplay()
+  }
+
+  updateDebuffDisplay() {
+    // Суммируем все дебаффы
+    let total = 0
+    Object.values(this.debuffs).forEach(d => {
+      total += d.value
+    })
+    this.debuffValue = total
+
+    // Обновляем текст дебаффа
+    if (this.debuffText) {
+      if (this.debuffValue < 0) {
+        this.debuffText.text = `${this.debuffValue}`
+      } else {
+        this.debuffText.text = ''
+      }
+    }
+
+    // Если есть дебаффы - кружочек красный, иначе нормальный
+    if (this.valueCircle) {
+      if (this.debuffValue < 0) {
+        this.valueCircle.setState('red')
+      } else {
+        this.valueCircle.setNormalStyle()
+      }
+    }
+  }
+
   getValue() {
-    return this.cardData.value + this.buffValue
+    return Math.max(0, this.cardData.value + this.buffValue + this.debuffValue)
   }
 
   get type() {
@@ -470,10 +529,16 @@ export class Card extends PIXI.Container {
     
     if (this.buffValue > 0) {
       this.buffText.text = `+${this.buffValue}`
-      this.valueCircle.setBuffedStyle()
+      // Не перезаписываем красный стиль дебаффа
+      if (this.debuffValue >= 0) {
+        this.valueCircle.setBuffedStyle()
+      }
     } else {
       this.buffText.text = ''
-      this.valueCircle.setNormalStyle()
+      // Не перезаписываем красный стиль дебаффа
+      if (this.debuffValue >= 0) {
+        this.valueCircle.setNormalStyle()
+      }
     }
     
     this.updateValue()
@@ -484,7 +549,7 @@ export class Card extends PIXI.Container {
   }
 
   updateValue() {
-    const totalValue = this.cardData.value + this.buffValue
+    const totalValue = Math.max(0, this.cardData.value + this.buffValue + this.debuffValue)
     this.valueCircle.setText(`${totalValue}`)
   }
 
@@ -598,7 +663,13 @@ export class Card extends PIXI.Container {
       this.buffText.x = -w/2 + w * (0.5 + this.buffText.xRatio)
       this.buffText.y = -h/2 + h * (0.5 + this.buffText.yRatio)
     }
-    
+
+    // debuffText
+    if (this.debuffText && this.debuffText.xRatio !== undefined) {
+      this.debuffText.x = -w/2 + w * (0.5 + this.debuffText.xRatio)
+      this.debuffText.y = -h/2 + h * (0.5 + this.debuffText.yRatio)
+    }
+
     // countCircle (для deck_menu)
     if (this.countCircle) {
       if (this.countCircle.xRatio !== null) {

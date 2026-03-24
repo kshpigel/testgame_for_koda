@@ -19,6 +19,7 @@ import { BattleEffects } from './ui/battle_effects.js'
 
 // Импорт ассетов
 import { cardStyles, getCardStyle } from './data/card_styles.js'
+import { applyDebuff } from './data/debuffs/index.js'
 
 const assets = {
   cardBack: '/assets/img/card_back.png',
@@ -347,6 +348,33 @@ export class Battle extends EventEmitter {
         }
       }
     })
+
+    // Применяем дебаффы врага к выбранным картам
+    this.applyDebuffs()
+  }
+
+  applyDebuffs() {
+    console.log('[DEBUFF] applyDebuffs called, enemyData.debuffs:', this.enemyData.debuffs)
+
+    // Очищаем дебаффы у ВСЕХ карт (включая deselected)
+    this.cards.forEach(card => {
+      card.clearDebuffs()
+      card.valueCircle?.setNormalStyle()
+    })
+
+    // Применяем дебаффы врага только к выбранным картам
+    if (this.enemyData.debuffs && this.selectedCards.length > 0) {
+      console.log('[DEBUFF] applying to', this.selectedCards.length, 'cards')
+      this.enemyData.debuffs.forEach(debuff => {
+        applyDebuff(debuff.type, this.selectedCards, debuff.params)
+      })
+
+      // Обновляем визуал для дебафнутых карт
+      this.selectedCards.forEach(card => {
+        console.log('[DEBUFF] card value:', card.getValue())
+        card.updateValue()
+      })
+    }
   }
 
   applySkills() {

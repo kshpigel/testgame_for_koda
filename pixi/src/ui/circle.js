@@ -211,4 +211,28 @@ export class Circle extends UINode {
     if (options.x !== undefined) this.setX(options.x)
     if (options.y !== undefined) this.setY(options.y)
   }
+
+  setState(state) {
+    if (state === 'red') {
+      this.gradientCenter = gradientColors.card.circle.debuff.center
+      this.gradientEdge = gradientColors.card.circle.debuff.edge
+      this.draw()
+    } else if (state === 'normal') {
+      this.setNormalStyle()
+    }
+  }
+
+  setBuffedStyle() {
+    // Зелёный градиент для баффов
+    this.gradientCenter = gradientColors.card.circle.buffed.center
+    this.gradientEdge = gradientColors.card.circle.buffed.edge
+    this.draw()
+  }
+
+  setNormalStyle() {
+    // Обычный градиент
+    this.gradientCenter = gradientColors.card.circle.normal.center
+    this.gradientEdge = gradientColors.card.circle.normal.edge
+    this.draw()
+  }
 }

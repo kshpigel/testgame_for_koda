@@ -32,6 +32,7 @@ const gradientColorsData = {
       selected: { center: '#EE40D7', edge: '#3B0C32' },
       buffed: { center: '#EE40D7', edge: '#3B0C32' },
       debuffed: { center: '#C02828', edge: '#600808' },
+      debuff: { center: '#C02828', edge: '#600808' },
       dark: { center: '#3C3C44', edge: '#1C1C22' }
     }
   },
@@ -125,7 +126,9 @@ const colorsData = {
     },
     circle: {
       bg: '#000000',
-      border: '#666666'
+      border: '#666666',
+      debuff: '#C02828',
+      debuffBorder: '#600808'
     },
     text: {
       primary: '#F5E7CF',

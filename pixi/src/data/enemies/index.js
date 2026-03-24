@@ -38,7 +38,8 @@ const tempEnemies = enemiesData.enemies.map((enemy, index) => {
     image: enemy.image,
     image_bg: enemy.image_bg,
     health: health,
-    isBoss: isBoss
+    isBoss: isBoss,
+    debuffs: enemy.debuffs
   }
 })
 
@@ -78,7 +79,8 @@ export const enemies = tempEnemies.map((enemy, index) => {
     image: enemy.image,
     image_bg: enemy.image_bg,
     health: enemy.health,
-    difficulty: difficulty
+    difficulty: difficulty,
+    debuffs: enemy.debuffs
   }
 })
 
