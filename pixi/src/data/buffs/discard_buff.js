@@ -25,17 +25,15 @@ export class DiscardBuff extends Buff {
       card.addBuff('discard_buff', 'discard', value)
     })
 
-    // Баффаем карты в колоде (currentDeck)
-    if (battle.currentDeck) {
-      battle.currentDeck.forEach(cardData => {
-        // Фильтрация по параметрам
-        if (faction && cardData.faction !== faction) return
-        if (kind && cardData.kind !== kind) return
-        if (id && cardData.type !== id) return
-
-        // Для колоды нужно хранить бафф отдельно
-        // Пока пропустим - нужно продумать как хранить баффы в колоде
-      })
+    // Добавляем в permanentBuffs для будущих карт из колоды
+    if (faction) {
+      battle.permanentBuffs[faction] = (battle.permanentBuffs[faction] || 0) + value
+    }
+    if (kind) {
+      battle.permanentBuffs[kind] = (battle.permanentBuffs[kind] || 0) + value
+    }
+    if (id) {
+      battle.permanentBuffs[id] = (battle.permanentBuffs[id] || 0) + value
     }
   }
 }

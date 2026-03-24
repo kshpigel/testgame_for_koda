@@ -1,3 +1,5 @@
+import { config } from './config.js'
+
 // Колоды игрока
 // ID 1 - Стартовая колода (текущая)
 // ID 2 - Агрессивная колода (больше атаки)
@@ -10,7 +12,8 @@ export const decks = {
     steps: 4, // Количество ходов
     cards: [
       5,5,5,5,5,5,5, // 7 копий type 5 (защита)
-      3,3,            // 2 копии type 3
+      3,            // 2 копии type 3
+      13,
       7,              // 1 копия type 7
       8,8,            // 2 копии type 8
       9,9,9,          // 3 копии type 9
@@ -51,7 +54,21 @@ export const decks = {
 
 // Получить колоду по ID
 export function getDeckByCode(code) {
-  return decks[code] || decks[1]
+  const originalDeck = decks[code] || decks[1]
+  
+  // Создаём копию, чтобы не мутировать оригинал
+  const deck = {
+    ...originalDeck,
+    cards: [...originalDeck.cards]
+  }
+
+  // Если в конфиге указаны карты для тестирования - добавляем их в начало
+  if (config.getCards && config.getCards.length > 0) {
+    const testCards = [...config.getCards]
+    deck.cards = [...testCards, ...deck.cards]
+  }
+
+  return deck
 }
 
 // Экспорт для совместимости (текущая колода = колода игрока с кодом 1)

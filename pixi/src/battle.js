@@ -2,7 +2,7 @@ import * as PIXI from 'pixi.js'
 import { EventEmitter } from 'events'
 import { FONT } from './data/fonts.js'
 import { colors } from './data/colors.js'
-import { log } from './data/config.js'
+import { log, config } from './data/config.js'
 import { Z } from './data/z_index.js'
 import { soundManager } from './audio/sound_manager.js'
 import { Card, CARD_CONFIG } from './ui/card.js'
@@ -72,8 +72,30 @@ export class Battle extends EventEmitter {
     // Счётчик сыгранных карт за бой
     this.cardsPlayedThisBattle = 0
 
+    // Постоянные баффы (от DiscardBuff и т.д.)
+    // { faction: value, kind: value, id: value }
+    this.permanentBuffs = {}
+
     // Регистрируем дебаффы (подписка на события)
     registerDebuffs(this)
+  }
+
+  // Применить постоянные баффы к карте
+  applyPermanentBuffs(card) {
+    const { faction, kind, type } = card.cardData
+
+    // Проверяем по faction
+    if (faction && this.permanentBuffs[faction]) {
+      card.addPermanentBuff(this.permanentBuffs[faction])
+    }
+    // По kind
+    if (kind && this.permanentBuffs[kind]) {
+      card.addPermanentBuff(this.permanentBuffs[kind])
+    }
+    // По type (id)
+    if (type && this.permanentBuffs[type]) {
+      card.addPermanentBuff(this.permanentBuffs[type])
+    }
   }
 
   setBlocked(blocked) {
@@ -155,7 +177,28 @@ export class Battle extends EventEmitter {
     this.currentDeck = this.deck.map(typeId => {
       return this.cardTypes.find(t => t.type === typeId)
     }).filter(Boolean)
-    this.currentDeck.sort(() => Math.random() - 0.5)
+    
+    // Если есть тестовые карты - берём их по порядку из getCards, остальные перемешиваем
+    if (config.getCards && config.getCards.length > 0) {
+      const testCards = []
+      const restCards = [...this.currentDeck]
+      
+      // Берём карты по порядку из getCards
+      for (const typeId of config.getCards) {
+        const idx = restCards.findIndex(c => c.type === typeId)
+        if (idx !== -1) {
+          testCards.push(restCards.splice(idx, 1)[0])
+        }
+      }
+      
+      // Перемешиваем остальные
+      restCards.sort(() => Math.random() - 0.5)
+      
+      // Тестовые первыми
+      this.currentDeck = [...testCards, ...restCards]
+    } else {
+      this.currentDeck.sort(() => Math.random() - 0.5)
+    }
   }
 
   dealCards(cnt) {
@@ -163,7 +206,8 @@ export class Battle extends EventEmitter {
     
     for (let i = 0; i < cardsToDeal; i++) {
       setTimeout(() => {
-        const cardData = this.currentDeck.pop()
+        // Берём с начала (shift) чтобы тестовые карты были первыми
+        const cardData = this.currentDeck.shift()
         if (cardData) {
           this.addCard(cardData)
           // После добавления всех карт - пересчитываем позиции
@@ -202,6 +246,9 @@ export class Battle extends EventEmitter {
     
     card.on('pointerdown', () => this.onCardClick(card))
     this.container.addChild(card)
+
+    // Применяем постоянные баффы (от DiscardBuff и т.д.)
+    this.applyPermanentBuffs(card)
     
     // Позиция колоды (откуда вылетает карта) - по центру колоды
     const deckX = this.app.screen.width - CARD_CONFIG.width / 2 - 30

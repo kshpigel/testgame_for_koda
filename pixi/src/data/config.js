@@ -4,7 +4,8 @@
 // Приватный объект с значениями
 const _config = {
   debug: false,  // Включить логи и debug рамки
-  enemiesCount: 10
+  enemiesCount: 10,
+  getCards: []   // Карты для тестирования (будут в начале колоды)
 }
 
 // Публичный API
@@ -12,7 +13,9 @@ export const config = {
   get debug() { return _config.debug },
   set debug(v) { _config.debug = v },
   get enemiesCount() { return _config.enemiesCount },
-  set enemiesCount(v) { _config.enemiesCount = v }
+  set enemiesCount(v) { _config.enemiesCount = v },
+  get getCards() { return _config.getCards },
+  set getCards(v) { _config.getCards = v }
 }
 
 // Логирование только в debug режиме
@@ -26,9 +29,10 @@ export function log(...args) {
 export async function loadConfig() {
   _config.debug = false // Дефолт
   _config.enemiesCount = 10
-  
+  _config.getCards = []
+
   const paths = ['local_config.json', '/local_config.json']
-  
+
   for (const path of paths) {
     try {
       const res = await fetch(path + '?v=' + Date.now())
@@ -36,7 +40,9 @@ export async function loadConfig() {
         const localConfig = await res.json()
         if (localConfig.debug !== undefined) _config.debug = localConfig.debug
         if (localConfig.enemiesCount !== undefined) _config.enemiesCount = localConfig.enemiesCount
-        console.log('[Config] Loaded:', _config)
+        if (localConfig.getCards !== undefined) _config.getCards = localConfig.getCards
+        console.log('[Config] Loaded:', localConfig)
+        console.log('[Config] getCards:', _config.getCards)
         break
       }
     } catch (e) { /* ignore */ }

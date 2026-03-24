@@ -6,7 +6,7 @@ import { BaseScreen } from './base_screen.js'
 import { card_types } from './data/card_types/index.js'
 import { getDeckByCode, deck as defaultDeck } from './data/deck.js'
 import { player } from './data/player.js'
-import { enemies as allEnemies } from './data/enemies/index.js'
+import { enemies as allEnemies, initEnemies } from './data/enemies/index.js'
 import { config, log } from './data/config.js'
 import { Z } from './data/z_index.js'
 import { maps } from './data/maps.js'
@@ -207,6 +207,9 @@ export class Game {
     Z.reset()
     this.hideCurrentScreen()
     soundManager.playMusic('mapBg')
+    
+    // Инициализируем врагов с рандомными HP (каждый раз новые)
+    initEnemies()
     
     // Переиспользуем существующую карту или создаём новую со случайной картой
     let mapScreen = this.screens['map']

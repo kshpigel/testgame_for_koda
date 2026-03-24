@@ -40,6 +40,7 @@ export class Card extends PIXI.Container {
     this.debuffValue = 0
     this.debuffs = {} // { [debuffId]: { type, value } }
     this.blockedBuffs = new Set() // заблокированные баффы (по типу карты-источника)
+    this.permanentBuffValue = 0 // постоянный бафф (не сбрасывается)
     this._cachedId = null // Кешируем ID карты
     
     // Используем cardWidth/cardHeight чтобы не переопределять встроенные PIXI свойства
@@ -433,6 +434,11 @@ export class Card extends PIXI.Container {
     this.updateValue()
   }
 
+  clearPermanentBuffs() {
+    this.permanentBuffValue = 0
+    this.updateValue()
+  }
+
   clearDebuffs() {
     this.debuffs = {}
     this.debuffValue = 0
@@ -489,7 +495,7 @@ export class Card extends PIXI.Container {
   }
 
   getValue() {
-    return Math.max(0, this.cardData.value + this.buffValue + this.debuffValue)
+    return Math.max(0, this.cardData.value + this.buffValue + this.debuffValue + this.permanentBuffValue)
   }
 
   get type() {
@@ -563,8 +569,13 @@ export class Card extends PIXI.Container {
   }
 
   updateValue() {
-    const totalValue = Math.max(0, this.cardData.value + this.buffValue + this.debuffValue)
+    const totalValue = Math.max(0, this.cardData.value + this.buffValue + this.debuffValue + this.permanentBuffValue)
     this.valueCircle.setText(`${totalValue}`)
+  }
+
+  addPermanentBuff(value) {
+    this.permanentBuffValue += value
+    this.updateValue()
   }
 
   update() {
