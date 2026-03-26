@@ -15,7 +15,6 @@ export function registerDebuffs(battle) {
     // Очищаем дебаффы у всех карт
     allCards.forEach(card => {
       card.clearDebuffs()
-      card.valueCircle?.setNormalStyle()
     })
 
     if (!battle.enemyData.debuffs) return

@@ -400,6 +400,11 @@ export class Card extends PIXI.Container {
     this.targetScale = CARD_CONFIG.selectedScale
     this.targetHeroScale = 1.1
     this.drawBg(CARD_CONFIG.colors.selected)
+    
+    // Если есть permanent бафф — оставляем фиолетовый кружок
+    if (this.permanentBuffValue > 0) {
+      this.valueCircle.setBuffedStyle()
+    }
   }
 
   deselect() {
@@ -407,6 +412,15 @@ export class Card extends PIXI.Container {
     this.targetScale = 1
     this.targetHeroScale = 1
     this.drawBg(CARD_CONFIG.colors.normal)
+    
+    // Если есть permanent бафф — оставляем фиолетовый кружок
+    if (this.permanentBuffValue > 0) {
+      this.valueCircle.setBuffedStyle()
+    } else if (this.debuffValue < 0) {
+      this.valueCircle.setState('red')
+    } else {
+      this.valueCircle.setNormalStyle()
+    }
   }
 
   setDisabled(disabled) {
@@ -419,9 +433,17 @@ export class Card extends PIXI.Container {
     this.buffValue = value
     if (value > 0) {
       this.buffText.text = `+${value}`
-      this.valueCircle.setBuffedStyle()
     } else {
       this.buffText.text = ''
+    }
+    // Обновляем цвет кружка с учётом permanent баффа
+    if (this.permanentBuffValue > 0) {
+      this.valueCircle.setBuffedStyle()
+    } else if (this.debuffValue < 0) {
+      this.valueCircle.setState('red')
+    } else if (value > 0) {
+      this.valueCircle.setBuffedStyle()
+    } else {
       this.valueCircle.setNormalStyle()
     }
   }
@@ -430,12 +452,20 @@ export class Card extends PIXI.Container {
     this.buffs = {}
     this.buffValue = 0
     this.buffText.text = ''
-    this.valueCircle.setNormalStyle()
+    // Сохраняем цвет кружка если есть permanent бафф
+    if (this.permanentBuffValue > 0) {
+      this.valueCircle.setBuffedStyle()
+    } else if (this.debuffValue < 0) {
+      this.valueCircle.setState('red')
+    } else {
+      this.valueCircle.setNormalStyle()
+    }
     this.updateValue()
   }
 
   clearPermanentBuffs() {
     this.permanentBuffValue = 0
+    this.valueCircle.setNormalStyle()
     this.updateValue()
   }
 
@@ -484,9 +514,11 @@ export class Card extends PIXI.Container {
       }
     }
 
-    // Если есть дебаффы - кружочек красный, иначе нормальный
+    // Обновляем цвет кружка с учётом permanent баффа
     if (this.valueCircle) {
-      if (this.debuffValue < 0) {
+      if (this.permanentBuffValue > 0) {
+        this.valueCircle.setBuffedStyle()
+      } else if (this.debuffValue < 0) {
         this.valueCircle.setState('red')
       } else {
         this.valueCircle.setNormalStyle()
@@ -549,16 +581,19 @@ export class Card extends PIXI.Container {
     
     if (this.buffValue > 0) {
       this.buffText.text = `+${this.buffValue}`
-      // Не перезаписываем красный стиль дебаффа
-      if (this.debuffValue >= 0) {
-        this.valueCircle.setBuffedStyle()
-      }
     } else {
       this.buffText.text = ''
-      // Не перезаписываем красный стиль дебаффа
-      if (this.debuffValue >= 0) {
-        this.valueCircle.setNormalStyle()
-      }
+    }
+    
+    // Обновляем цвет кружка с учётом permanent баффа
+    if (this.permanentBuffValue > 0) {
+      this.valueCircle.setBuffedStyle()
+    } else if (this.debuffValue < 0) {
+      this.valueCircle.setState('red')
+    } else if (this.buffValue > 0) {
+      this.valueCircle.setBuffedStyle()
+    } else {
+      this.valueCircle.setNormalStyle()
     }
     
     this.updateValue()
@@ -575,6 +610,7 @@ export class Card extends PIXI.Container {
 
   addPermanentBuff(value) {
     this.permanentBuffValue += value
+    this.valueCircle.setBuffedStyle() // Фиолетовый при permanent баффе
     this.updateValue()
   }
 
