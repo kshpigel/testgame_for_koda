@@ -23,6 +23,63 @@
 - Магазин карт
 - Локализация
 
+## Коллекция карт и конструктор колоды
+
+### Файлы данных
+1. **public/assets/data/collection.json** - хранилище карт игрока
+```json
+{
+  "maxCards": 60,
+  "cards": {
+    "1": 5,   // type 1 - 5 копий
+    "2": 15,  // type 2 - 15 копий
+    "5": 7,
+    "6": 11,
+    ...
+  }
+}
+```
+- `maxCards` - лимит хранимых карт (влияет на база)
+- `cards` - объект { cardType: count }
+
+2. **public/assets/data/decks.json** - колоды игрока
+```json
+{
+  "decks": {
+    "1": {
+      "id": 1,
+      "name": "Стартовая",
+      "steps": 4,
+      "cards": [6,6,6,5,5,3, ...]
+    }
+  },
+  "activeDeck": 1
+}
+```
+- `decks` - объект колод (пока 1)
+- `activeDeck` - ID активной колоды
+
+### Реализация
+- [x] Создать файлы collection.json и decks.json с дефолтными данными
+- [x] Класс CollectionManager (src/data/collection_manager.js)
+  - load() / save() - работа с localStorage
+  - addCard(type, count) / removeCard(type, count)
+  - getCount(type) / getTotal()
+  - getMax() - лимит
+  - canAdd(type, count) - проверка лимита
+- [x] Класс DeckManager (src/data/deck_manager.js)
+  - load() / save() - работа с decks.json + localStorage
+  - getDeck(id) / getActiveDeck()
+  - setActiveDeck(id)
+  - addCardToDeck(deckId, type) / removeCardFromDeck(deckId, type)
+  - validateDeck(deckId) - проверить что карты есть в коллекции
+- [x] Класс Castle (src/ui/castle.js)
+  - Визуальный компонент на базе UINode
+  - click -> главное модальное окно с двумя ярлыками
+  - "Хранилище" -> Modal с списком карт коллекции
+  - "Колода" -> Modal с информацией о колоде и валидацией
+- [x] Интеграция Castle в BaseScreen
+
 ## Уровень базы (будущий функционал)
 - Влияет на количество хранимых карт
 - Влияет на количество колод

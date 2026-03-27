@@ -84,6 +84,7 @@ this.container.addChild(this.enemyDisplay)
 - 3 колоды в deck.js
 - Portal с защитой от повторного destroy
 - Git-репозиторий на GitHub
+- Обфускация кода при сборке (javascript-obfuscator)
 
 ---
 
@@ -120,6 +121,9 @@ this.container.addChild(this.enemyDisplay)
 ## Реализованные фичи
 - [x] Бой и карта работают полностью
 - [x] BaseScreen (экран базы игрока)
+- [x] Castle - класс замка с модальными окнами (Хранилище, Колода)
+- [x] CollectionManager - управление коллекцией карт (collection.json)
+- [x] DeckManager - управление колодами (decks.json)
 - [x] EnemyDisplay, HandRenderer, DeckMenu, BattleUI (вынесены из battle.js)
 - [x] MapNode, MapRenderer (вынесены из map.js)
 - [x] Dialog класс для диалогов с героями

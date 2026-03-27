@@ -7,6 +7,7 @@ import { log } from './data/config.js'
 import { soundManager } from './audio/sound_manager.js'
 import { player } from './data/player.js'
 import { Portal } from './ui/portal.js'
+import { Castle } from './ui/castle.js'
 import { Birds } from './ui/birds.js'
 import { Clouds } from './ui/clouds.js'
 
@@ -74,38 +75,17 @@ export class BaseScreen extends EventEmitter {
     this.clouds = new Clouds(this.app, { count: 8, speed: 0.15 })
     this.container.addChild(this.clouds.container)
 
-    // База (по центру горизонтально, 2/3 сверху)
-    if (this.assets.base && this.assets.base.texture) {
-      this.base = new PIXI.Sprite(this.assets.base.texture)
-      this.base.anchor.set(0.5, 1)
-      this.base.x = this.app.screen.width / 2
-      this.base.y = this.app.screen.height * 0.76
-      // Масштабируем до 300x300
-      const targetW = 220
-      const targetH = 220
-      const scale = Math.min(
-        targetW / this.base.texture.width,
-        targetH / this.base.texture.height
-      )
-      this.base.scale.set(scale)
-      this.base.eventMode = 'static'
-      this.base.cursor = 'pointer'
-      
-      // Glow эффект для базы
-      const baseGlow = new ColorMatrixFilter()
-      baseGlow.brightness(1.3, false)
-      
-      this.base.on('pointerover', () => {
-        this.base.filters = [baseGlow]
-        soundManager.play('hover')
-      })
-      
-      this.base.on('pointerout', () => {
-        this.base.filters = null
-      })
-      
-      this.container.addChild(this.base)
-    }
+    // База - Замок (по центру горизонтально, 2/3 сверху)
+    const baseTexture = this.assets.base?.texture || null
+    this.castle = new Castle({
+      texture: baseTexture,
+      width: 220,
+      height: 220,
+      app: this.app
+    })
+    this.castle.setX(this.app.screen.width / 2)
+    this.castle.setY(this.app.screen.height * 0.76)
+    this.container.addChild(this.castle)
 
     // Порталы - статические позиции
     const positions = this.getPortalPositions()
@@ -293,6 +273,10 @@ export class BaseScreen extends EventEmitter {
     
     if (this.portals) {
       this.portals.forEach(p => p.update())
+    }
+    
+    if (this.castle) {
+      this.castle.update()
     }
   }
 
