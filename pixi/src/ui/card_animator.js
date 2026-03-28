@@ -35,12 +35,23 @@ export class CardAnimator {
   }
   
   animateCardOut(card, onComplete) {
+    // Проверяем что карта ещё имеет валидный контейнер
+    if (!card || !card.parent) {
+      if (onComplete) onComplete()
+      return
+    }
+    
     const startX = card.x
     const startY = card.y
     const targetY = this.app.screen.height + 300
     
     let progress = 0
     const animate = () => {
+      // Проверяем на каждом кадре
+      if (!card || !card.parent) {
+        if (onComplete) onComplete()
+        return
+      }
       progress += 0.03
       if (progress >= 1) {
         card.y = targetY
