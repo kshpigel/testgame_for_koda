@@ -1,15 +1,20 @@
 import { log } from './config.js'
 import { card_types } from './card_types/index.js'
 import collectionData from '../../public/assets/data/collection.json'
+import sleevesData from '../../public/assets/data/deck_sleeves.json'
 
 const STORAGE_KEY = 'card_game_collection'
 
 // Дефолтные данные коллекции (из collection.json)
 const DEFAULT_COLLECTION = collectionData
 
+// Дефолтные данные рубашек (из deck_sleeves.json)
+const DEFAULT_SLEEVES = sleevesData
+
 export class CollectionManager {
   constructor() {
     this.data = { ...DEFAULT_COLLECTION }
+    this.sleevesData = { ...DEFAULT_SLEEVES }
     this.load()
     
     // Если коллекция пустая - инициализируем дефолтом
@@ -17,6 +22,13 @@ export class CollectionManager {
       log('[CollectionManager] Empty collection, initializing with defaults')
       this.data = { ...DEFAULT_COLLECTION }
       this.save()
+    }
+    
+    // Если рубашек нет - инициализируем дефолтом
+    if (!this.sleevesData.sleeves || Object.keys(this.sleevesData.sleeves).length === 0) {
+      log('[CollectionManager] Empty sleeves, initializing with defaults')
+      this.sleevesData = { ...DEFAULT_SLEEVES }
+      this.saveSleeves()
     }
   }
 
@@ -31,6 +43,9 @@ export class CollectionManager {
     } catch (e) {
       console.warn('[CollectionManager] Failed to load:', e)
     }
+    
+    // Загружаем рубашки
+    this.loadSleeves()
   }
 
   // Сохранить в localStorage
@@ -104,6 +119,94 @@ export class CollectionManager {
   reset() {
     this.data = { ...DEFAULT_COLLECTION }
     this.save()
+  }
+
+  // ========== РУБАШКИ (SLEEVES) ==========
+
+  // Загрузить рубашки из localStorage
+  loadSleeves() {
+    try {
+      const saved = localStorage.getItem('card_game_sleeves')
+      if (saved) {
+        this.sleevesData = { ...DEFAULT_SLEEVES, ...JSON.parse(saved) }
+      }
+      log('[CollectionManager] sleeves loaded:', this.sleevesData)
+    } catch (e) {
+      console.warn('[CollectionManager] Failed to load sleeves:', e)
+    }
+  }
+
+  // Сохранить рубашки в localStorage
+  saveSleeves() {
+    try {
+      localStorage.setItem('card_game_sleeves', JSON.stringify(this.sleevesData))
+      log('[CollectionManager] sleeves saved')
+    } catch (e) {
+      console.warn('[CollectionManager] Failed to save sleeves:', e)
+    }
+  }
+
+  // Получить все рубашки
+  getAllSleeves() {
+    return { ...this.sleevesData.sleeves }
+  }
+
+  // Получить рубашку по ID
+  getSleeve(id) {
+    return this.sleevesData.sleeves[id] || null
+  }
+
+  // Получить активную рубашку
+  getActiveSleeve() {
+    return this.getSleeve(this.sleevesData.activeSleeve)
+  }
+
+  // Получить ID активной рубашки
+  getActiveSleeveId() {
+    return this.sleevesData.activeSleeve
+  }
+
+  // Установить активную рубашку
+  setActiveSleeve(id) {
+    if (this.sleevesData.sleeves[id]) {
+      this.sleevesData.activeSleeve = id
+      this.saveSleeves()
+      log(`[CollectionManager] Active sleeve set to ${id}`)
+      return true
+    }
+    return false
+  }
+
+  // Рассчитать minCards для рубашки
+  getMinCards(sleeveId) {
+    const sleeve = this.getSleeve(sleeveId)
+    if (!sleeve) return 0
+    const handSize = 8
+    return Math.floor((sleeve.turns + sleeve.discards / 2) * handSize)
+  }
+
+  // Проверить, есть ли рубашка в коллекции
+  hasSleeve(id) {
+    return !!this.sleevesData.sleeves[id]
+  }
+
+  // Добавить рубашку в коллекцию
+  addSleeve(sleeveData) {
+    const id = sleeveData.id
+    if (!id) {
+      log('[CollectionManager] Cannot add sleeve - no ID')
+      return false
+    }
+    this.sleevesData.sleeves[id] = sleeveData
+    this.saveSleeves()
+    log(`[CollectionManager] Added sleeve ${id}`)
+    return true
+  }
+
+  // Сбросить рубашки к дефолту
+  resetSleeves() {
+    this.sleevesData = { ...DEFAULT_SLEEVES }
+    this.saveSleeves()
   }
 }
 

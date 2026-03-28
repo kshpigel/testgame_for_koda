@@ -256,9 +256,10 @@ export class Game {
     soundManager.stopMusic()
     soundManager.playMusic('battleBg')
     
-    // Получаем колоду по коду игрока
-    const playerDeck = getDeckByCode(player.deckCode)
-    const battle = new Battle(this.app, playerDeck.cards, card_types, enemyData, this)
+    // Получаем колоду по коду игрока (из DeckManager)
+    const playerDeck = deckManager.getDeck(deckManager.getActiveDeckId())
+    const sleeve = collectionManager.getActiveSleeve()
+    const battle = new Battle(this.app, playerDeck.cards, card_types, enemyData, this, sleeve)
 
     // Показываем диалог врага перед боем
     this.showEnemyDialog(enemyData)

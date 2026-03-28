@@ -8,6 +8,7 @@ import { Modal } from './modal.js'
 import { collectionManager } from '../data/collection_manager.js'
 import { deckManager } from '../data/deck_manager.js'
 import { CardGridRenderer } from './card_grid_renderer.js'
+import { DeckEditor } from './deck_editor.js'
 
 export class Castle extends UINode {
   constructor(options = {}) {
@@ -119,8 +120,8 @@ export class Castle extends UINode {
       '🃏 Колода',
       'Сборка колоды',
       () => {
-        // Не hide(), а просто открываем следующее поверх
-        this.showDecksModal()
+        // Открываем редактор колоды
+        this.openDeckEditor()
       }
     )
     decksBtn.x = 120
@@ -263,97 +264,10 @@ export class Castle extends UINode {
     modal.show()
   }
 
-  // Модальное окно колод
-  showDecksModal() {
-    const modal = new Modal(this.app, {
-      title: 'Управление колодой',
-      width: 750,
-      height: 500,
-      bgColor: colors.ui.panel.bg
-    })
-
-    // Информация об активной колоде
-    const activeDeck = deckManager.getActiveDeck()
-    const deckSize = activeDeck ? activeDeck.cards.length : 0
-    
-    const infoText = new PIXI.Text(
-      `Колода: ${activeDeck?.name || 'Нет'} (${deckSize} карт)`,
-      {
-        fontFamily: FONT,
-        fontSize: 16,
-        fill: colors.ui.text.primary
-      }
-    )
-    infoText.anchor.set(0.5, 0)
-    infoText.y = -200 // Смещаем выше
-    
-    // Валидация с названиями карт
-    const validation = deckManager.validateDeck(deckManager.getActiveDeckId(), this.cardTypes)
-    let validationText
-    if (validation.valid) {
-      validationText = new PIXI.Text(
-        '✅ Колода готова к бою',
-        { fontFamily: FONT, fontSize: 14, fill: colors.ui.text.primary }
-      )
-    } else {
-      // reason уже содержит название карты
-      validationText = new PIXI.Text(
-        `⚠️ ${validation.reason}`,
-        { fontFamily: FONT, fontSize: 14, fill: 0xff6644 }
-      )
-    }
-    validationText.anchor.set(0.5, 0)
-    validationText.y = -170 // Смещаем выше
-    
-    modal.setContent((content) => {
-      content.addChild(infoText)
-      content.addChild(validationText)
-      
-      // Рендерим карты в content
-      const cardCounts = {}
-      if (activeDeck) {
-        activeDeck.cards.forEach(type => {
-          cardCounts[type] = (cardCounts[type] || 0) + 1
-        })
-      }
-      
-      const cardDataList = Object.entries(cardCounts).map(([type, count]) => {
-        const cardType = this.cardTypes.find(c => c.type === parseInt(type))
-        const haveInCollection = collectionManager.getCount(parseInt(type))
-        return {
-          type: parseInt(type),
-          count,
-          haveInCollection,
-          ...cardType
-        }
-      })
-      
-      this.gridRenderer = new CardGridRenderer(this.app, cardDataList, this.assets, {
-        columns: 6,
-        cardScale: 0.55,
-        gap: 8,
-        showCount: true,
-        grayscaleZero: false,
-        sortBy: 'value',
-        sortDesc: true,
-        cardTypes: this.cardTypes
-      })
-      this.gridRenderer.render(content)
-    })
-    
-    // Запускаем ticker для скролла
-    this.startTicker()
-
-    modal.onClose = () => {
-      this.stopTicker()
-      if (this.gridRenderer) {
-        this.gridRenderer.destroy()
-        this.gridRenderer = null
-      }
-    }
-
-    modal.addToStage(this.app.stage)
-    modal.show()
+  // Открыть редактор колоды
+  openDeckEditor() {
+    const editor = new DeckEditor(this.app, this.cardTypes, this.assets)
+    editor.show()
   }
   
   // Запустить ticker для обновления скролла

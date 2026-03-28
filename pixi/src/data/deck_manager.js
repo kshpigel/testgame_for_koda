@@ -105,7 +105,74 @@ export class DeckManager {
       }
     }
 
+    // Проверяем minCards (по рубашке)
+    const sleeveId = deck.sleeveId || 1
+    const minCards = collectionManager.getMinCards(sleeveId)
+    const deckSize = deck.cards.length
+    
+    if (deckSize < minCards) {
+      return {
+        valid: false,
+        reason: `Need at least ${minCards} cards (currently ${deckSize})`
+      }
+    }
+
     return { valid: true }
+  }
+
+  // Получить sleeveId колоды
+  getSleeveId(deckId) {
+    const deck = this.getDeck(deckId)
+    return deck?.sleeveId || 1
+  }
+
+  // Установить sleeveId для колоды
+  setSleeveId(deckId, sleeveId) {
+    const deck = this.getDeck(deckId)
+    if (!deck) return false
+    deck.sleeveId = sleeveId
+    this.save()
+    log(`[DeckManager] Set sleeve ${sleeveId} for deck ${deckId}`)
+    return true
+  }
+
+  // Обновить название колоды
+  updateDeckName(deckId, name) {
+    const deck = this.getDeck(deckId)
+    if (!deck) return false
+    deck.name = name
+    this.save()
+    log(`[DeckManager] Updated name for deck ${deckId}: ${name}`)
+    return true
+  }
+
+  // Создать новую колоду
+  createDeck(name, sleeveId = 1) {
+    const id = Date.now()
+    this.data.decks[id] = {
+      id,
+      name: name || 'Новая колода',
+      sleeveId,
+      cards: []
+    }
+    this.save()
+    log(`[DeckManager] Created new deck ${id}`)
+    return id
+  }
+
+  // Удалить колоду
+  deleteDeck(deckId) {
+    if (this.data.decks[deckId] && Object.keys(this.data.decks).length > 1) {
+      delete this.data.decks[deckId]
+      // Если удалили активную - выбрать первую
+      if (this.data.activeDeck === deckId) {
+        this.data.activeDeck = parseInt(Object.keys(this.data.decks)[0])
+      }
+      this.save()
+      log(`[DeckManager] Deleted deck ${deckId}`)
+      return true
+    }
+    return false
   }
 
   // Добавить карту в колоду

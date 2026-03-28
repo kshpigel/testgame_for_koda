@@ -29,13 +29,14 @@ const assets = {
 }
 
 export class Battle extends EventEmitter {
-  constructor(app, deck, cardTypes, enemyData, game) {
+  constructor(app, deck, cardTypes, enemyData, game, sleeve = null) {
     super()
     this.app = app
     this.deck = [...deck]
     this.cardTypes = cardTypes
     this.enemyData = enemyData
     this.game = game
+    this.sleeve = sleeve
     
     this.container = new PIXI.Container()
     this.container.zIndex = 100 // Высокий zIndex для боя
@@ -58,9 +59,10 @@ export class Battle extends EventEmitter {
     
     this.maxCards = 5
     this.activeCards = 0
-    this.cntReset = 3
-    this.cntSteps = 4
-    this.defCntSteps = 4
+    // Параметры из рубашки (sleeve)
+    this.cntReset = sleeve?.discards || 1
+    this.cntSteps = sleeve?.turns || 4
+    this.defCntSteps = this.cntSteps
     this.enemyHealth = enemyData.health
     
     // Хранилище баффов Священника для предотвращения мухлежа

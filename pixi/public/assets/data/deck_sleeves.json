@@ -1,0 +1,55 @@
+{
+  "sleeves": {
+    "1": {
+      "id": 1,
+      "name": "Стартовая",
+      "image": "/assets/img/card_back.png",
+      "description": "Базовая колода для новичков",
+      "turns": 4,
+      "discards": 1,
+      "rarity": "common",
+      "cost": null
+    },
+    "2": {
+      "id": 2,
+      "name": "Воин",
+      "image": "/assets/img/card_back.png",
+      "description": "Колода воина - больше ходов, меньше сбросов",
+      "turns": 5,
+      "discards": 1,
+      "rarity": "common",
+      "cost": 100
+    },
+    "3": {
+      "id": 3,
+      "name": "Берсерк",
+      "image": "/assets/img/card_back.png",
+      "description": "Агрессивная колода - много ходов, много сбросов",
+      "turns": 4,
+      "discards": 3,
+      "rarity": "rare",
+      "cost": 250
+    },
+    "4": {
+      "id": 4,
+      "name": "Мастер",
+      "image": "/assets/img/card_back.png",
+      "description": "Профессиональная колода для опытных игроков",
+      "turns": 6,
+      "discards": 2,
+      "rarity": "epic",
+      "cost": 500
+    },
+    "5": {
+      "id": 5,
+      "name": "Легенда",
+      "image": "/assets/img/card_back.png",
+      "description": "Легендарная колода - максимум возможностей",
+      "turns": 8,
+      "discards": 3,
+      "rarity": "legendary",
+      "cost": null
+    }
+  },
+  "activeSleeve": 1
+}
