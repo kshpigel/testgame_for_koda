@@ -15,7 +15,8 @@
 - После перезапуска WSL запустить `.koda_tmp/wsl_proxy.bat` для восстановления проброса портов
 - Основная ветка разработки: папка `pixi/` (Pixi.js версия)
 - Папка `my/` - старая webpack версия (не трогаем)
-- После изменений в `pixi/` проверяем сборку: `npm run build`
+- После изменений в `pixi/` проверяем сборку: `npm run build:fast` (быстрая, без обфускации)
+- Полная сборка с обфускацией: `npm run build` (для прода)
 - При необходимости запустить dev-сервер прошу пользователя сделать это вручную (`npm run dev`), т.к. команда зависает
 - Все цвета выносим в файл data/colors.js, только в HEX
 - Сборка (`npm run build`) автоматически генерирует версию в формате v{package.json.version}-{git-hash}
@@ -122,8 +123,9 @@ this.container.addChild(this.enemyDisplay)
 - [x] Бой и карта работают полностью
 - [x] BaseScreen (экран базы игрока)
 - [x] Castle - класс замка с модальными окнами (Хранилище, Колода)
-- [x] CollectionManager - управление коллекцией карт (collection.json)
-- [x] DeckManager - управление колодами (decks.json)
+- [x] CardGridRenderer - универсальный рендер карт в сетку со скроллом
+- [x] CollectionManager - управление коллекцией карт (загружается из collection.json)
+- [x] DeckManager - управление колодами (загружается из decks.json)
 - [x] EnemyDisplay, HandRenderer, DeckMenu, BattleUI (вынесены из battle.js)
 - [x] MapNode, MapRenderer (вынесены из map.js)
 - [x] Dialog класс для диалогов с героями

@@ -12,7 +12,7 @@ import { Modal } from './ui/modal.js'
 import { TextNode } from './ui/text_node.js'
 import { EnemyDisplay } from './ui/enemy_display.js'
 import { HandRenderer } from './ui/hand_renderer.js'
-import { DeckMenu } from './ui/deck_menu.js'
+import { CardGridRenderer } from './ui/card_grid_renderer.js'
 import { BattleUI } from './ui/battle_ui.js'
 import { CardAnimator } from './ui/card_animator.js'
 import { BattleEffects } from './ui/battle_effects.js'
@@ -796,9 +796,69 @@ export class Battle extends EventEmitter {
   }
 
   showDeckMenu() {
-    const deckMenu = new DeckMenu(this.app, this.currentDeck, this.cardTypes, this.assets, this.container)
-    deckMenu.cardsInHand = this.cards.length
-    deckMenu.show()
+    // Создаём модальное окно
+    const modal = new Modal(this.app, {
+      title: 'Колода',
+      width: 750,
+      height: 500,
+      bgColor: colors.ui.panel.bg
+    })
+    
+    // Подсчёт количества каждого типа карты которые ОСТАЛИСЬ В КОЛОДЕ
+    const cardCounts = {}
+    
+    // Считаем карты в текущей колоде (остаток)
+    this.currentDeck.forEach(card => {
+      const type = card.type
+      cardCounts[type] = (cardCounts[type] || 0) + 1
+    })
+    
+    // Формируем массив {type, count, ...cardData} для всех типов карт
+    // count = сколько карт этого типа ещё в игре (не использовано)
+    const cardDataList = this.cardTypes.map(cardType => ({
+      type: cardType.type,
+      count: cardCounts[cardType.type] || 0,
+      ...cardType
+    }))
+    
+    // Статистика
+    const statsText = new PIXI.Text(
+      `Всего карт: ${this.currentDeck.length} | В руке: ${this.cards.length}`,
+      { fontFamily: FONT, fontSize: 16, fill: colors.ui.text.secondary }
+    )
+    statsText.anchor.set(0.5, 0)
+    statsText.y = -180
+    
+    // Рендерим через CardGridRenderer
+    modal.setContent((content) => {
+      content.addChild(statsText)
+      
+      const gridRenderer = new CardGridRenderer(this.app, cardDataList, this.assets, {
+        columns: 6,
+        cardScale: 0.55,
+        gap: 8,
+        showCount: true,
+        grayscaleZero: true,
+        sortBy: 'value',
+        sortDesc: true,
+        cardTypes: this.cardTypes
+      })
+      gridRenderer.render(content)
+      
+      // Запускаем ticker для скролла
+      this._deckGridTicker = () => gridRenderer.update()
+      this.app.ticker.add(this._deckGridTicker)
+    })
+    
+    modal.onClose = () => {
+      if (this._deckGridTicker) {
+        this.app.ticker.remove(this._deckGridTicker)
+        this._deckGridTicker = null
+      }
+    }
+    
+    modal.addToStage(this.app.stage)
+    modal.show()
   }
 
   createButton(text, color, onClick) {

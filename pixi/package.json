@@ -8,6 +8,7 @@
     "prebuild": "node scripts/generate-version.cjs",
     "postbuild": "cp -n public/local_config.json dist/ 2>/dev/null || true",
     "build": "vite build",
+    "build:fast": "vite build --config vite.config.fast.js",
     "preview": "vite preview"
   },
   "dependencies": {

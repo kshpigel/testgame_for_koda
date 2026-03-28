@@ -107,7 +107,7 @@ export class Castle extends UINode {
       '📦 Хранилище',
       'Карты в коллекции',
       () => {
-        modal.hide()
+        // Не hide(), а просто открываем следующее поверх
         this.showStorageModal()
       }
     )
@@ -119,7 +119,7 @@ export class Castle extends UINode {
       '🃏 Колода',
       'Сборка колоды',
       () => {
-        modal.hide()
+        // Не hide(), а просто открываем следующее поверх
         this.showDecksModal()
       }
     )

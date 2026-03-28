@@ -441,22 +441,6 @@ export class CardGridRenderer {
     countText.y = topY + 30 + bioText.height + 10 + mechanicText.height + 10
     detailModal.content.addChild(countText)
     
-    // Кнопка "Закрыть"
-    const closeBtn = new Button('Закрыть', {
-      width: 100,
-      height: 35,
-      color: colors.ui.button.secondary,
-      fontSize: 14,
-      app: this.app
-    })
-    closeBtn.setX(150)
-    closeBtn.setY(120)
-    closeBtn.onClick = () => {
-      detailModal.hide()
-      this.app.stage.removeChild(detailModal.container)
-    }
-    detailModal.content.addChild(closeBtn)
-    
     detailModal.show()
     this.app.stage.addChild(detailModal.container)
   }
