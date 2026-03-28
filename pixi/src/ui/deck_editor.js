@@ -779,5 +779,10 @@ export class DeckEditor {
     if (this.app.stage) {
       this.app.stage.off('wheel', this.onWheel, this)
     }
+    // Полностью уничтожаем модалку
+    if (this.modal) {
+      this.modal.destroy()
+      this.modal = null
+    }
   }
 }

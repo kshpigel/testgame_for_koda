@@ -160,4 +160,15 @@ export class Modal {
   centerContent() {
     this.content.x = 0
   }
+  
+  // Полностью уничтожить модалку
+  destroy() {
+    if (this.container) {
+      this.container.destroy({ children: true })
+      this.container = null
+    }
+    this.content = null
+    this.window = null
+    this.closeBtn = null
+  }
 }
