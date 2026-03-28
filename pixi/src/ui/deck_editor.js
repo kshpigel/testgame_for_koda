@@ -109,6 +109,18 @@ export class DeckEditor {
     
     const decks = deckManager.getAllDecks()
     const deckIds = Object.keys(decks)
+    const activeDeckId = deckManager.getActiveDeckId()
+    const isActive = String(this.currentDeckId) === String(activeDeckId)
+    
+    // Подсветка активной колоды
+    if (isActive) {
+      const activeBg = new PIXI.Graphics()
+      activeBg.lineStyle(2, colors.ui.text.gold || 0xFFD700)
+      activeBg.beginFill(colors.ui.panel.dark || 0x1a1a1a, 0.3)
+      activeBg.drawRoundedRect(-70, -20, 230, 40, 8)
+      activeBg.endFill()
+      selectorContainer.addChild(activeBg)
+    }
     
     const prevBtn = new Button('<', {
       width: 30,
@@ -136,10 +148,21 @@ export class DeckEditor {
     const counterText = new PIXI.Text(`${idx + 1}/${deckIds.length}`, {
       fontFamily: FONT,
       fontSize: 14,
-      fill: colors.ui.text.secondary
+      fill: isActive ? colors.ui.text.gold : colors.ui.text.secondary
     })
     counterText.anchor.set(0.5)
+    counterText.y = -12
     selectorContainer.addChild(counterText)
+    
+    // Статус активности
+    const statusText = new PIXI.Text(isActive ? '✓ Активна' : '', {
+      fontFamily: FONT,
+      fontSize: 10,
+      fill: colors.ui.text.gold
+    })
+    statusText.anchor.set(0.5)
+    statusText.y = 8
+    selectorContainer.addChild(statusText)
     
     const newBtn = new Button('+', {
       width: 30,
@@ -151,6 +174,20 @@ export class DeckEditor {
     newBtn.setX(110)
     newBtn.onClick = () => this.createNewDeck()
     selectorContainer.addChild(newBtn)
+    
+    // Кнопка "Выбрать" если не активна
+    if (!isActive) {
+      const selectBtn = new Button('Выбрать', {
+        width: 80,
+        height: 24,
+        color: colors.ui.button.play,
+        fontSize: 12,
+        app: this.app
+      })
+      selectBtn.setX(155)
+      selectBtn.onClick = () => this.selectDeck()
+      selectorContainer.addChild(selectBtn)
+    }
     
     content.addChild(selectorContainer)
   }
@@ -426,6 +463,22 @@ export class DeckEditor {
     this.currentDeckId = deckId
     this.currentDeck = deckManager.getDeck(deckId)
     this.savedDeckState = this._getDeckStateCopy()
+    this.modal.hide()
+    this.modal.removeFromStage(this.app.stage)
+    this.show()
+  }
+
+  // Выбрать эту колоду как активную для боя
+  selectDeck() {
+    const validation = deckManager.validateDeck(this.currentDeckId, this.cardTypes)
+    if (!validation.valid) {
+      // Показываем предупреждение
+      alert(`Нельзя выбрать эту колоду: ${validation.reason}`)
+      return
+    }
+    deckManager.setActiveDeck(this.currentDeckId)
+    soundManager.play('click')
+    // Перерисовываем чтобы показать статус
     this.modal.hide()
     this.modal.removeFromStage(this.app.stage)
     this.show()

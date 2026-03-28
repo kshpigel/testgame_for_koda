@@ -97,10 +97,10 @@ export class DeckManager {
       const haveCount = collectionManager.getCount(parseInt(type))
       if (haveCount < needCount) {
         const cardType = cardTypes.find(c => c.type === parseInt(type))
-        const cardName = cardType ? cardType.name : `type ${type}`
+        const cardName = cardType ? cardType.name : `тип ${type}`
         return {
           valid: false,
-          reason: `Not enough ${cardName}: need ${needCount}, have ${haveCount}`
+          reason: `Недостаточно ${cardName}: нужно ${needCount}, есть ${haveCount}`
         }
       }
     }
@@ -113,7 +113,7 @@ export class DeckManager {
     if (deckSize < minCards) {
       return {
         valid: false,
-        reason: `Need at least ${minCards} cards (currently ${deckSize})`
+        reason: `Нужно минимум ${minCards} карт (сейчас ${deckSize})`
       }
     }
 

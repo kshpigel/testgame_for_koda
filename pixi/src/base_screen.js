@@ -11,6 +11,8 @@ import { Castle } from './ui/castle.js'
 import { Birds } from './ui/birds.js'
 import { Clouds } from './ui/clouds.js'
 import { getCardStyle } from './data/card_styles.js'
+import { collectionManager } from './data/collection_manager.js'
+import { deckManager } from './data/deck_manager.js'
 
 const ASSETS = {
   bg: '/assets/img/base_bg.png',
@@ -21,9 +23,10 @@ const ASSETS = {
 import { Z } from './data/z_index.js'
 
 export class BaseScreen extends EventEmitter {
-  constructor(app) {
+  constructor(app, cardTypes = []) {
     super()
     this.app = app
+    this.cardTypes = cardTypes
     this.container = new PIXI.Container()
     this.container.zIndex = Z.bgBase
     this.assets = {}
@@ -179,6 +182,67 @@ export class BaseScreen extends EventEmitter {
     this.container.addChild(text1, text2, text3)
     
     this.playerInfoContainer = bg
+    
+    // Информация о колоде (справа сверху)
+    this.createDeckInfo()
+  }
+
+  // Информер выбранной колоды
+  createDeckInfo() {
+    const activeDeck = deckManager.getActiveDeck()
+    const padding = 10
+    const fontSize = 14
+    
+    let deckName = 'Колода не выбрана'
+    let deckCards = 0
+    let deckSleeve = ''
+    let isValid = false
+    
+    if (activeDeck) {
+      deckName = activeDeck.name || 'Без названия'
+      deckCards = activeDeck.cards?.length || 0
+      const sleeve = collectionManager.getSleeve(activeDeck.sleeveId || 1)
+      const sleeveName = sleeve?.name || 'Standard'
+      const minCards = collectionManager.getMinCards(activeDeck.sleeveId || 1)
+      isValid = deckCards >= minCards
+      
+      const validation = deckManager.validateDeck(activeDeck.id, this.cardTypes)
+      isValid = validation.valid
+    }
+    
+    const deckText = new PIXI.Text(deckName, {
+      fontFamily: FONT,
+      fontSize: fontSize,
+      fill: isValid ? colors.ui.text.primary : 0xff6644
+    })
+    
+    const cardsText = new PIXI.Text(isValid ? `Карт: ${deckCards}` : `Мало карт (${deckCards})`, {
+      fontFamily: FONT,
+      fontSize: 12,
+      fill: isValid ? colors.ui.text.secondary : 0xff6644
+    })
+    
+    // Фон
+    const totalWidth = Math.max(deckText.width, cardsText.width) + padding * 2
+    const height = 50
+    
+    const bg = new PIXI.Graphics()
+    bg.beginFill(0x000000, 0.25)
+    bg.drawRoundedRect(0, 0, totalWidth, height, 8)
+    bg.endFill()
+    bg.x = this.app.screen.width - totalWidth - 10
+    bg.y = 10
+    this.container.addChild(bg)
+    
+    deckText.x = padding
+    deckText.y = padding
+    
+    cardsText.x = padding
+    cardsText.y = padding + 18
+    
+    this.container.addChild(deckText, cardsText)
+    
+    this.deckInfoContainer = bg
   }
 
   // Позиции порталов на базе (статические)

@@ -18,6 +18,7 @@ import { GAME_VERSION } from './data/version.js'
 import { soundManager } from './audio/sound_manager.js'
 import { Button } from './ui/button.js'
 import { Dialog } from './ui/dialog.js'
+import { Modal } from './ui/modal.js'
 
 // Главный фон
 const MAIN_BG = '/assets/img/bg_full.jpg'
@@ -192,15 +193,22 @@ export class Game {
     let baseScreen = this.screens['base']
     if (!baseScreen) {
       log('[Game] Creating NEW BaseScreen')
-      baseScreen = new BaseScreen(this.app)
-      baseScreen.on('start_game', (portalId) => this.showMap(portalId))
+      baseScreen = new BaseScreen(this.app, card_types)
+      baseScreen.on('start_game', (portalId) => {
+        // Проверка колоды перед входом в портал
+        const activeDeckId = deckManager.getActiveDeckId()
+        const validation = deckManager.validateDeck(activeDeckId, card_types)
+        if (!validation.valid) {
+          // Показываем модалку с предупреждением
+          this.showDeckRequiredModal(validation.reason)
+          return
+        }
+        this.showMap(portalId)
+      })
       this.screens['base'] = baseScreen
     } else {
       log('[Game] Reusing existing BaseScreen')
     }
-    
-    // Передаём cardTypes в baseScreen
-    baseScreen.cardTypes = card_types
     
     // Передаём список пройденных порталов
     log('[Game] Calling baseScreen.init with:', [...this.completedPortals])
@@ -444,5 +452,36 @@ export class Game {
     sprite.scale.set(scale)
     sprite.x = (targetWidth - sprite.texture.width * scale) / 2
     sprite.y = (targetHeight - sprite.texture.height * scale) / 2
+  }
+
+  // Показать модалку о необходимости колоды
+  showDeckRequiredModal(reason) {
+    const modal = new Modal(this.app, {
+      title: '⚠️ Колода не готова',
+      width: 400,
+      height: 180,
+      bgColor: colors.ui.panel.bg,
+      showCloseButton: true
+    })
+    
+    modal.setContent((content) => {
+      const text = new PIXI.Text(
+        `Вы не можете войти в портал:\n${reason}\n\nОткройте редактор колоды и исправьте ситуацию.`,
+        {
+          fontFamily: FONT,
+          fontSize: 14,
+          fill: colors.ui.text.primary,
+          align: 'center',
+          wordWrap: true,
+          wordWrapWidth: 350
+        }
+      )
+      text.anchor.set(0.5)
+      text.y = -20
+      content.addChild(text)
+    })
+    
+    modal.addToStage(this.app.stage)
+    modal.show()
   }
 }
