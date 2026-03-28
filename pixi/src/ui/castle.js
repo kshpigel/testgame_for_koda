@@ -7,6 +7,7 @@ import { UINode } from './ui_node.js'
 import { Modal } from './modal.js'
 import { collectionManager } from '../data/collection_manager.js'
 import { deckManager } from '../data/deck_manager.js'
+import { CardGridRenderer } from './card_grid_renderer.js'
 
 export class Castle extends UINode {
   constructor(options = {}) {
@@ -20,6 +21,10 @@ export class Castle extends UINode {
     this.app = options.app || null
     this.texture = options.texture || null
     this.onClick = options.onClick || null
+    this.cardTypes = options.cardTypes || []
+    this.assets = options.assets || {}
+    this.gridRenderer = null
+    this._tickerCallback = null
     
     this.glowFilter = new ColorMatrixFilter()
     this.glowFilter.brightness(1.3, false)
@@ -193,13 +198,11 @@ export class Castle extends UINode {
   showStorageModal() {
     const modal = new Modal(this.app, {
       title: 'Хранилище карт',
-      width: 600,
+      width: 750,
       height: 500,
       bgColor: colors.ui.panel.bg
     })
 
-    const content = new PIXI.Container()
-    
     // Статистика
     const total = collectionManager.getTotal()
     const max = collectionManager.getMax()
@@ -212,52 +215,45 @@ export class Castle extends UINode {
       }
     )
     statsText.anchor.set(0.5, 0)
-    statsText.y = -180
-    content.addChild(statsText)
+    statsText.y = -200 // Смещаем выше
     
-    // Список карт (скролл или простой список)
-    const cards = collectionManager.getAllCards()
-    const cardTypes = Object.keys(cards).map(Number).sort((a, b) => a - b)
-    
-    const listContainer = new PIXI.Container()
-    listContainer.y = -120
-    
-    cardTypes.forEach((type, index) => {
-      const count = cards[type]
-      const row = new PIXI.Container()
-      row.y = index * 30
+    modal.setContent((content) => {
+      content.addChild(statsText)
       
-      const typeText = new PIXI.Text(`Type ${type}:`, {
-        fontFamily: FONT,
-        fontSize: 14,
-        fill: colors.ui.text.primary
+      // Рендерим карты в content
+      const cards = collectionManager.getAllCards()
+      const cardDataList = Object.entries(cards).map(([type, count]) => {
+        const cardType = this.cardTypes.find(c => c.type === parseInt(type))
+        return {
+          type: parseInt(type),
+          count,
+          ...cardType
+        }
       })
-      typeText.anchor.set(0, 0.5)
-      typeText.x = -250
-      row.addChild(typeText)
       
-      const countText = new PIXI.Text(`×${count}`, {
-        fontFamily: FONT,
-        fontSize: 14,
-        fill: colors.ui.text.gold
+      this.gridRenderer = new CardGridRenderer(this.app, cardDataList, this.assets, {
+        columns: 6,
+        cardScale: 0.55,
+        gap: 8,
+        showCount: true,
+        grayscaleZero: false,
+        sortBy: 'type',
+        sortDesc: false,
+        cardTypes: this.cardTypes
       })
-      countText.anchor.set(0, 0.5)
-      countText.x = -100
-      row.addChild(countText)
-      
-      listContainer.addChild(row)
+      this.gridRenderer.render(content)
     })
     
-    // Ограничиваем высоту
-    if (cardTypes.length > 10) {
-      listContainer.scale.y = 10 / cardTypes.length
+    // Запускаем ticker для скролла
+    this.startTicker()
+
+    modal.onClose = () => {
+      this.stopTicker()
+      if (this.gridRenderer) {
+        this.gridRenderer.destroy()
+        this.gridRenderer = null
+      }
     }
-    
-    content.addChild(listContainer)
-    
-    modal.setContent((c) => {
-      c.addChild(content)
-    })
 
     modal.addToStage(this.app.stage)
     modal.show()
@@ -267,13 +263,11 @@ export class Castle extends UINode {
   showDecksModal() {
     const modal = new Modal(this.app, {
       title: 'Управление колодой',
-      width: 600,
+      width: 750,
       height: 500,
       bgColor: colors.ui.panel.bg
     })
 
-    const content = new PIXI.Container()
-    
     // Информация об активной колоде
     const activeDeck = deckManager.getActiveDeck()
     const deckSize = activeDeck ? activeDeck.cards.length : 0
@@ -287,79 +281,96 @@ export class Castle extends UINode {
       }
     )
     infoText.anchor.set(0.5, 0)
-    infoText.y = -180
-    content.addChild(infoText)
+    infoText.y = -200 // Смещаем выше
     
-    // Валидация
-    const validation = deckManager.validateDeck(deckManager.getActiveDeckId())
-    const validationText = new PIXI.Text(
-      validation.valid ? '✅ Колода готова к бою' : `⚠️ ${validation.reason}`,
-      {
-        fontFamily: FONT,
-        fontSize: 14,
-        fill: validation.valid ? colors.ui.text.primary : 0xff6644
-      }
-    )
-    validationText.anchor.set(0.5, 0)
-    validationText.y = -150
-    content.addChild(validationText)
-    
-    // Список карт в колоде
-    const cardCounts = {}
-    if (activeDeck) {
-      activeDeck.cards.forEach(type => {
-        cardCounts[type] = (cardCounts[type] || 0) + 1
-      })
-    }
-    
-    const listContainer = new PIXI.Container()
-    listContainer.y = -100
-    
-    const cardTypes = Object.keys(cardCounts).map(Number).sort((a, b) => a - b)
-    cardTypes.forEach((type, index) => {
-      const count = cardCounts[type]
-      const haveInCollection = collectionManager.getCount(type)
-      
-      const row = new PIXI.Container()
-      row.y = index * 25
-      
-      const typeText = new PIXI.Text(`Type ${type}:`, {
-        fontFamily: FONT,
-        fontSize: 12,
-        fill: colors.ui.text.primary
-      })
-      typeText.anchor.set(0, 0.5)
-      typeText.x = -250
-      row.addChild(typeText)
-      
-      const countText = new PIXI.Text(
-        `×${count} (есть ${haveInCollection})`,
-        {
-          fontFamily: FONT,
-          fontSize: 12,
-          fill: count <= haveInCollection ? colors.ui.text.gold : 0xff6644
-        }
+    // Валидация с названиями карт
+    const validation = deckManager.validateDeck(deckManager.getActiveDeckId(), this.cardTypes)
+    let validationText
+    if (validation.valid) {
+      validationText = new PIXI.Text(
+        '✅ Колода готова к бою',
+        { fontFamily: FONT, fontSize: 14, fill: colors.ui.text.primary }
       )
-      countText.anchor.set(0, 0.5)
-      countText.x = -100
-      row.addChild(countText)
-      
-      listContainer.addChild(row)
-    })
-    
-    // Ограничиваем высоту
-    if (cardTypes.length > 12) {
-      listContainer.scale.y = 12 / cardTypes.length
+    } else {
+      // reason уже содержит название карты
+      validationText = new PIXI.Text(
+        `⚠️ ${validation.reason}`,
+        { fontFamily: FONT, fontSize: 14, fill: 0xff6644 }
+      )
     }
+    validationText.anchor.set(0.5, 0)
+    validationText.y = -170 // Смещаем выше
     
-    content.addChild(listContainer)
-    
-    modal.setContent((c) => {
-      c.addChild(content)
+    modal.setContent((content) => {
+      content.addChild(infoText)
+      content.addChild(validationText)
+      
+      // Рендерим карты в content
+      const cardCounts = {}
+      if (activeDeck) {
+        activeDeck.cards.forEach(type => {
+          cardCounts[type] = (cardCounts[type] || 0) + 1
+        })
+      }
+      
+      const cardDataList = Object.entries(cardCounts).map(([type, count]) => {
+        const cardType = this.cardTypes.find(c => c.type === parseInt(type))
+        const haveInCollection = collectionManager.getCount(parseInt(type))
+        return {
+          type: parseInt(type),
+          count,
+          haveInCollection,
+          ...cardType
+        }
+      })
+      
+      this.gridRenderer = new CardGridRenderer(this.app, cardDataList, this.assets, {
+        columns: 6,
+        cardScale: 0.55,
+        gap: 8,
+        showCount: true,
+        grayscaleZero: false,
+        sortBy: 'value',
+        sortDesc: true,
+        cardTypes: this.cardTypes
+      })
+      this.gridRenderer.render(content)
     })
+    
+    // Запускаем ticker для скролла
+    this.startTicker()
+
+    modal.onClose = () => {
+      this.stopTicker()
+      if (this.gridRenderer) {
+        this.gridRenderer.destroy()
+        this.gridRenderer = null
+      }
+    }
 
     modal.addToStage(this.app.stage)
     modal.show()
+  }
+  
+  // Запустить ticker для обновления скролла
+  startTicker() {
+    if (this._tickerCallback) return
+    
+    this._tickerCallback = () => {
+      if (this.gridRenderer) {
+        this.gridRenderer.update()
+      }
+    }
+    this.app.ticker.add(this._tickerCallback)
+  }
+  
+  // Остановить ticker
+  stopTicker() {
+    if (this._tickerCallback) {
+      this.app.ticker.remove(this._tickerCallback)
+      this._tickerCallback = null
+    }
+    this.gridRenderer = null
   }
 
   // Анимация glow (отдельная от scale)

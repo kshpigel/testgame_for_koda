@@ -199,6 +199,9 @@ export class Game {
       log('[Game] Reusing existing BaseScreen')
     }
     
+    // Передаём cardTypes в baseScreen
+    baseScreen.cardTypes = card_types
+    
     // Передаём список пройденных порталов
     log('[Game] Calling baseScreen.init with:', [...this.completedPortals])
     await baseScreen.init(this.completedPortals || [])

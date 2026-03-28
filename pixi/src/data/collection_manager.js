@@ -1,25 +1,11 @@
 import { log } from './config.js'
+import { card_types } from './card_types/index.js'
+import collectionData from '../../public/assets/data/collection.json'
 
 const STORAGE_KEY = 'card_game_collection'
 
-// Дефолтные данные коллекции (стартовые карты)
-const DEFAULT_COLLECTION = {
-  maxCards: 60,
-  cards: {
-    1: 5,
-    2: 15,
-    3: 1,
-    4: 10,
-    5: 7,
-    6: 11,
-    7: 1,
-    8: 2,
-    9: 3,
-    10: 2,
-    11: 1,
-    12: 10
-  }
-}
+// Дефолтные данные коллекции (из collection.json)
+const DEFAULT_COLLECTION = collectionData
 
 export class CollectionManager {
   constructor() {

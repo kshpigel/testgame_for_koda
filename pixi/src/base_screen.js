@@ -10,6 +10,7 @@ import { Portal } from './ui/portal.js'
 import { Castle } from './ui/castle.js'
 import { Birds } from './ui/birds.js'
 import { Clouds } from './ui/clouds.js'
+import { getCardStyle } from './data/card_styles.js'
 
 const ASSETS = {
   bg: '/assets/img/base_bg.png',
@@ -48,6 +49,37 @@ export class BaseScreen extends EventEmitter {
     for (const [key, url] of Object.entries(ASSETS)) {
       this.assets[key] = { texture: PIXI.Assets.get(url) }
     }
+    
+    // Загружаем ассеты карт (для хранилища и колоды)
+    await this.loadCardAssets()
+  }
+  
+  async loadCardAssets() {
+    if (!this.cardTypes) return
+    
+    const urls = []
+    this.cardTypes.forEach(type => {
+      if (type.image) urls.push(type.image)
+      // Получаем стиль для карты
+      const style = getCardStyle(type.style)
+      if (style && style.image_bg) urls.push(style.image_bg)
+    })
+    
+    if (urls.length > 0) {
+      await PIXI.Assets.load(urls)
+      
+      // Сохраняем маппинг
+      this.cardAssets = {}
+      this.cardTypes.forEach(type => {
+        if (type.image) {
+          this.cardAssets[`card_${type.type}`] = { texture: PIXI.Assets.get(type.image) }
+        }
+        const style = getCardStyle(type.style)
+        if (style && style.image_bg) {
+          this.cardAssets[`card_bg_${type.type}`] = { texture: PIXI.Assets.get(style.image_bg) }
+        }
+      })
+    }
   }
 
   render() {
@@ -77,11 +109,15 @@ export class BaseScreen extends EventEmitter {
 
     // База - Замок (по центру горизонтально, 2/3 сверху)
     const baseTexture = this.assets.base?.texture || null
+    // Объединяем базовые ассеты и ассеты карт
+    const allAssets = { ...this.assets, ...this.cardAssets }
     this.castle = new Castle({
       texture: baseTexture,
       width: 220,
       height: 220,
-      app: this.app
+      app: this.app,
+      cardTypes: this.cardTypes || [],
+      assets: allAssets
     })
     this.castle.setX(this.app.screen.width / 2)
     this.castle.setY(this.app.screen.height * 0.76)

@@ -1,34 +1,11 @@
 import { log } from './config.js'
 import { collectionManager } from './collection_manager.js'
+import decksData from '../../public/assets/data/decks.json'
 
 const STORAGE_KEY = 'card_game_decks'
 
-// Дефолтные данные колод
-const DEFAULT_DECKS = {
-  decks: {
-    1: {
-      id: 1,
-      name: 'Стартовая',
-      steps: 4,
-      cards: [
-        5,5,5,5,5,5,5,
-        3,
-        13,
-        7,
-        8,8,
-        9,9,9,
-        10,10,
-        11,
-        6,6,6,6,6,6,6,6,6,6,6,
-        1,1,1,1,1,
-        4,4,4,4,4,4,4,4,4,
-        12,12,12,12,12,12,
-        2,2,2,2,2,2,2,2,2,2,2,2
-      ]
-    }
-  },
-  activeDeck: 1
-}
+// Дефолтные данные колод (из decks.json)
+const DEFAULT_DECKS = decksData
 
 export class DeckManager {
   constructor() {
@@ -104,7 +81,7 @@ export class DeckManager {
   }
 
   // Проверить, достаточно ли карт в коллекции для колоды
-  validateDeck(id) {
+  validateDeck(id, cardTypes = []) {
     const deck = this.getDeck(id)
     if (!deck) return { valid: false, reason: 'Deck not found' }
 
@@ -119,9 +96,11 @@ export class DeckManager {
     for (const [type, needCount] of Object.entries(cardCounts)) {
       const haveCount = collectionManager.getCount(parseInt(type))
       if (haveCount < needCount) {
+        const cardType = cardTypes.find(c => c.type === parseInt(type))
+        const cardName = cardType ? cardType.name : `type ${type}`
         return {
           valid: false,
-          reason: `Not enough type ${type}: need ${needCount}, have ${haveCount}`
+          reason: `Not enough ${cardName}: need ${needCount}, have ${haveCount}`
         }
       }
     }
