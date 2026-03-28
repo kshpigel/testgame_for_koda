@@ -145,7 +145,11 @@ export class Castle extends UINode {
     bg.drawRoundedRect(-80, -50, 160, 100, 10)
     bg.endFill()
     bg.lineStyle(2, colors.ui.text.primary)
+    bg.hitArea = new PIXI.Rectangle(-80, -50, 160, 100)
     container.addChild(bg)
+    
+    // HitArea для контейнера
+    container.hitArea = new PIXI.Rectangle(-80, -50, 160, 100)
     
     // Заголовок
     const titleText = new PIXI.Text(title, {

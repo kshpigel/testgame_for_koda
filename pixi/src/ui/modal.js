@@ -19,6 +19,9 @@ import { Button } from './button.js'
  * - maxHeight = screen.height - 100
  */
 export class Modal {
+  static modalStack = [] // Стек открытых модальных окон
+  static escapeHandler = null
+  
   constructor(app, options = {}) {
     this.app = app
     this.title = options.title || ''
@@ -114,10 +117,27 @@ export class Modal {
   
   show() {
     this.container.visible = true
+    // Добавляем в стек
+    Modal.modalStack.push(this)
+    
+    // Подключаем обработчик Escape один раз
+    if (!Modal.escapeHandler) {
+      Modal.escapeHandler = (e) => {
+        if (e.key === 'Escape' && Modal.modalStack.length > 0) {
+          const topModal = Modal.modalStack.pop()
+          if (topModal) topModal.hide()
+        }
+      }
+      window.addEventListener('keydown', Modal.escapeHandler)
+    }
   }
   
   hide() {
     this.container.visible = false
+    // Удаляем из стека если там есть
+    const idx = Modal.modalStack.indexOf(this)
+    if (idx > -1) Modal.modalStack.splice(idx, 1)
+    
     if (this.onClose) this.onClose()
   }
   

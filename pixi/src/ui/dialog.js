@@ -4,7 +4,7 @@ import { colors } from '../data/colors.js'
 import { Button } from './button.js'
 
 const DIALOG_CONFIG = {
-  height: 300,
+  height: 250,
   marginLeft: 50,
   marginRight: 50,
   marginTop: 50,
@@ -13,7 +13,8 @@ const DIALOG_CONFIG = {
   borderTopWidth: 3,
   closeButtonSize: 40,
   continueText: 'дальше...',
-  closeText: 'закрыть'
+  closeText: 'закрыть',
+  fontSize: 20 // Увеличенный размер шрифта
 }
 
 export class Dialog {
@@ -94,6 +95,15 @@ export class Dialog {
     this.dialogContainer = new PIXI.Container()
     this.dialogContainer.zIndex = 20000 // Выше модальных окон
     this.dialogContainer.sortableChildren = true
+    
+    // Overlay - перехватывает клики
+    const overlay = new PIXI.Graphics()
+    overlay.beginFill(0x000000, 0.3)
+    overlay.drawRect(0, 0, this.app.screen.width, this.app.screen.height)
+    overlay.endFill()
+    overlay.eventMode = 'static'
+    overlay.on('pointerdown', (e) => e.stopPropagation()) // Блокируем клики
+    this.dialogContainer.addChild(overlay)
 
     // Фон диалога
     const bg = new PIXI.Graphics()
@@ -164,7 +174,7 @@ export class Dialog {
     // Текст чанка
     const textObj = new PIXI.Text(chunk, {
       fontFamily: FONT,
-      fontSize: 18,
+      fontSize: 24,
       fill: '#333333',
       wordWrap: true,
       wordWrapWidth: this.app.screen.width - DIALOG_CONFIG.marginLeft * 3 - DIALOG_CONFIG.imageWidth - DIALOG_CONFIG.marginRight
@@ -178,7 +188,7 @@ export class Dialog {
 
     const continueBtn = new PIXI.Text(buttonText, {
       fontFamily: FONT,
-      fontSize: 18,
+      fontSize: 24,
       fontWeight: 'bold',
       fill: '#aa0000'
     })
