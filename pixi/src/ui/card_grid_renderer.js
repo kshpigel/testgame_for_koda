@@ -82,7 +82,7 @@ export class CardGridRenderer {
     // Центрируем сетку карт по горизонтали
     // Карты начинаются сверху (startY = 0)
     const startX = -totalWidth / 2 + this.cardWidth / 2 + 10
-    const startY = 15 // Начинаем сверху
+    const startY = 0 // Начинаем сверху (+15)
     
     // Создаём скролл-контейнер
     this.scrollContainer = new PIXI.Container()
@@ -92,7 +92,7 @@ export class CardGridRenderer {
     // Маска - по размеру видимой области, центрирована и смещена выше
     const mask = new PIXI.Graphics()
     mask.beginFill(0xffffff)
-    mask.drawRect(-this.viewWidth / 2, -this.viewHeight / 2 - 10, this.viewWidth, this.viewHeight)
+    mask.drawRect(-this.viewWidth / 2, -this.viewHeight / 2 + 5, this.viewWidth, this.viewHeight)
     mask.endFill()
     // Маска должна быть в том же контейнере что и scrollContainer
     container.addChild(mask)
@@ -240,7 +240,7 @@ export class CardGridRenderer {
   // Создать скроллбар
   createScrollbar(container, totalHeight) {
     const viewHeight = this.viewHeight
-    const scrollbarWidth = 10
+    const scrollbarWidth = 5
     const scrollbarHeight = Math.min(viewHeight, (viewHeight / totalHeight) * viewHeight)
     const trackHeight = viewHeight - 20
     
@@ -250,16 +250,16 @@ export class CardGridRenderer {
     track.drawRoundedRect(0, 0, scrollbarWidth, trackHeight, 5)
     track.endFill()
     track.x = this.viewWidth / 2 - scrollbarWidth - 10
-    track.y = -viewHeight / 2
+    track.y = -viewHeight / 2 + 15
     container.addChild(track)
     
     // Ползунок
     this.scrollbar = new PIXI.Graphics()
-    this.scrollbar.beginFill(colors.ui.button.primary || 0x6666ff)
+    this.scrollbar.beginFill(colors.ui.text.primary)
     this.scrollbar.drawRoundedRect(0, 0, scrollbarWidth, scrollbarHeight, 5)
     this.scrollbar.endFill()
     this.scrollbar.x = this.viewWidth / 2 - scrollbarWidth - 10
-    this.scrollbar.y = -viewHeight / 2
+    this.scrollbar.y = -viewHeight / 2 + 15
     this.scrollbar.eventMode = 'static'
     this.scrollbar.cursor = 'pointer'
     
@@ -335,7 +335,7 @@ export class CardGridRenderer {
         const maxScroll = Math.max(0, this.contentHeight - this.viewHeight)
         const ratio = maxScroll > 0 ? this.scrollY / maxScroll : 0
         const track = this.scrollParams.trackHeight - this.scrollParams.scrollbarHeight
-        this.scrollbar.y = -this.viewHeight / 2 + ratio * track
+        this.scrollbar.y = -this.viewHeight / 2 + 15 + ratio * track
       }
     }
   }
