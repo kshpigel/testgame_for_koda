@@ -5,6 +5,7 @@ import { CARD_CONFIG } from './card.js'
 import { Circle } from './circle.js'
 import { UINode } from './ui_node.js'
 import { soundManager } from '../audio/sound_manager.js'
+import { t } from '../data/i18n.js'
 
 export class DeckDisplay extends UINode {
   constructor(app, assets, currentDeckLength, onDeckClick) {
@@ -61,7 +62,7 @@ export class DeckDisplay extends UINode {
     this.addChild(this.deckCountCircle)
     
     // Подпись "Колода"
-    const deckLabel = new PIXI.Text('Колода', {
+    const deckLabel = new PIXI.Text(t('castle.deck'), {
       fontFamily: FONT,
       fontSize: 14,
       fill: '#aaaaaa'

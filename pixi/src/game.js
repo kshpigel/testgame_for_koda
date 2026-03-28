@@ -19,6 +19,7 @@ import { soundManager } from './audio/sound_manager.js'
 import { Button } from './ui/button.js'
 import { Dialog } from './ui/dialog.js'
 import { Modal } from './ui/modal.js'
+import { t } from './data/i18n.js'
 
 // Главный фон
 const MAIN_BG = '/assets/img/bg_full.jpg'
@@ -305,7 +306,7 @@ export class Game {
       player.addGold(gold)
       player.addCrystals(crystals)
       player.addWin()
-      this.showMessage(`Победа! +${gold}💰 +${crystals}💎`, colors.ui.text.victory)
+      this.showMessage(t('game.victory_reward', { gold, crystals }), colors.ui.text.victory)
     })
     
     battle.on('defeat', async () => {
@@ -335,7 +336,7 @@ export class Game {
 
   addExitButton(battle) {
     // Кнопка "Сбежать"
-    const exitBtn = new Button('Сбежать', {
+    const exitBtn = new Button(t('game.run_away'), {
       width: 120,
       height: 40,
       color: colors.ui.button.exit,
@@ -457,7 +458,7 @@ export class Game {
   // Показать модалку о необходимости колоды
   showDeckRequiredModal(reason) {
     const modal = new Modal(this.app, {
-      title: '⚠️ Колода не готова',
+      title: `⚠️ ${t('validation.deck_not_ready')}`,
       width: 400,
       height: 180,
       bgColor: colors.ui.panel.bg,
@@ -466,7 +467,7 @@ export class Game {
     
     modal.setContent((content) => {
       const text = new PIXI.Text(
-        `Вы не можете войти в портал:\n${reason}\n\nОткройте редактор колоды и исправьте ситуацию.`,
+        t('validation.cannot_enter_portal', { reason }),
         {
           fontFamily: FONT,
           fontSize: 14,

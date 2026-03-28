@@ -9,6 +9,7 @@ import { Card } from './card.js'
 import { Circle } from './circle.js'
 import { Modal } from './modal.js'
 import { soundManager } from '../audio/sound_manager.js'
+import { t } from '../data/i18n.js'
 
 export class DeckMenu {
   constructor(app, currentDeck, cardTypes, assets, container) {
@@ -20,7 +21,7 @@ export class DeckMenu {
     
     // Создаём модальное окно (2/4 экрана по ширине)
     this.modal = new Modal(app, {
-      title: 'Колода',
+      title: t('castle.deck'),
       width: app.screen.width * 0.5,
       height: 500
     })
@@ -125,7 +126,7 @@ export class DeckMenu {
     })
     
     // Статистика
-    const statsText = new PIXI.Text(`Всего карт: ${this.currentDeck.length} | В руке: ${this.cardsInHand || 0}`, {
+    const statsText = new PIXI.Text(`${t('battle.cards_left')}: ${this.currentDeck.length} | ${t('battle.in_hand')}: ${this.cardsInHand || 0}`, {
       fontFamily: FONT,
       fontSize: 18,
       fill: colors.ui.text.secondary

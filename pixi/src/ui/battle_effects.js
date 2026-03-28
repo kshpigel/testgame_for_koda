@@ -2,6 +2,7 @@ import * as PIXI from 'pixi.js'
 import { FONT } from '../data/fonts.js'
 import { colors } from '../data/colors.js'
 import { soundManager } from '../audio/sound_manager.js'
+import { t } from '../data/i18n.js'
 
 export class BattleEffects {
   constructor(app, container, assets) {
@@ -89,7 +90,7 @@ export class BattleEffects {
     }
     
     // Текст победы
-    const victoryText = new PIXI.Text('ПОБЕДА!', {
+    const victoryText = new PIXI.Text(t('battle.victory'), {
       fontFamily: FONT,
       fontSize: 64,
       fontWeight: 'bold',
@@ -132,7 +133,7 @@ export class BattleEffects {
     }
     
     // Текст поражения
-    const defeatText = new PIXI.Text('ПОРАЖЕНИЕ', {
+    const defeatText = new PIXI.Text(t('battle.defeat'), {
       fontFamily: FONT,
       fontSize: 64,
       fontWeight: 'bold',

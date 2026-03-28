@@ -4,6 +4,7 @@ import { soundManager } from './audio/sound_manager.js'
 import { FONT } from './data/fonts.js'
 import { colors } from './data/colors.js'
 import { Z } from './data/z_index.js'
+import { t } from './data/i18n.js'
 
 const START_BG = '/assets/img/bg_full.jpg'
 
@@ -44,7 +45,7 @@ export class StartScreen {
   }
 
   createButton() {
-    this.button = new Button('Играть', {
+    this.button = new Button(t('ui.start'), {
       width: 280,
       height: 90,
       fontSize: 32,

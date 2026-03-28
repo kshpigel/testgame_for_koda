@@ -7,6 +7,7 @@ import { Circle } from './circle.js'
 import { DeckDisplay } from './deck_display.js'
 import { TextNode } from './text_node.js'
 import { soundManager } from '../audio/sound_manager.js'
+import { t } from '../data/i18n.js'
 
 export class BattleUI {
   constructor(app, container, assets) {
@@ -30,7 +31,7 @@ export class BattleUI {
     const btnY = this.app.screen.height - 60
     
     // Кнопка "Ход"
-    this.playBtn = new Button('Сделать ход!', {
+    this.playBtn = new Button(t('battle.play'), {
       width: 140,
       height: 50,
       color: colors.ui.button.play,
@@ -43,7 +44,7 @@ export class BattleUI {
     this.container.addChild(this.playBtn)
     
     // Кнопка "Сброс"
-    this.resetBtn = new Button('Сброс', {
+    this.resetBtn = new Button(t('battle.reset'), {
       width: 140,
       height: 50,
       color: colors.ui.button.reset,
@@ -57,7 +58,7 @@ export class BattleUI {
     
     // Счетчики через TextNode
     this.stepsText = new TextNode({
-      text: `Ходы: ${cntSteps}`,
+      text: `${t('battle.steps')}: ${cntSteps}`,
       width: 150,
       height: 30,
       fontSize: 20,
@@ -71,7 +72,7 @@ export class BattleUI {
     this.container.addChild(this.stepsText)
     
     this.resetsText = new TextNode({
-      text: `Сбросы: ${cntReset}`,
+      text: `${t('battle.resets')}: ${cntReset}`,
       width: 150,
       height: 30,
       fontSize: 20,
@@ -96,13 +97,13 @@ export class BattleUI {
   
   updateSteps(cntSteps) {
     if (this.stepsText) {
-      this.stepsText.setText(`Ходы: ${cntSteps}`)
+      this.stepsText.setText(`${t('battle.steps')}: ${cntSteps}`)
     }
   }
   
   updateResets(cntReset) {
     if (this.resetsText) {
-      this.resetsText.setText(`Сбросы: ${cntReset}`)
+      this.resetsText.setText(`${t('battle.resets')}: ${cntReset}`)
     }
   }
   

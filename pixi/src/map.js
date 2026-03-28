@@ -9,6 +9,7 @@ import { Z } from './data/z_index.js'
 import { MapNode } from './ui/map_node.js'
 import { MapRenderer } from './ui/map_renderer.js'
 import { Button } from './ui/button.js'
+import { t } from './data/i18n.js'
 
 export class MapScreen extends EventEmitter {
   constructor(app, mapData, enemies, game) {
@@ -77,7 +78,7 @@ export class MapScreen extends EventEmitter {
   }
   
   addExitButton() {
-    const exitBtn = new Button('Покинуть', {
+    const exitBtn = new Button(t('map.leave'), {
       width: 120,
       height: 40,
       color: colors.ui.button.exit,

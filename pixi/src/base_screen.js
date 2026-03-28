@@ -13,6 +13,7 @@ import { Clouds } from './ui/clouds.js'
 import { getCardStyle } from './data/card_styles.js'
 import { collectionManager } from './data/collection_manager.js'
 import { deckManager } from './data/deck_manager.js'
+import { t } from './data/i18n.js'
 
 const ASSETS = {
   bg: '/assets/img/base_bg.png',
@@ -193,7 +194,7 @@ export class BaseScreen extends EventEmitter {
     const padding = 10
     const fontSize = 14
     
-    let deckName = 'Колода не выбрана'
+    let deckName = t('base.deck_not_selected')
     let deckCards = 0
     let deckSleeve = ''
     let isValid = false
@@ -216,7 +217,7 @@ export class BaseScreen extends EventEmitter {
       fill: isValid ? colors.ui.text.primary : 0xff6644
     })
     
-    const cardsText = new PIXI.Text(isValid ? `Карт: ${deckCards}` : `Мало карт (${deckCards})`, {
+    const cardsText = new PIXI.Text(isValid ? t('base.deck_ready', { count: deckCards }) : t('base.deck_not_ready', { count: deckCards }), {
       fontFamily: FONT,
       fontSize: 12,
       fill: isValid ? colors.ui.text.secondary : 0xff6644

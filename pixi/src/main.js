@@ -4,6 +4,7 @@ import { soundManager } from './audio/sound_manager.js'
 import { loadAllAssets } from './asset_loader.js'
 import { colors } from './data/colors.js'
 import { config, loadConfig, log } from './data/config.js'
+import { loadTranslations, t } from './data/i18n.js'
 
 let gameInstance = null
 
@@ -85,6 +86,9 @@ async function init() {
   // Загружаем конфиг (сначала дефолтный, потом пытаемся переопределить из local_config.json)
   await loadConfig()
   
+  // Загружаем переводы
+  await loadTranslations(config.lang)
+  
   log('Game starting after loading...')
   
   const app = new Application({
@@ -107,11 +111,11 @@ async function init() {
     const startScreen = gameInstance.startScreen
     
     // Загружаем шрифт
-    startScreen.setLoadingText('Загрузка шрифта...')
+    startScreen.setLoadingText(t('loading.font'))
     await loadFont()
     
     // Загружаем звуки
-    startScreen.setLoadingText('Загрузка звуков...')
+    startScreen.setLoadingText(t('loading.sounds'))
     await soundManager.init()
     
     // Загружаем ассеты
@@ -122,7 +126,7 @@ async function init() {
     
     // Всё загружено - запускаем игру
     log('All assets loaded, starting game...')
-    startScreen.setLoadingText('Готово!')
+    startScreen.setLoadingText(t('loading.done'))
     
     // Небольшая пауза для чтения "Готово!"
     await new Promise(r => setTimeout(r, 500))

@@ -9,6 +9,7 @@ import { collectionManager } from '../data/collection_manager.js'
 import { deckManager } from '../data/deck_manager.js'
 import { CardGridRenderer } from './card_grid_renderer.js'
 import { DeckEditor } from './deck_editor.js'
+import { t } from '../data/i18n.js'
 
 export class Castle extends UINode {
   constructor(options = {}) {
@@ -94,7 +95,7 @@ export class Castle extends UINode {
   // Показать главное модальное окно с выбором (Хранилище / Колода)
   showMainModal() {
     const modal = new Modal(this.app, {
-      title: 'Замок',
+      title: t('castle.castle'),
       width: 500,
       height: 350,
       bgColor: colors.ui.panel.bg
@@ -105,8 +106,8 @@ export class Castle extends UINode {
     
     // Кнопка "Хранилище"
     const storageBtn = this.createOptionButton(
-      '📦 Хранилище',
-      'Карты в коллекции',
+      `📦 ${t('castle.storage')}`,
+      t('castle.cards_in_collection'),
       () => {
         // Не hide(), а просто открываем следующее поверх
         this.showStorageModal()
@@ -117,8 +118,8 @@ export class Castle extends UINode {
     
     // Кнопка "Колоды"
     const decksBtn = this.createOptionButton(
-      '🃏 Колода',
-      'Сборка колоды',
+      `🃏 ${t('castle.deck')}`,
+      t('castle.deck_building'),
       () => {
         // Открываем редактор колоды
         this.openDeckEditor()
@@ -202,7 +203,7 @@ export class Castle extends UINode {
   // Модальное окно хранилища
   showStorageModal() {
     const modal = new Modal(this.app, {
-      title: 'Хранилище карт',
+      title: t('castle.collection'),
       width: 750,
       height: 500,
       bgColor: colors.ui.panel.bg
@@ -212,7 +213,7 @@ export class Castle extends UINode {
     const total = collectionManager.getTotal()
     const max = collectionManager.getMax()
     const statsText = new PIXI.Text(
-      `Всего карт: ${total} / ${max}`,
+      `${t('battle.cards_left')}: ${total} / ${max}`,
       {
         fontFamily: FONT,
         fontSize: 16,

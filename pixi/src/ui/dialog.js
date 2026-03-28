@@ -2,6 +2,7 @@ import * as PIXI from 'pixi.js'
 import { FONT } from '../data/fonts.js'
 import { colors } from '../data/colors.js'
 import { Button } from './button.js'
+import { t } from '../data/i18n.js'
 
 const DIALOG_CONFIG = {
   height: 250,
@@ -184,7 +185,7 @@ export class Dialog {
     this.textContainer.addChild(textObj)
 
     // Кнопка "дальше..." или "закрыть" - оба красным
-    const buttonText = isLastChunk ? DIALOG_CONFIG.closeText : DIALOG_CONFIG.continueText
+    const buttonText = isLastChunk ? t('ui.close') : t('ui.continue') + '...'
 
     const continueBtn = new PIXI.Text(buttonText, {
       fontFamily: FONT,

@@ -1,0 +1,91 @@
+{
+  "ui": {
+    "start": "ИГРАТЬ",
+    "continue": "ПРОДОЛЖИТЬ",
+    "save": "СОХРАНИТЬ",
+    "cancel": "ОТМЕНА",
+    "close": "ЗАКРЫТЬ",
+    "reset": "СБРОСИТЬ",
+    "edit": "РЕДАКТИРОВАТЬ",
+    "select": "ВЫБРАТЬ",
+    "back": "НАЗАД"
+  },
+  "deck_editor": {
+    "title": "Редактор колоды",
+    "new_deck": "Новая колода",
+    "active": "Активна",
+    "deck_name_hint": "клик для редактирования",
+    "sleeve": "Рубашка:",
+    "change": "Изменить",
+    "cards_in_deck": "Карт в колоде",
+    "min_cards": "мин.",
+    "save": "Сохранить",
+    "reset": "Сбросить",
+    "select_deck": "Выбрать для боя",
+    "sleeve_selector": "Выбор рубашки",
+    "turns": "ходов",
+    "discards": "сбросов",
+    "min": "min:"
+  },
+  "validation": {
+    "need_min_cards": "Нужно минимум {min} карт (сейчас {current})",
+    "not_enough_cards": "Недостаточно {name}: нужно {need}, есть {have}",
+    "deck_not_ready": "Колода не готова",
+    "cannot_enter_portal": "Вы не можете войти в портал:\n{reason}\n\nОткройте редактор колоды и исправьте ситуацию."
+  },
+  "base": {
+    "deck_not_selected": "Колода не выбрана",
+    "deck_ready": "Карт: {count}",
+    "deck_not_ready": "Мало карт ({count})"
+  },
+  "battle": {
+    "victory": "ПОБЕДА!",
+    "defeat": "ПОРАЖЕНИЕ",
+    "steps": "ХОДЫ",
+    "resets": "СБРОСЫ",
+    "cards_left": "В колоде",
+    "show_deck": "Показать колоду",
+    "all_cards": "Все карты",
+    "in_hand": "В руке",
+    "play": "Сделать ход!",
+    "reset": "Сброс",
+    "continue": "Продолжить",
+    "to_base": "На базу",
+    "points": "Очки"
+  },
+  "game": {
+    "run_away": "Сбежать",
+    "victory_reward": "Победа! +{gold}💰 +{crystals}💎"
+  },
+  "map": {
+    "leave": "Покинуть",
+    "node_completed": "Пройдено",
+    "node_available": "Доступно",
+    "node_locked": "Заблокировано"
+  },
+  "castle": {
+    "storage": "Хранилище",
+    "deck": "Колода",
+    "collection": "Коллекция",
+    "castle": "Замок",
+    "cards_in_collection": "Карты в коллекции",
+    "deck_building": "Сборка колоды"
+  },
+  "enemies": {
+    "defeat": "Побеждён",
+    "health": "HP"
+  },
+  "cards": {
+    "value": "Сила",
+    "in_deck": "В колоде",
+    "mechanic": "Механика",
+    "no_mechanic": "Механика отсутствует"
+  },
+  "loading": {
+    "loading": "Загрузка...",
+    "font": "Загрузка шрифта...",
+    "sounds": "Загрузка звуков...",
+    "assets": "Загрузка ассетов...",
+    "done": "Готово!"
+  }
+}

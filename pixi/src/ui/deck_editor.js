@@ -10,6 +10,7 @@ import { deckManager } from '../data/deck_manager.js'
 import { Card } from './card.js'
 import { CARD_CONFIG } from './card.js'
 import { getCardStyle } from '../data/card_styles.js'
+import { t } from '../data/i18n.js'
 
 const DECK_EDITOR_CONFIG = {
   modalWidth: 900,
@@ -47,7 +48,7 @@ export class DeckEditor {
     this.savedDeckState = this._getDeckStateCopy()
     
     this.modal = new Modal(this.app, {
-      title: 'Редактор колоды',
+      title: t('deck_editor.title'),
       width: DECK_EDITOR_CONFIG.modalWidth,
       height: DECK_EDITOR_CONFIG.modalHeight,
       bgColor: colors.ui.panel.bg,
@@ -90,7 +91,7 @@ export class DeckEditor {
     this.deckNameText.on('pointerdown', () => this.startEditingName())
     nameContainer.addChild(this.deckNameText)
     
-    const hintText = new PIXI.Text('(клик для редактирования)', {
+    const hintText = new PIXI.Text(`(${t('deck_editor.deck_name_hint')})`, {
       fontFamily: FONT,
       fontSize: 10,
       fill: colors.ui.text.secondary
@@ -155,7 +156,7 @@ export class DeckEditor {
     selectorContainer.addChild(counterText)
     
     // Статус активности
-    const statusText = new PIXI.Text(isActive ? '✓ Активна' : '', {
+    const statusText = new PIXI.Text(isActive ? `✓ ${t('deck_editor.active')}` : '', {
       fontFamily: FONT,
       fontSize: 10,
       fill: colors.ui.text.gold
@@ -177,7 +178,7 @@ export class DeckEditor {
     
     // Кнопка "Выбрать" если не активна
     if (!isActive) {
-      const selectBtn = new Button('Выбрать', {
+      const selectBtn = new Button(t('ui.select'), {
         width: 80,
         height: 24,
         color: colors.ui.button.play,
@@ -197,7 +198,7 @@ export class DeckEditor {
     sleeveContainer.y = -195
     sleeveContainer.x = -380
     
-    const titleText = new PIXI.Text('Рубашка:', {
+    const titleText = new PIXI.Text(t('deck_editor.sleeve'), {
       fontFamily: FONT,
       fontSize: 16,
       fill: colors.ui.text.primary
@@ -210,7 +211,7 @@ export class DeckEditor {
     const minCards = collectionManager.getMinCards(sleeveId)
     
     this.sleeveInfoText = new PIXI.Text(
-      `${sleeve?.name || 'Unknown'} (${sleeve?.turns || 0} ходов, ${sleeve?.discards || 0} сбросов)`,
+      `${sleeve?.name || 'Unknown'} (${sleeve?.turns || 0} ${t('deck_editor.turns')}, ${sleeve?.discards || 0} ${t('deck_editor.discards')})`,
       {
         fontFamily: FONT,
         fontSize: 14,
@@ -230,7 +231,7 @@ export class DeckEditor {
     minCardsText.y = 40
     sleeveContainer.addChild(minCardsText)
     
-    const changeSleeveBtn = new Button('Изменить', {
+    const changeSleeveBtn = new Button(t('deck_editor.change'), {
       width: 100,
       height: 30,
       color: colors.ui.button.primary,
@@ -406,7 +407,7 @@ export class DeckEditor {
     this.statusText.anchor.set(0.5)
     footerContainer.addChild(this.statusText)
     
-    const resetBtn = new Button('Сбросить', {
+    const resetBtn = new Button(t('deck_editor.reset'), {
       width: 120,
       height: 40,
       color: colors.ui.button.reset,
@@ -417,7 +418,7 @@ export class DeckEditor {
     resetBtn.onClick = () => this.resetDeck()
     footerContainer.addChild(resetBtn)
     
-    const saveBtn = new Button('Сохранить', {
+    const saveBtn = new Button(t('deck_editor.save'), {
       width: 150,
       height: 40,
       color: colors.ui.button.play,
@@ -438,7 +439,7 @@ export class DeckEditor {
     const isValid = deckSize >= minCards
     
     return new PIXI.Text(
-      `Карт в колоде: ${deckSize} / ${minCards} ${isValid ? '✅' : '⚠️'}`,
+      `${t('deck_editor.cards_in_deck')}: ${deckSize} / ${minCards} ${isValid ? '✅' : '⚠️'}`,
       {
         fontFamily: FONT,
         fontSize: 16,
@@ -578,7 +579,7 @@ export class DeckEditor {
         nameText.y = -25
         sleeveContainer.addChild(nameText)
         
-        const paramsText = new PIXI.Text(`${sleeve.turns} ходов\n${sleeve.discards} сбросов`, {
+        const paramsText = new PIXI.Text(`${sleeve.turns} ${t('deck_editor.turns')}\n${sleeve.discards} ${t('deck_editor.discards')}`, {
           fontFamily: FONT,
           fontSize: 12,
           fill: colors.ui.text.secondary,

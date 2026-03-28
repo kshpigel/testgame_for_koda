@@ -1,4 +1,5 @@
 import { log } from './config.js'
+import { t } from './i18n.js'
 import { collectionManager } from './collection_manager.js'
 import decksData from '../../public/assets/data/decks.json'
 
@@ -100,7 +101,7 @@ export class DeckManager {
         const cardName = cardType ? cardType.name : `тип ${type}`
         return {
           valid: false,
-          reason: `Недостаточно ${cardName}: нужно ${needCount}, есть ${haveCount}`
+          reason: t('validation.not_enough_cards', { name: cardName, need: needCount, have: haveCount })
         }
       }
     }
@@ -113,7 +114,7 @@ export class DeckManager {
     if (deckSize < minCards) {
       return {
         valid: false,
-        reason: `Нужно минимум ${minCards} карт (сейчас ${deckSize})`
+        reason: t('validation.need_min_cards', { min: minCards, current: deckSize })
       }
     }
 

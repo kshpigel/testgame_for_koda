@@ -10,6 +10,7 @@ import { Circle } from './circle.js'
 import { Modal } from './modal.js'
 import { Button } from './button.js'
 import { soundManager } from '../audio/sound_manager.js'
+import { t } from '../data/i18n.js'
 
 /**
  * CardGridRenderer - универсальный рендер карт в сетку со скроллом
@@ -394,7 +395,7 @@ export class CardGridRenderer {
     detailModal.content.addChild(heroContainer)
     
     // Сила карты
-    const valueText = new PIXI.Text(`Сила: ${cardType.value || 0}`, {
+    const valueText = new PIXI.Text(`${t('cards.value')}: ${cardType.value || 0}`, {
       fontFamily: FONT,
       fontSize: 20,
       fontWeight: 'bold',
@@ -419,7 +420,7 @@ export class CardGridRenderer {
     detailModal.content.addChild(bioText)
     
     // Механика
-    const mechanicText = new PIXI.Text(cardType.mechanic || 'Механика отсутствует', {
+    const mechanicText = new PIXI.Text(cardType.mechanic || t('cards.no_mechanic'), {
       fontFamily: FONT,
       fontSize: 16,
       fill: colors.ui.text.primary,
@@ -432,7 +433,7 @@ export class CardGridRenderer {
     detailModal.content.addChild(mechanicText)
     
     // Количество
-    const countText = new PIXI.Text(`В колоде: ${count}`, {
+    const countText = new PIXI.Text(`${t('cards.in_deck')}: ${count}`, {
       fontFamily: FONT,
       fontSize: 18,
       fill: colors.ui.text.secondary

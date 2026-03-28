@@ -1,0 +1,91 @@
+{
+  "ui": {
+    "start": "PLAY",
+    "continue": "CONTINUE",
+    "save": "SAVE",
+    "cancel": "CANCEL",
+    "close": "CLOSE",
+    "reset": "RESET",
+    "edit": "EDIT",
+    "select": "SELECT",
+    "back": "BACK"
+  },
+  "deck_editor": {
+    "title": "Deck Editor",
+    "new_deck": "New Deck",
+    "active": "Active",
+    "deck_name_hint": "click to edit",
+    "sleeve": "Sleeve:",
+    "change": "Change",
+    "cards_in_deck": "Cards in deck",
+    "min_cards": "min.",
+    "save": "Save",
+    "reset": "Reset",
+    "select_deck": "Select for battle",
+    "sleeve_selector": "Choose Sleeve",
+    "turns": "turns",
+    "discards": "discards",
+    "min": "min:"
+  },
+  "validation": {
+    "need_min_cards": "Need at least {min} cards (currently {current})",
+    "not_enough_cards": "Not enough {name}: need {need}, have {have}",
+    "deck_not_ready": "Deck not ready",
+    "cannot_enter_portal": "You cannot enter the portal:\n{reason}\n\nOpen deck editor and fix the issue."
+  },
+  "base": {
+    "deck_not_selected": "No deck selected",
+    "deck_ready": "Cards: {count}",
+    "deck_not_ready": "Not enough cards ({count})"
+  },
+  "battle": {
+    "victory": "VICTORY!",
+    "defeat": "DEFEAT",
+    "steps": "STEPS",
+    "resets": "RESETS",
+    "cards_left": "In deck",
+    "show_deck": "Show deck",
+    "all_cards": "All cards",
+    "in_hand": "In hand",
+    "play": "Make move!",
+    "reset": "Reset",
+    "continue": "Continue",
+    "to_base": "To base",
+    "points": "Points"
+  },
+  "game": {
+    "run_away": "Run away",
+    "victory_reward": "Victory! +{gold}💰 +{crystals}💎"
+  },
+  "map": {
+    "leave": "Leave",
+    "node_completed": "Completed",
+    "node_available": "Available",
+    "node_locked": "Locked"
+  },
+  "castle": {
+    "storage": "Storage",
+    "deck": "Deck",
+    "collection": "Collection",
+    "castle": "Castle",
+    "cards_in_collection": "Cards in collection",
+    "deck_building": "Deck building"
+  },
+  "enemies": {
+    "defeat": "Defeated",
+    "health": "HP"
+  },
+  "cards": {
+    "value": "Power",
+    "in_deck": "In deck",
+    "mechanic": "Mechanic",
+    "no_mechanic": "No mechanic"
+  },
+  "loading": {
+    "loading": "Loading...",
+    "font": "Loading font...",
+    "sounds": "Loading sounds...",
+    "assets": "Loading assets...",
+    "done": "Done!"
+  }
+}

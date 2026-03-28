@@ -16,6 +16,7 @@ import { CardGridRenderer } from './ui/card_grid_renderer.js'
 import { BattleUI } from './ui/battle_ui.js'
 import { CardAnimator } from './ui/card_animator.js'
 import { BattleEffects } from './ui/battle_effects.js'
+import { t } from './data/i18n.js'
 
 // Импорт ассетов
 import { cardStyles, getCardStyle } from './data/card_styles.js'
@@ -615,7 +616,7 @@ export class Battle extends EventEmitter {
     
     // Модальное окно победы
     this.victoryModal = new Modal(this.app, {
-      title: 'ПОБЕДА!',
+      title: t('battle.victory'),
       width: 500,
       height: 400,
       showCloseButton: false,
@@ -624,7 +625,7 @@ export class Battle extends EventEmitter {
     
     // Текст очков
     const pointsText = new TextNode({
-      text: `Очки: ${points}`,
+      text: `${t('battle.points')}: ${points}`,
       width: 400,
       height: 40,
       fontSize: 28,
@@ -638,7 +639,7 @@ export class Battle extends EventEmitter {
     this.victoryModal.addChild(pointsText)
     
     // Кнопка продолжения
-    const continueBtn = new Button('Продолжить', {
+    const continueBtn = new Button(t('battle.continue'), {
       width: 200,
       height: 60,
       fontSize: 24,
@@ -664,7 +665,7 @@ export class Battle extends EventEmitter {
   showDefeat() {
     // Модальное окно поражения
     this.defeatModal = new Modal(this.app, {
-      title: 'ПОРАЖЕНИЕ',
+      title: t('battle.defeat'),
       width: 500,
       height: 400,
       showCloseButton: false,
@@ -687,7 +688,7 @@ export class Battle extends EventEmitter {
     this.defeatModal.addChild(msgText)
     
     // Кнопка продолжения
-    const continueBtn = new Button('На базу', {
+    const continueBtn = new Button(t('battle.to_base'), {
       width: 200,
       height: 60,
       fontSize: 24,
@@ -800,7 +801,7 @@ export class Battle extends EventEmitter {
   showDeckMenu() {
     // Создаём модальное окно
     const modal = new Modal(this.app, {
-      title: 'Колода',
+      title: t('castle.deck'),
       width: 750,
       height: 500,
       bgColor: colors.ui.panel.bg
@@ -825,7 +826,7 @@ export class Battle extends EventEmitter {
     
     // Статистика
     const statsText = new PIXI.Text(
-      `Всего карт: ${this.currentDeck.length} | В руке: ${this.cards.length}`,
+      `${t('battle.cards_left')}: ${this.currentDeck.length} | ${t('battle.in_hand')}: ${this.cards.length}`,
       { fontFamily: FONT, fontSize: 16, fill: colors.ui.text.secondary }
     )
     statsText.anchor.set(0.5, 0)

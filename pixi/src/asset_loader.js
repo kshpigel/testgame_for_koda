@@ -1,3 +1,5 @@
+import { t } from './data/i18n.js'
+
 // Список всех ассетов для предзагрузки
 const ASSETS = {
   // Фоны
@@ -86,7 +88,7 @@ export async function loadAllAssets(onProgress) {
     loaded++
     if (onProgress) {
       const percent = (loaded / total) * 100
-      onProgress(percent, `Загрузка... ${loaded}/${total}`)
+      onProgress(percent, `${t('loading.loading')} ${loaded}/${total}`)
     }
   }
   

@@ -1,6 +1,7 @@
 import * as PIXI from 'pixi.js'
 import { FONT } from './data/fonts.js'
 import { colors } from './data/colors.js'
+import { t } from './data/i18n.js'
 
 export class LoadingScreen {
   constructor(app) {
@@ -24,7 +25,7 @@ export class LoadingScreen {
       fontSize: 32,
       fill: colors.ui.text.primary
     })
-    this.text = new PIXI.Text('Загрузка...', style)
+    this.text = new PIXI.Text(t('loading.loading'), style)
     this.text.anchor.set(0.5)
     this.text.x = this.app.screen.width / 2
     this.text.y = this.app.screen.height / 2
@@ -53,7 +54,7 @@ export class LoadingScreen {
   }
 
   setProgress(percent, msg = '') {
-    this.text.text = msg || `Загрузка... ${Math.round(percent)}%`
+    this.text.text = msg || `${t('loading.loading')} ${Math.round(percent)}%`
   }
 
   hide() {
