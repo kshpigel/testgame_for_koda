@@ -464,9 +464,8 @@ export class DeckEditor {
     this.currentDeckId = deckId
     this.currentDeck = deckManager.getDeck(deckId)
     this.savedDeckState = this._getDeckStateCopy()
-    this.modal.hide()
-    this.modal.removeFromStage(this.app.stage)
-    this.show()
+    // Перерисовать контент без пересоздания модалки
+    this._redrawContent()
   }
 
   // Выбрать эту колоду как активную для боя
@@ -479,10 +478,8 @@ export class DeckEditor {
     }
     deckManager.setActiveDeck(this.currentDeckId)
     soundManager.play('click')
-    // Перерисовываем чтобы показать статус
-    this.modal.hide()
-    this.modal.removeFromStage(this.app.stage)
-    this.show()
+    // Просто перерисовать контент
+    this._redrawContent()
   }
 
   createNewDeck() {
@@ -604,9 +601,8 @@ export class DeckEditor {
           deckManager.setSleeveId(this.currentDeckId, sleeve.id)
           this.currentDeck = deckManager.getDeck(this.currentDeckId)
           sleeveModal.hide()
-          this.modal.hide()
-          this.modal.removeFromStage(this.app.stage)
-          this.show()
+          // Просто перерисовать контент
+          this._redrawContent()
         })
         
         content.addChild(sleeveContainer)
@@ -684,10 +680,8 @@ export class DeckEditor {
       }
       deckManager.save()
       this.currentDeck = deckManager.getDeck(this.currentDeckId)
-      
-      this.modal.hide()
-      this.modal.removeFromStage(this.app.stage)
-      this.show()
+      // Просто перерисовать контент
+      this._redrawContent()
     }
   }
 
@@ -697,6 +691,26 @@ export class DeckEditor {
       sleeveId: this.currentDeck?.sleeveId,
       cards: [...(this.currentDeck?.cards || [])]
     }
+  }
+
+  // Перерисовать контент модалки без пересоздания
+  _redrawContent() {
+    // Очистить старый контент
+    this.modal.content.removeChildren()
+    this.cardSprites = []
+    this.scrollContainer = null
+    this.mask = null
+    this.scrollbar = null
+    this.scrollParams = null
+    this.scrollY = 0
+    this.targetScrollY = 0
+    
+    // Перерисовать все секции
+    this.renderHeader(this.modal.content)
+    this.renderDeckSelector(this.modal.content)
+    this.renderSleeveSection(this.modal.content)
+    this.renderCardsGrid(this.modal.content)
+    this.renderFooter(this.modal.content)
   }
 
   createScrollbar(content, totalHeight, viewHeight) {
