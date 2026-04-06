@@ -121,7 +121,8 @@ export class BaseScreen extends EventEmitter {
       height: 220,
       app: this.app,
       cardTypes: this.cardTypes || [],
-      assets: allAssets
+      assets: allAssets,
+      baseScreen: this // Передаём ссылку на себя для обновления UI
     })
     this.castle.setX(this.app.screen.width / 2)
     this.castle.setY(this.app.screen.height * 0.76)
@@ -244,6 +245,29 @@ export class BaseScreen extends EventEmitter {
     this.container.addChild(deckText, cardsText)
     
     this.deckInfoContainer = bg
+    this.deckInfoText = deckText
+    this.deckInfoCardsText = cardsText
+  }
+  
+  // Обновить информацию о колоде (вызывать при возврате на базу)
+  updateDeckInfo() {
+    const activeDeck = deckManager.getDeck(deckManager.getActiveDeckId())
+    
+    if (!activeDeck || !this.deckInfoText) return
+    
+    let deckName = activeDeck.name || 'Без названия'
+    let deckCards = activeDeck.cards?.length || 0
+    const minCards = collectionManager.getMinCards(activeDeck.sleeveId || 1)
+    const validation = deckManager.validateDeck(activeDeck.id, this.cardTypes)
+    const isValid = validation.valid
+    
+    this.deckInfoText.text = deckName
+    this.deckInfoText.style.fill = isValid ? colors.ui.text.primary : 0xff6644
+    
+    this.deckInfoCardsText.text = isValid 
+      ? t('base.deck_ready', { count: deckCards }) 
+      : t('base.deck_not_ready', { count: deckCards })
+    this.deckInfoCardsText.style.fill = isValid ? colors.ui.text.secondary : 0xff6644
   }
 
   // Позиции порталов на базе (статические)

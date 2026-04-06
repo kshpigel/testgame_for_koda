@@ -25,6 +25,7 @@ export class Castle extends UINode {
     this.onClick = options.onClick || null
     this.cardTypes = options.cardTypes || []
     this.assets = options.assets || {}
+    this.baseScreen = options.baseScreen || null // Ссылка на базу для обновления UI
     this.gridRenderer = null
     this._tickerCallback = null
     
@@ -268,6 +269,12 @@ export class Castle extends UINode {
   // Открыть редактор колоды
   openDeckEditor() {
     const editor = new DeckEditor(this.app, this.cardTypes, this.assets)
+    // Обновляем базу при выборе колоды в редакторе
+    editor.on('deck_selected', (deckId) => {
+      if (this.baseScreen) {
+        this.baseScreen.updateDeckInfo()
+      }
+    })
     editor.show()
   }
   

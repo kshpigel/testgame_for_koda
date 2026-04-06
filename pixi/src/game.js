@@ -214,6 +214,10 @@ export class Game {
     // Передаём список пройденных порталов
     log('[Game] Calling baseScreen.init with:', [...this.completedPortals])
     await baseScreen.init(this.completedPortals || [])
+    
+    // Обновляем информацию о колоде после init (чтобы перезаписать данные из render)
+    baseScreen.updateDeckInfo()
+    
     this.currentScreen = baseScreen
     
     // Рисуем сетку ПОСЛЕ BaseScreen

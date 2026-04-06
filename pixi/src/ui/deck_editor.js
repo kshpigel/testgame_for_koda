@@ -1,5 +1,6 @@
 import * as PIXI from 'pixi.js'
 import { ColorMatrixFilter } from 'pixi.js'
+import { EventEmitter } from 'events'
 import { FONT } from '../data/fonts.js'
 import { colors } from '../data/colors.js'
 import { soundManager } from '../audio/sound_manager.js'
@@ -20,8 +21,9 @@ const DECK_EDITOR_CONFIG = {
   gap: 30
 }
 
-export class DeckEditor {
+export class DeckEditor extends EventEmitter {
   constructor(app, cardTypes, assets) {
+    super()
     this.app = app
     this.cardTypes = cardTypes
     this.assets = assets
@@ -478,6 +480,8 @@ export class DeckEditor {
     }
     deckManager.setActiveDeck(this.currentDeckId)
     soundManager.play('click')
+    // Emit событие для обновления базы
+    this.emit('deck_selected', this.currentDeckId)
     // Просто перерисовать контент
     this._redrawContent()
   }
@@ -514,21 +518,26 @@ export class DeckEditor {
     
     let newName = this.currentDeck?.name || ''
     inputText.on('pointerdown', () => {
-      // Простойprompt
+      // Простой prompt
       const result = prompt('Введите название колоды:', newName)
-      if (result) {
-        newName = result
-        inputText.text = result
+      if (result && result.trim()) {
+        newName = result.trim()
+        inputText.text = newName
+        // Сразу сохраняем при изменении
+        deckManager.updateDeckName(this.currentDeckId, newName)
       }
     })
     
-    // Enter для подтверждения
-    window.addEventListener('keydown', function onEnter(e) {
+    // Enter для подтверждения (если не был сохранён)
+    const onEnter = (e) => {
       if (e.key === 'Enter') {
-        deckManager.updateDeckName(this.currentDeckId, newName)
+        if (newName && newName !== this.currentDeck?.name) {
+          deckManager.updateDeckName(this.currentDeckId, newName)
+        }
         window.removeEventListener('keydown', onEnter)
       }
-    })
+    }
+    window.addEventListener('keydown', onEnter)
     
     inputContainer.addChild(inputText)
     this.modal.content.addChild(inputContainer)
