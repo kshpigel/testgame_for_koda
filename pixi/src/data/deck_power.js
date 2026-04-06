@@ -2,10 +2,22 @@ import { getDeckByCode } from './deck.js'
 import { card_types } from './card_types/index.js'
 
 // Расчёт силы колоды с учётом баффов
-export function calculateDeckPower(deckCode) {
-  const deck = getDeckByCode(deckCode)
-  const stepsPerBattle = deck.steps || 4
-  const cards = deck.cards
+// Принимает либо массив карт, либо deckCode (для обратной совместимости)
+export function calculateDeckPower(deckOrCards) {
+  let cards = []
+  let stepsPerBattle = 4
+  
+  // Определяем что передано: массив карт или код колоды
+  if (Array.isArray(deckOrCards)) {
+    cards = deckOrCards
+  } else {
+    // Это deckCode (число)
+    const deck = getDeckByCode(deckOrCards)
+    if (deck) {
+      cards = deck.cards
+      stepsPerBattle = deck.steps || 4
+    }
+  }
   
   if (!cards || cards.length === 0) return 0
   

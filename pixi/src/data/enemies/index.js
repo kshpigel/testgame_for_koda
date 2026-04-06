@@ -1,27 +1,32 @@
 // Загрузка врагов из JSON и генерация HP
 import enemiesData from '../../../public/assets/data/enemies.json' with { type: 'json' }
 import { calculateDeckPower } from '../deck_power.js'
-import { getDeckByCode } from '../deck.js'
-import { card_types } from '../card_types/index.js'
-import { player } from '../player.js'
+import { deckManager } from '../deck_manager.js'
 
 // Экспортируем переменную enemies (заполняется при initEnemies)
 export let enemies = []
 
 // Инициализация врагов (вызывать ПОСЛЕ загрузки конфига)
 export function initEnemies() {
+  // Получаем активную колоду через DeckManager
+  const activeDeckId = deckManager.getActiveDeckId()
+  const activeDeck = deckManager.getDeck(activeDeckId)
+  
+  if (!activeDeck || !activeDeck.cards || activeDeck.cards.length === 0) {
+    console.warn('[enemies] No active deck, using default values')
+  }
+  
+  const deckCards = activeDeck?.cards || []
+  const steps = activeDeck?.steps || 4
+  
+  // Рассчитываем силу колоды по реальным картам
+  const deckPower = calculateDeckPower(deckCards)
+  const baseDamage = deckPower.damagePerStep || 10
+  
   // Сначала генерируем HP для всех врагов
   const tempEnemies = enemiesData.enemies.map((enemy, index) => {
     const isBoss = index === enemiesData.enemies.length - 1
     const total = enemiesData.enemies.length
-    
-    // Получаем steps из колоды
-    const deck = getDeckByCode(player.deckCode)
-    const steps = deck.steps || 4
-    
-    // Рассчитываем силу колоды
-    const deckPower = calculateDeckPower(player.deckCode)
-    const baseDamage = deckPower.damagePerStep
     
     // По нарастающей: от 2.5x до 7x шагов
     let turnsMultiplier
