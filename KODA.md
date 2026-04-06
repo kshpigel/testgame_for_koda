@@ -88,6 +88,7 @@ this.container.addChild(this.enemyDisplay)
 - Portal с защитой от повторного destroy
 - Git-репозиторий на GitHub
 - Обфускация кода при сборке (javascript-obfuscator)
+- DeckEditor - перерисовка контента без пересоздания модалки
 
 ---
 

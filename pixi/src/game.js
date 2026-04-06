@@ -267,7 +267,7 @@ export class Game {
     
     // Получаем колоду по коду игрока (из DeckManager)
     const playerDeck = deckManager.getDeck(deckManager.getActiveDeckId())
-    const sleeve = collectionManager.getActiveSleeve()
+    const sleeve = collectionManager.getSleeve(playerDeck.sleeveId || 1)
     const battle = new Battle(this.app, playerDeck.cards, card_types, enemyData, this, sleeve)
 
     // Показываем диалог врага перед боем
