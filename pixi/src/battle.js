@@ -5,6 +5,7 @@ import { colors } from './data/colors.js'
 import { log, config } from './data/config.js'
 import { Z } from './data/z_index.js'
 import { soundManager } from './audio/sound_manager.js'
+import { battleStats } from './data/battle_stats.js'
 import { Card, CARD_CONFIG } from './ui/card.js'
 import { Circle } from './ui/circle.js'
 import { Button } from './ui/button.js'
@@ -74,7 +75,12 @@ export class Battle extends EventEmitter {
     
     // Счётчик сыгранных карт за бой
     this.cardsPlayedThisBattle = 0
-
+    
+    // Инициализация статистики боя
+    battleStats.reset()
+    battleStats.setEnemy(enemyData.name, enemyData.health)
+    battleStats.deckSize = deck.length
+    
     // Постоянные баффы (от DiscardBuff и т.д.)
     // { faction: value, kind: value, id: value }
     this.permanentBuffs = {}
@@ -467,6 +473,10 @@ export class Battle extends EventEmitter {
     this.enemyHealth -= summ
     if (!skipStep) {
       this.cntSteps--
+      // Трекинг: засчитываем ход
+      battleStats.stepsPlayed++
+      battleStats.damageDealt += summ
+      battleStats.cardsPlayed += this.selectedCards.length
     }
     
     soundManager.play('attack')
@@ -535,6 +545,8 @@ export class Battle extends EventEmitter {
     if (this.cntReset <= 0 || this.selectedCards.length === 0 || this.isBlocked) return
     
     this.cntReset--
+    // Трекинг: засчитываем сброс
+    battleStats.cardsDiscarded += this.selectedCards.length
     this.priestBuffs = {}
     
     const cardsToRemove = [...this.selectedCards]
@@ -623,6 +635,11 @@ export class Battle extends EventEmitter {
   }
 
   showVictory() {
+    // Завершаем статистику боя
+    const remainingCards = this.currentDeck?.length || 0
+    battleStats.finish(true, remainingCards)
+    const reward = battleStats.calculateReward(this.enemyHealth)
+    
     const points = this.enemyData.health + this.cntSteps * 10
     
     // Модальное окно победы
@@ -646,8 +663,32 @@ export class Battle extends EventEmitter {
       app: this.app
     })
     pointsText.setX(0) // Центр окна
-    pointsText.y = -50
+    pointsText.y = -120
     this.victoryModal.addChild(pointsText)
+    
+    // Статистика боя
+    const stats = battleStats.getData()
+    const statsLines = [
+      `${t('battle.stats.steps')}: ${stats.stepsPlayed}`,
+      `${t('battle.stats.cards_played')}: ${stats.cardsPlayed}`,
+      `${t('battle.stats.cards_discarded')}: ${stats.cardsDiscarded}`,
+      `${t('battle.stats.damage_dealt')}: ${stats.damageDealt}`,
+      `${t('battle.stats.gold')}: +${reward.gold}`,
+      `${t('battle.stats.crystals')}: +${reward.crystals}`
+    ]
+    
+    let statsY = -80
+    statsLines.forEach((line, i) => {
+      const statText = new PIXI.Text(line, {
+        fontFamily: FONT,
+        fontSize: 16,
+        fill: i < 4 ? colors.ui.text.primary : (i === 4 ? colors.ui.text.gold : colors.ui.text.crystals)
+      })
+      statText.anchor.set(0.5)
+      statText.x = 0
+      statText.y = statsY + i * 22
+      this.victoryModal.addChild(statText)
+    })
     
     // Кнопка продолжения
     const continueBtn = new Button(t('battle.continue'), {
@@ -674,6 +715,11 @@ export class Battle extends EventEmitter {
   }
 
   showDefeat() {
+    // Завершаем статистику боя
+    const remainingCards = this.currentDeck?.length || 0
+    battleStats.finish(false, remainingCards)
+    battleStats.calculateReward(this.enemyHealth)
+    
     // Модальное окно поражения
     this.defeatModal = new Modal(this.app, {
       title: t('battle.defeat'),
@@ -695,8 +741,30 @@ export class Battle extends EventEmitter {
       app: this.app
     })
     msgText.setX(0) // Центр окна
-    msgText.y = -50
+    msgText.y = -120
     this.defeatModal.addChild(msgText)
+    
+    // Статистика боя
+    const stats = battleStats.getData()
+    const statsLines = [
+      `${t('battle.stats.steps')}: ${stats.stepsPlayed}`,
+      `${t('battle.stats.cards_played')}: ${stats.cardsPlayed}`,
+      `${t('battle.stats.cards_discarded')}: ${stats.cardsDiscarded}`,
+      `${t('battle.stats.damage_dealt')}: ${stats.damageDealt}`
+    ]
+    
+    let statsY = -80
+    statsLines.forEach((line, i) => {
+      const statText = new PIXI.Text(line, {
+        fontFamily: FONT,
+        fontSize: 16,
+        fill: colors.ui.text.primary
+      })
+      statText.anchor.set(0.5)
+      statText.x = 0
+      statText.y = statsY + i * 22
+      this.defeatModal.addChild(statText)
+    })
     
     // Кнопка продолжения
     const continueBtn = new Button(t('battle.to_base'), {

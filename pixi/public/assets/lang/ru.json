@@ -51,7 +51,15 @@
     "reset": "Сброс",
     "continue": "Продолжить",
     "to_base": "На базу",
-    "points": "Очки"
+    "points": "Очки",
+    "stats": {
+      "steps": "Ходов",
+      "cards_played": "Сыграно карт",
+      "cards_discarded": "Сброшено карт",
+      "damage_dealt": "Нанесено урона",
+      "gold": "Золото",
+      "crystals": "Кристаллы"
+    }
   },
   "game": {
     "run_away": "Сбежать",
