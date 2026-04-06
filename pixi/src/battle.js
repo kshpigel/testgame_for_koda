@@ -678,13 +678,18 @@ export class Battle extends EventEmitter {
       { label: t('battle.stats.crystals'), value: `+${reward.crystals}`, color: 'crystals' }
     ]
     
+    const labelX = -130
+    const valueX = 80
+    const maxDots = 25 // Максимум точек
     let statsY = -100
     
     statsData.forEach((item, i) => {
       const label = item.label
       const value = String(item.value)
-      // Формируем строку: "Название.............Значение"
-      const dots = '................................'.slice(0, 20 - label.length - value.length)
+      
+      // Считаем сколько нужно точек
+      const dotsCount = Math.max(3, maxDots - label.length - value.length)
+      const dots = '.'.repeat(dotsCount)
       const fullLine = `${label}${dots}${value}`
       
       const statText = new PIXI.Text(fullLine, {
@@ -763,12 +768,14 @@ export class Battle extends EventEmitter {
       { label: t('battle.stats.enemy_hp'), value: stats.enemyMaxHealth - stats.enemyFinalHealth }
     ]
     
+    const maxDots = 25
     let statsY = -80
     
     statsData.forEach((item, i) => {
       const label = item.label
       const value = String(item.value)
-      const dots = '................................'.slice(0, 20 - label.length - value.length)
+      const dotsCount = Math.max(3, maxDots - label.length - value.length)
+      const dots = '.'.repeat(dotsCount)
       const fullLine = `${label}${dots}${value}`
       
       const statText = new PIXI.Text(fullLine, {
