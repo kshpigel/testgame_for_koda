@@ -663,31 +663,63 @@ export class Battle extends EventEmitter {
       app: this.app
     })
     pointsText.setX(0) // Центр окна
-    pointsText.y = -120
+    pointsText.y = -140
     this.victoryModal.addChild(pointsText)
     
-    // Статистика боя
+    // Статистика боя - форматированный список
     const stats = battleStats.getData()
-    const statsLines = [
-      `${t('battle.stats.steps')}: ${stats.stepsPlayed}`,
-      `${t('battle.stats.cards_played')}: ${stats.cardsPlayed}`,
-      `${t('battle.stats.cards_discarded')}: ${stats.cardsDiscarded}`,
-      `${t('battle.stats.damage_dealt')}: ${stats.damageDealt}`,
-      `${t('battle.stats.gold')}: +${reward.gold}`,
-      `${t('battle.stats.crystals')}: +${reward.crystals}`
+    const statsData = [
+      { label: t('battle.stats.steps'), value: stats.stepsPlayed },
+      { label: t('battle.stats.cards_played'), value: stats.cardsPlayed },
+      { label: t('battle.stats.cards_discarded'), value: stats.cardsDiscarded },
+      { label: t('battle.stats.damage_dealt'), value: stats.damageDealt },
+      { label: t('battle.stats.enemy_hp'), value: stats.enemyMaxHealth - stats.enemyFinalHealth },
+      { label: t('battle.stats.gold'), value: `+${reward.gold}`, color: 'gold' },
+      { label: t('battle.stats.crystals'), value: `+${reward.crystals}`, color: 'crystals' }
     ]
     
-    let statsY = -80
-    statsLines.forEach((line, i) => {
-      const statText = new PIXI.Text(line, {
+    // Форматируем строку "Название ........... Значение"
+    const maxLabelWidth = 180 // Максимальная ширина для выравнивания
+    let statsY = -100
+    
+    statsData.forEach((item, i) => {
+      // Создаём строку с точками
+      const labelText = item.label
+      const valueText = String(item.value)
+      
+      // Используем Text с двумя частями для точного выравнивания
+      const label = new PIXI.Text(labelText, {
         fontFamily: FONT,
         fontSize: 16,
-        fill: i < 4 ? colors.ui.text.primary : (i === 4 ? colors.ui.text.gold : colors.ui.text.crystals)
+        fill: item.color === 'gold' ? colors.ui.text.gold : (item.color === 'crystals' ? colors.ui.text.crystals : colors.ui.text.primary)
       })
-      statText.anchor.set(0.5)
-      statText.x = 0
-      statText.y = statsY + i * 22
-      this.victoryModal.addChild(statText)
+      label.anchor.set(0, 0.5)
+      label.x = -180
+      label.y = statsY + i * 24
+      
+      // Точки
+      const dotsNeeded = Math.max(1, Math.floor((maxLabelWidth - labelText.length * 8) / 8))
+      const dots = new PIXI.Text(' .'.repeat(dotsNeeded).slice(1), {
+        fontFamily: FONT,
+        fontSize: 16,
+        fill: colors.ui.text.secondary || 0x888888
+      })
+      dots.anchor.set(0, 0.5)
+      dots.x = 5
+      dots.y = statsY + i * 24
+      
+      // Значение
+      const value = new PIXI.Text(valueText, {
+        fontFamily: FONT,
+        fontSize: 16,
+        fontWeight: 'bold',
+        fill: item.color === 'gold' ? colors.ui.text.gold : (item.color === 'crystals' ? colors.ui.text.crystals : colors.ui.text.primary)
+      })
+      value.anchor.set(1, 0.5)
+      value.x = 200
+      value.y = statsY + i * 24
+      
+      this.victoryModal.addChild(label, dots, value)
     })
     
     // Кнопка продолжения
@@ -699,7 +731,7 @@ export class Battle extends EventEmitter {
       app: this.app
     })
     continueBtn.setX(0) // Центр окна
-    continueBtn.setY(80)
+    continueBtn.setY(110)
     continueBtn.onClick = () => {
       this.victoryModal.hide()
       this.app.stage.removeChild(this.victoryModal.container)
@@ -731,10 +763,10 @@ export class Battle extends EventEmitter {
     
     // Текст
     const msgText = new TextNode({
-      text: 'Не расстраивайся!',
+      text: 'Судьба ещё повернётся к тебе лицом...',
       width: 400,
       height: 40,
-      fontSize: 28,
+      fontSize: 22,
       color: '#ff6666',
       align: 'center',
       shadow: true,
@@ -744,26 +776,54 @@ export class Battle extends EventEmitter {
     msgText.y = -120
     this.defeatModal.addChild(msgText)
     
-    // Статистика боя
+    // Статистика боя - форматированный список
     const stats = battleStats.getData()
-    const statsLines = [
-      `${t('battle.stats.steps')}: ${stats.stepsPlayed}`,
-      `${t('battle.stats.cards_played')}: ${stats.cardsPlayed}`,
-      `${t('battle.stats.cards_discarded')}: ${stats.cardsDiscarded}`,
-      `${t('battle.stats.damage_dealt')}: ${stats.damageDealt}`
+    const statsData = [
+      { label: t('battle.stats.steps'), value: stats.stepsPlayed },
+      { label: t('battle.stats.cards_played'), value: stats.cardsPlayed },
+      { label: t('battle.stats.cards_discarded'), value: stats.cardsDiscarded },
+      { label: t('battle.stats.damage_dealt'), value: stats.damageDealt },
+      { label: t('battle.stats.enemy_hp'), value: stats.enemyMaxHealth - stats.enemyFinalHealth }
     ]
     
+    // Форматируем строку "Название ........... Значение"
+    const maxLabelWidth = 180
     let statsY = -80
-    statsLines.forEach((line, i) => {
-      const statText = new PIXI.Text(line, {
+    
+    statsData.forEach((item, i) => {
+      const labelText = item.label
+      const valueText = String(item.value)
+      
+      const label = new PIXI.Text(labelText, {
         fontFamily: FONT,
         fontSize: 16,
         fill: colors.ui.text.primary
       })
-      statText.anchor.set(0.5)
-      statText.x = 0
-      statText.y = statsY + i * 22
-      this.defeatModal.addChild(statText)
+      label.anchor.set(0, 0.5)
+      label.x = -180
+      label.y = statsY + i * 24
+      
+      const dotsNeeded = Math.max(1, Math.floor((maxLabelWidth - labelText.length * 8) / 8))
+      const dots = new PIXI.Text(' .'.repeat(dotsNeeded).slice(1), {
+        fontFamily: FONT,
+        fontSize: 16,
+        fill: colors.ui.text.secondary || 0x888888
+      })
+      dots.anchor.set(0, 0.5)
+      dots.x = 5
+      dots.y = statsY + i * 24
+      
+      const value = new PIXI.Text(valueText, {
+        fontFamily: FONT,
+        fontSize: 16,
+        fontWeight: 'bold',
+        fill: colors.ui.text.primary
+      })
+      value.anchor.set(1, 0.5)
+      value.x = 200
+      value.y = statsY + i * 24
+      
+      this.defeatModal.addChild(label, dots, value)
     })
     
     // Кнопка продолжения

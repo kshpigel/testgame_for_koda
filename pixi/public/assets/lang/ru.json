@@ -57,6 +57,7 @@
       "cards_played": "Сыграно карт",
       "cards_discarded": "Сброшено карт",
       "damage_dealt": "Нанесено урона",
+      "enemy_hp": "HP врага",
       "gold": "Золото",
       "crystals": "Кристаллы"
     }
