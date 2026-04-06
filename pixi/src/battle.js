@@ -678,48 +678,25 @@ export class Battle extends EventEmitter {
       { label: t('battle.stats.crystals'), value: `+${reward.crystals}`, color: 'crystals' }
     ]
     
-    // Форматируем строку "Название ........... Значение"
-    const maxLabelWidth = 180 // Максимальная ширина для выравнивания
     let statsY = -100
     
     statsData.forEach((item, i) => {
-      // Создаём строку с точками
-      const labelText = item.label
-      const valueText = String(item.value)
+      const label = item.label
+      const value = String(item.value)
+      // Формируем строку: "Название.............Значение"
+      const dots = '................................'.slice(0, 20 - label.length - value.length)
+      const fullLine = `${label}${dots}${value}`
       
-      // Используем Text с двумя частями для точного выравнивания
-      const label = new PIXI.Text(labelText, {
+      const statText = new PIXI.Text(fullLine, {
         fontFamily: FONT,
         fontSize: 16,
         fill: item.color === 'gold' ? colors.ui.text.gold : (item.color === 'crystals' ? colors.ui.text.crystals : colors.ui.text.primary)
       })
-      label.anchor.set(0, 0.5)
-      label.x = -180
-      label.y = statsY + i * 24
+      statText.anchor.set(0.5, 0)
+      statText.x = 0
+      statText.y = statsY + i * 24
       
-      // Точки
-      const dotsNeeded = Math.max(1, Math.floor((maxLabelWidth - labelText.length * 8) / 8))
-      const dots = new PIXI.Text(' .'.repeat(dotsNeeded).slice(1), {
-        fontFamily: FONT,
-        fontSize: 16,
-        fill: colors.ui.text.secondary || 0x888888
-      })
-      dots.anchor.set(0, 0.5)
-      dots.x = 5
-      dots.y = statsY + i * 24
-      
-      // Значение
-      const value = new PIXI.Text(valueText, {
-        fontFamily: FONT,
-        fontSize: 16,
-        fontWeight: 'bold',
-        fill: item.color === 'gold' ? colors.ui.text.gold : (item.color === 'crystals' ? colors.ui.text.crystals : colors.ui.text.primary)
-      })
-      value.anchor.set(1, 0.5)
-      value.x = 200
-      value.y = statsY + i * 24
-      
-      this.victoryModal.addChild(label, dots, value)
+      this.victoryModal.addChild(statText)
     })
     
     // Кнопка продолжения
@@ -786,44 +763,24 @@ export class Battle extends EventEmitter {
       { label: t('battle.stats.enemy_hp'), value: stats.enemyMaxHealth - stats.enemyFinalHealth }
     ]
     
-    // Форматируем строку "Название ........... Значение"
-    const maxLabelWidth = 180
     let statsY = -80
     
     statsData.forEach((item, i) => {
-      const labelText = item.label
-      const valueText = String(item.value)
+      const label = item.label
+      const value = String(item.value)
+      const dots = '................................'.slice(0, 20 - label.length - value.length)
+      const fullLine = `${label}${dots}${value}`
       
-      const label = new PIXI.Text(labelText, {
+      const statText = new PIXI.Text(fullLine, {
         fontFamily: FONT,
         fontSize: 16,
         fill: colors.ui.text.primary
       })
-      label.anchor.set(0, 0.5)
-      label.x = -180
-      label.y = statsY + i * 24
+      statText.anchor.set(0.5, 0)
+      statText.x = 0
+      statText.y = statsY + i * 24
       
-      const dotsNeeded = Math.max(1, Math.floor((maxLabelWidth - labelText.length * 8) / 8))
-      const dots = new PIXI.Text(' .'.repeat(dotsNeeded).slice(1), {
-        fontFamily: FONT,
-        fontSize: 16,
-        fill: colors.ui.text.secondary || 0x888888
-      })
-      dots.anchor.set(0, 0.5)
-      dots.x = 5
-      dots.y = statsY + i * 24
-      
-      const value = new PIXI.Text(valueText, {
-        fontFamily: FONT,
-        fontSize: 16,
-        fontWeight: 'bold',
-        fill: colors.ui.text.primary
-      })
-      value.anchor.set(1, 0.5)
-      value.x = 200
-      value.y = statsY + i * 24
-      
-      this.defeatModal.addChild(label, dots, value)
+      this.defeatModal.addChild(statText)
     })
     
     // Кнопка продолжения
