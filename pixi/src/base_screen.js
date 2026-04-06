@@ -139,75 +139,36 @@ export class BaseScreen extends EventEmitter {
   createPlayerInfo() {
     const padding = 10
     const fontSize = 14
-    const lineHeight = 18
+    const gap = 30
     
-    const text1 = new PIXI.Text(player.name, {
+    // Создаём тексты
+    const nameText = new PIXI.Text(player.name, {
       fontFamily: FONT,
       fontSize: fontSize,
       fill: colors.ui.text.primary
     })
     
-    const text2 = new PIXI.Text(`💰 ${player.gold}`, {
+    const goldText = new PIXI.Text(`💰 ${player.gold}`, {
       fontFamily: FONT,
       fontSize: fontSize,
       fill: colors.ui.text.gold
     })
     
-    const text3 = new PIXI.Text(`💎 ${player.crystals}`, {
+    const crystalsText = new PIXI.Text(`💎 ${player.crystals}`, {
       fontFamily: FONT,
       fontSize: fontSize,
       fill: colors.ui.text.crystals
     })
     
-    // Фон
-    const totalWidth = text1.width + text2.width + text3.width + padding * 4
-    const height = lineHeight + padding * 2
-    
-    const bg = new PIXI.Graphics()
-    bg.beginFill(0x000000, 0.25)
-    bg.drawRoundedRect(0, 0, totalWidth, height, 8)
-    bg.endFill()
-    bg.x = 10
-    bg.y = 10
-    this.container.addChild(bg)
-    
-    // Размещаем горизонтально
-    text1.x = padding
-    text1.y = padding
-    
-    text2.x = padding + text1.width + 20
-    text2.y = padding
-    
-    text3.x = padding + text1.width + text2.width + 40
-    text3.y = padding
-    
-    this.container.addChild(text1, text2, text3)
-    
-    this.playerInfoContainer = bg
-    
-    // Информация о колоде (справа сверху)
-    this.createDeckInfo()
-  }
-
-  // Информер выбранной колоды
-  createDeckInfo() {
+    // Информация о колоде
     const activeDeck = deckManager.getActiveDeck()
-    const padding = 10
-    const fontSize = 14
-    
     let deckName = t('base.deck_not_selected')
     let deckCards = 0
-    let deckSleeve = ''
     let isValid = false
     
     if (activeDeck) {
       deckName = activeDeck.name || 'Без названия'
       deckCards = activeDeck.cards?.length || 0
-      const sleeve = collectionManager.getSleeve(activeDeck.sleeveId || 1)
-      const sleeveName = sleeve?.name || 'Standard'
-      const minCards = collectionManager.getMinCards(activeDeck.sleeveId || 1)
-      isValid = deckCards >= minCards
-      
       const validation = deckManager.validateDeck(activeDeck.id, this.cardTypes)
       isValid = validation.valid
     }
@@ -224,27 +185,42 @@ export class BaseScreen extends EventEmitter {
       fill: isValid ? colors.ui.text.secondary : 0xff6644
     })
     
-    // Фон
-    const totalWidth = Math.max(deckText.width, cardsText.width) + padding * 2
+    // Рассчитываем общую ширину
+    const totalWidth = nameText.width + goldText.width + crystalsText.width + 
+                       deckText.width + cardsText.width + 
+                       padding * 6 + gap * 4 // 4 gap: между элементами
     const height = 50
     
+    // Фон
     const bg = new PIXI.Graphics()
     bg.beginFill(0x000000, 0.25)
     bg.drawRoundedRect(0, 0, totalWidth, height, 8)
     bg.endFill()
-    bg.x = this.app.screen.width - totalWidth - 10
+    bg.x = 10
     bg.y = 10
     this.container.addChild(bg)
     
-    deckText.x = padding
-    deckText.y = padding
+    // Размещаем элементы в линию с gap, по центру вертикали
+    const centerY = (height - fontSize) / 2
     
-    cardsText.x = padding
-    cardsText.y = padding + 18
+    nameText.x = padding
+    nameText.y = centerY
     
-    this.container.addChild(deckText, cardsText)
+    goldText.x = nameText.x + nameText.width + gap
+    goldText.y = centerY
     
-    this.deckInfoContainer = bg
+    crystalsText.x = goldText.x + goldText.width + gap
+    crystalsText.y = centerY
+    
+    deckText.x = crystalsText.x + crystalsText.width + gap
+    deckText.y = centerY
+    
+    cardsText.x = deckText.x + deckText.width + gap
+    cardsText.y = centerY
+    
+    this.container.addChild(nameText, goldText, crystalsText, deckText, cardsText)
+    
+    this.playerInfoContainer = bg
     this.deckInfoText = deckText
     this.deckInfoCardsText = cardsText
   }
@@ -257,7 +233,6 @@ export class BaseScreen extends EventEmitter {
     
     let deckName = activeDeck.name || 'Без названия'
     let deckCards = activeDeck.cards?.length || 0
-    const minCards = collectionManager.getMinCards(activeDeck.sleeveId || 1)
     const validation = deckManager.validateDeck(activeDeck.id, this.cardTypes)
     const isValid = validation.valid
     
