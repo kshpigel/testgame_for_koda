@@ -221,28 +221,33 @@ export class BaseScreen extends EventEmitter {
     this.container.addChild(nameText, goldText, crystalsText, deckText, cardsText)
     
     this.playerInfoContainer = bg
+    this.playerInfoTexts = [nameText, goldText, crystalsText, deckText, cardsText]
     this.deckInfoText = deckText
     this.deckInfoCardsText = cardsText
   }
   
   // Обновить информацию о колоде (вызывать при возврате на базу)
   updateDeckInfo() {
-    const activeDeck = deckManager.getDeck(deckManager.getActiveDeckId())
+    // При любом изменении (колода, золото, кристаллы) - полностью перестраиваем панель
+    this.rebuildPlayerInfo()
+  }
+  
+  // Полностью перестроить панель игрока (включая фон и позиции)
+  rebuildPlayerInfo() {
+    // Удаляем старые элементы
+    if (this.playerInfoTexts) {
+      this.playerInfoTexts.forEach(text => {
+        this.container.removeChild(text)
+        text.destroy()
+      })
+    }
+    if (this.playerInfoContainer) {
+      this.container.removeChild(this.playerInfoContainer)
+      this.playerInfoContainer.destroy()
+    }
     
-    if (!activeDeck || !this.deckInfoText) return
-    
-    let deckName = activeDeck.name || 'Без названия'
-    let deckCards = activeDeck.cards?.length || 0
-    const validation = deckManager.validateDeck(activeDeck.id, this.cardTypes)
-    const isValid = validation.valid
-    
-    this.deckInfoText.text = deckName
-    this.deckInfoText.style.fill = isValid ? colors.ui.text.primary : 0xff6644
-    
-    this.deckInfoCardsText.text = isValid 
-      ? t('base.deck_ready', { count: deckCards }) 
-      : t('base.deck_not_ready', { count: deckCards })
-    this.deckInfoCardsText.style.fill = isValid ? colors.ui.text.secondary : 0xff6644
+    // Пересоздаём панель
+    this.createPlayerInfo()
   }
 
   // Позиции порталов на базе (статические)
