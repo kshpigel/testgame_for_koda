@@ -1,0 +1,15 @@
+{
+  "dailyReward": {
+    "crystals": 10,
+    "gold": 50
+  },
+  "portalCost": {
+    "crystals": 3
+  },
+  "rewards": {
+    "balance": {
+      "goldPercent": 90,
+      "crystalsPercent": 10
+    }
+  }
+}

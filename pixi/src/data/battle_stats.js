@@ -44,8 +44,8 @@ export class BattleStats {
     const killBonus = this.isVictory ? Math.floor(enemyHealth * 0.5) : 0
     this.goldEarned = baseGold + killBonus
     
-    // Кристалы: только за победу
-    this.crystalsEarned = this.isVictory ? Math.floor(Math.random() * 3) + 1 : 0
+    // Кристалы: 10% от золота (баланс 9/1), только за победу
+    this.crystalsEarned = this.isVictory ? Math.floor(this.goldEarned * 0.1) : 0
     
     // Начислить игроку
     if (this.goldEarned > 0) {

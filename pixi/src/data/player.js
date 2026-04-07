@@ -12,7 +12,8 @@ const DEFAULT_PLAYER = {
   maps: 0, // Количество пройденных порталов (карт с врагами)
   baseLevel: 1,
   lang: 'RU', // Язык: RU, EN и т.д.
-  cards: [] // ID карт в коллекции
+  cards: [], // ID карт в коллекции
+  lastDailyReward: 0 // Timestamp последней ежедневной награды
 }
 
 // Получить все уникальные ID карт из колоды
@@ -74,6 +75,7 @@ export class Player {
   get baseLevel() { return this.data.baseLevel }
   get lang() { return this.data.lang }
   get cards() { return this.data.cards }
+  get lastDailyReward() { return this.data.lastDailyReward || 0 }
 
   // Setters
   setDeckCode(code) {
@@ -116,6 +118,32 @@ export class Player {
   // Проверить, есть ли карта в коллекции
   hasCard(cardId) {
     return this.data.cards && this.data.cards.includes(cardId)
+  }
+
+  // Получить ежедневную награду (возвращает { received: bool, reward: { gold, crystals } })
+  claimDailyReward(config) {
+    const now = Date.now()
+    const lastClaim = this.lastDailyReward
+    
+    // Проверяем, прошло ли 24 часа (24 * 60 * 60 * 1000 = 86400000 мс)
+    const DAY_MS = 24 * 60 * 60 * 1000
+    
+    if (now - lastClaim < DAY_MS) {
+      return { received: false, reward: null }
+    }
+    
+    // Начисляем награду
+    const reward = {
+      gold: config.dailyReward.gold,
+      crystals: config.dailyReward.crystals
+    }
+    
+    this.data.gold += reward.gold
+    this.data.crystals += reward.crystals
+    this.data.lastDailyReward = now
+    this.save()
+    
+    return { received: true, reward }
   }
 }
 

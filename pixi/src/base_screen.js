@@ -14,6 +14,7 @@ import { getCardStyle } from './data/card_styles.js'
 import { collectionManager } from './data/collection_manager.js'
 import { deckManager } from './data/deck_manager.js'
 import { t } from './data/i18n.js'
+import { playerUI } from './ui/player_ui.js'
 
 const ASSETS = {
   bg: '/assets/img/base_bg.png',
@@ -137,117 +138,14 @@ export class BaseScreen extends EventEmitter {
   }
 
   createPlayerInfo() {
-    const padding = 10
-    const fontSize = 14
-    const gap = 30
-    
-    // Создаём тексты
-    const nameText = new PIXI.Text(player.name, {
-      fontFamily: FONT,
-      fontSize: fontSize,
-      fill: colors.ui.text.primary
-    })
-    
-    const goldText = new PIXI.Text(`💰 ${player.gold}`, {
-      fontFamily: FONT,
-      fontSize: fontSize,
-      fill: colors.ui.text.gold
-    })
-    
-    const crystalsText = new PIXI.Text(`💎 ${player.crystals}`, {
-      fontFamily: FONT,
-      fontSize: fontSize,
-      fill: colors.ui.text.crystals
-    })
-    
-    // Информация о колоде
-    const activeDeck = deckManager.getActiveDeck()
-    let deckName = t('base.deck_not_selected')
-    let deckCards = 0
-    let isValid = false
-    
-    if (activeDeck) {
-      deckName = activeDeck.name || 'Без названия'
-      deckCards = activeDeck.cards?.length || 0
-      const validation = deckManager.validateDeck(activeDeck.id, this.cardTypes)
-      isValid = validation.valid
-    }
-    
-    const deckText = new PIXI.Text(deckName, {
-      fontFamily: FONT,
-      fontSize: fontSize,
-      fill: isValid ? colors.ui.text.primary : 0xff6644
-    })
-    
-    const cardsText = new PIXI.Text(isValid ? t('base.deck_ready', { count: deckCards }) : t('base.deck_not_ready', { count: deckCards }), {
-      fontFamily: FONT,
-      fontSize: 12,
-      fill: isValid ? colors.ui.text.secondary : 0xff6644
-    })
-    
-    // Рассчитываем общую ширину
-    const totalWidth = nameText.width + goldText.width + crystalsText.width + 
-                       deckText.width + cardsText.width + 
-                       padding * 6 + gap * 4 // 4 gap: между элементами
-    const height = 50
-    
-    // Фон
-    const bg = new PIXI.Graphics()
-    bg.beginFill(0x000000, 0.25)
-    bg.drawRoundedRect(0, 0, totalWidth, height, 8)
-    bg.endFill()
-    bg.x = 10
-    bg.y = 10
-    this.container.addChild(bg)
-    
-    // Размещаем элементы в линию с gap, по центру вертикали
-    const centerY = (height - fontSize) / 2
-    
-    nameText.x = padding
-    nameText.y = centerY
-    
-    goldText.x = nameText.x + nameText.width + gap
-    goldText.y = centerY
-    
-    crystalsText.x = goldText.x + goldText.width + gap
-    crystalsText.y = centerY
-    
-    deckText.x = crystalsText.x + crystalsText.width + gap
-    deckText.y = centerY
-    
-    cardsText.x = deckText.x + deckText.width + gap
-    cardsText.y = centerY
-    
-    this.container.addChild(nameText, goldText, crystalsText, deckText, cardsText)
-    
-    this.playerInfoContainer = bg
-    this.playerInfoTexts = [nameText, goldText, crystalsText, deckText, cardsText]
-    this.deckInfoText = deckText
-    this.deckInfoCardsText = cardsText
+    // Используем playerUI
+    const ui = playerUI.create(this.app)
+    this.container.addChild(ui)
   }
-  
-  // Обновить информацию о колоде (вызывать при возврате на базу)
+
+  // Обновить информацию (теперь просто вызывает playerUI.update())
   updateDeckInfo() {
-    // При любом изменении (колода, золото, кристаллы) - полностью перестраиваем панель
-    this.rebuildPlayerInfo()
-  }
-  
-  // Полностью перестроить панель игрока (включая фон и позиции)
-  rebuildPlayerInfo() {
-    // Удаляем старые элементы
-    if (this.playerInfoTexts) {
-      this.playerInfoTexts.forEach(text => {
-        this.container.removeChild(text)
-        text.destroy()
-      })
-    }
-    if (this.playerInfoContainer) {
-      this.container.removeChild(this.playerInfoContainer)
-      this.playerInfoContainer.destroy()
-    }
-    
-    // Пересоздаём панель
-    this.createPlayerInfo()
+    playerUI.update()
   }
 
   // Позиции порталов на базе (статические)

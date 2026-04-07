@@ -19,6 +19,8 @@ import { soundManager } from './audio/sound_manager.js'
 import { battleStats } from './data/battle_stats.js'
 import { Button } from './ui/button.js'
 import { Dialog } from './ui/dialog.js'
+import { gameConfig } from './data/game_config.js'
+import { playerUI } from './ui/player_ui.js'
 import { Modal } from './ui/modal.js'
 import { t } from './data/i18n.js'
 
@@ -218,6 +220,9 @@ export class Game {
     
     // Обновляем информацию о колоде после init (чтобы перезаписать данные из render)
     baseScreen.updateDeckInfo()
+    
+    // Проверяем ежедневную награду
+    this.showDailyRewardIfAvailable()
     
     this.currentScreen = baseScreen
     
@@ -488,5 +493,36 @@ export class Game {
     
     modal.addToStage(this.app.stage)
     modal.show()
+  }
+
+  // Показать диалог ежедневной награды
+  async showDailyRewardIfAvailable() {
+    const result = player.claimDailyReward(gameConfig)
+    
+    if (!result.received) {
+      // Если награда уже получена сегодня - не показываем
+      return
+    }
+    
+    // Рандомная фраза
+    const phrases = t('dailyReward.phrases') || []
+    const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)]
+    
+    const npcName = t('dailyReward.npc') || 'Копейщица'
+    const rewardText = t('dailyReward.reward', {
+      gold: result.reward.gold,
+      crystals: result.reward.crystals
+    })
+    
+    const fullText = `${randomPhrase}\n\n${rewardText}`
+    
+    // Загружаем картинку Копейщицы (type 1)
+    const heroTexture = await PIXI.Assets.load('/assets/img/cards/type1.png')
+    
+    // Показываем диалог
+    this.dialog.show(heroTexture, fullText)
+    
+    // Сразу обновляем UI (не ждём закрытия)
+    playerUI.update()
   }
 }

@@ -87,5 +87,22 @@
     "sounds": "Loading sounds...",
     "assets": "Loading assets...",
     "done": "Done!"
+  },
+  "dailyReward": {
+    "title": "Daily Reward",
+    "npc": "Treasurer",
+    "phrases": [
+      "Take this, hero! Good luck!",
+      "The Treasurer is generous today!",
+      "The treasury is full, warrior!",
+      "Here's for your journey, brave one!",
+      "The gold never runs out — play on!",
+      "Strength and luck, champion!",
+      "Reward for your efforts — you earned it!",
+      "Money isn't everything, but it's nice!"
+    ],
+    "reward": "+{gold}💰 +{crystals}💎",
+    "comeBack": "Come back tomorrow!",
+    "alreadyReceived": "You've already received your reward today. Come back tomorrow!"
   }
 }
