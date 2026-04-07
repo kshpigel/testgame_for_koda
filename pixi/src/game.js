@@ -16,6 +16,7 @@ import { FONT } from './data/fonts.js'
 import { colors } from './data/colors.js'
 import { GAME_VERSION } from './data/version.js'
 import { soundManager } from './audio/sound_manager.js'
+import { battleStats } from './data/battle_stats.js'
 import { Button } from './ui/button.js'
 import { Dialog } from './ui/dialog.js'
 import { Modal } from './ui/modal.js'
@@ -304,13 +305,12 @@ export class Game {
       soundManager.playMusic('mapBg')
     })
     
-    battle.on('victory', (points) => {
-      const gold = Math.floor(points * 0.75)
-      const crystals = Math.floor(points * 0.25)
-      player.addGold(gold)
-      player.addCrystals(crystals)
+    battle.on('victory', () => {
+      // Награда уже начислена в battleStats.calculateReward()
       player.addWin()
-      this.showMessage(t('game.victory_reward', { gold, crystals }), colors.ui.text.victory)
+      // Покажем сообщение о награде
+      const stats = battleStats.getData()
+      this.showMessage(t('game.victory_reward', { gold: stats.goldEarned, crystals: stats.crystalsEarned }), colors.ui.text.victory)
     })
     
     battle.on('defeat', async () => {

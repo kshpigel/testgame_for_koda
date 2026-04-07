@@ -640,8 +640,6 @@ export class Battle extends EventEmitter {
     battleStats.finish(true, remainingCards)
     const reward = battleStats.calculateReward(this.enemyHealth)
     
-    const points = this.enemyData.health + this.cntSteps * 10
-    
     // Модальное окно победы
     this.victoryModal = new Modal(this.app, {
       title: t('battle.victory'),
@@ -651,20 +649,32 @@ export class Battle extends EventEmitter {
       onClose: () => {}
     })
     
-    // Текст очков
-    const pointsText = new TextNode({
-      text: `${t('battle.points')}: ${points}`,
+    // Эпическая фраза при победе
+    const victoryPhrases = [
+      'Слава герою!',
+      'Победа за тобой!',
+      'Враг повержен!',
+      'Триумф!',
+      'Честь и слава!',
+      'Легенда рождается!',
+      'Победа близка!',
+      'Ты непобедим!'
+    ]
+    const randomPhrase = victoryPhrases[Math.floor(Math.random() * victoryPhrases.length)]
+    
+    const phraseText = new TextNode({
+      text: randomPhrase,
       width: 400,
       height: 40,
-      fontSize: 28,
-      color: '#00ff00',
+      fontSize: 26,
+      color: '#ffd700',
       align: 'center',
       shadow: true,
       app: this.app
     })
-    pointsText.setX(0) // Центр окна
-    pointsText.y = -140
-    this.victoryModal.addChild(pointsText)
+    phraseText.setX(0)
+    phraseText.y = -140
+    this.victoryModal.addChild(phraseText)
     
     // Статистика боя - форматированный список
     const stats = battleStats.getData()
@@ -678,30 +688,60 @@ export class Battle extends EventEmitter {
       { label: t('battle.stats.crystals'), value: `+${reward.crystals}`, color: 'crystals' }
     ]
     
-    const labelX = -130
-    const valueX = 80
-    const maxDots = 25 // Максимум точек
+    // Вычисляем ширину самого длинного label для выравнивания
+    const tempText = new PIXI.Text('', { fontFamily: FONT, fontSize: 16 })
+    let maxLabelWidth = 0
+    statsData.forEach(item => {
+      tempText.text = item.label
+      if (tempText.width > maxLabelWidth) maxLabelWidth = tempText.width
+    })
+    
+    const labelX = -140
+    const valueX = 120
+    const lineStart = labelX + maxLabelWidth + 10
+    const lineEnd = valueX - 5
     let statsY = -100
     
     statsData.forEach((item, i) => {
       const label = item.label
       const value = String(item.value)
+      const color = item.color === 'gold' ? colors.ui.text.gold : (item.color === 'crystals' ? colors.ui.text.crystals : colors.ui.text.primary)
+      const y = statsY + i * 24
       
-      // Считаем сколько нужно точек
-      const dotsCount = Math.max(3, maxDots - label.length - value.length)
-      const dots = '.'.repeat(dotsCount)
-      const fullLine = `${label}${dots}${value}`
-      
-      const statText = new PIXI.Text(fullLine, {
+      // Label слева
+      const labelText = new PIXI.Text(label, {
         fontFamily: FONT,
         fontSize: 16,
-        fill: item.color === 'gold' ? colors.ui.text.gold : (item.color === 'crystals' ? colors.ui.text.crystals : colors.ui.text.primary)
+        fill: color
       })
-      statText.anchor.set(0.5, 0)
-      statText.x = 0
-      statText.y = statsY + i * 24
+      labelText.anchor.set(0, 0)
+      labelText.x = labelX
+      labelText.y = y
+      this.victoryModal.addChild(labelText)
       
-      this.victoryModal.addChild(statText)
+      // Пунктирная линия (dotted) по нижнему краю текста
+      const graphics = new PIXI.Graphics()
+      graphics.lineStyle(1, colors.ui.text.secondary, 0.5)
+      const dashLength = 3
+      const gapLength = 4
+      let currentX = lineStart
+      while (currentX < lineEnd) {
+        graphics.moveTo(currentX, y + 14)
+        graphics.lineTo(Math.min(currentX + dashLength, lineEnd), y + 14)
+        currentX += dashLength + gapLength
+      }
+      this.victoryModal.addChild(graphics)
+      
+      // Value справа
+      const valueText = new PIXI.Text(value, {
+        fontFamily: FONT,
+        fontSize: 16,
+        fill: color
+      })
+      valueText.anchor.set(0, 0)
+      valueText.x = valueX
+      valueText.y = y
+      this.victoryModal.addChild(valueText)
     })
     
     // Кнопка продолжения
@@ -717,7 +757,7 @@ export class Battle extends EventEmitter {
     continueBtn.onClick = () => {
       this.victoryModal.hide()
       this.app.stage.removeChild(this.victoryModal.container)
-      this.emit('victory', points)
+      this.emit('victory')
       this.emit('end')
     }
     this.victoryModal.addChild(continueBtn)
@@ -743,18 +783,15 @@ export class Battle extends EventEmitter {
       onClose: () => {}
     })
     
-    // Текст
-    const msgText = new TextNode({
-      text: 'Судьба ещё повернётся к тебе лицом...',
-      width: 400,
-      height: 40,
+    // Текст (создаём как PIXI.Text для возможности смены текста)
+    let msgText = new PIXI.Text('', {
+      fontFamily: FONT,
       fontSize: 22,
-      color: '#ff6666',
-      align: 'center',
-      shadow: true,
-      app: this.app
+      fill: '#ff6666',
+      align: 'center'
     })
-    msgText.setX(0) // Центр окна
+    msgText.anchor.set(0.5, 0)
+    msgText.x = 0
     msgText.y = -120
     this.defeatModal.addChild(msgText)
     
@@ -768,26 +805,73 @@ export class Battle extends EventEmitter {
       { label: t('battle.stats.enemy_hp'), value: stats.enemyMaxHealth - stats.enemyFinalHealth }
     ]
     
-    const maxDots = 25
+    // Эпические фразы при поражении
+    const defeatPhrases = [
+      'Судьба ещё повернётся к тебе лицом...',
+      'Каждый мастер когда-то был новичком...',
+      'Герои учатся на поражениях...',
+      'В следующий раз удача будет на твоей стороне...',
+      'Твой дух всё ещё силён...',
+      'Новая попытка — новый триумф...',
+      'Поражение — не конец, а начало пути...',
+      'Верь в себя, и ты победишь...'
+    ]
+    const randomDefeatPhrase = defeatPhrases[Math.floor(Math.random() * defeatPhrases.length)]
+    msgText.text = randomDefeatPhrase
+    
+    // Вычисляем ширину самого длинного label
+    const tempText = new PIXI.Text('', { fontFamily: FONT, fontSize: 16 })
+    let maxLabelWidth = 0
+    statsData.forEach(item => {
+      tempText.text = item.label
+      if (tempText.width > maxLabelWidth) maxLabelWidth = tempText.width
+    })
+    
+    const labelX = -140
+    const valueX = 120
+    const lineStart = labelX + maxLabelWidth + 10
+    const lineEnd = valueX - 5
     let statsY = -80
     
     statsData.forEach((item, i) => {
       const label = item.label
       const value = String(item.value)
-      const dotsCount = Math.max(3, maxDots - label.length - value.length)
-      const dots = '.'.repeat(dotsCount)
-      const fullLine = `${label}${dots}${value}`
+      const y = statsY + i * 24
       
-      const statText = new PIXI.Text(fullLine, {
+      // Label слева
+      const labelText = new PIXI.Text(label, {
         fontFamily: FONT,
         fontSize: 16,
         fill: colors.ui.text.primary
       })
-      statText.anchor.set(0.5, 0)
-      statText.x = 0
-      statText.y = statsY + i * 24
+      labelText.anchor.set(0, 0)
+      labelText.x = labelX
+      labelText.y = y
+      this.defeatModal.addChild(labelText)
       
-      this.defeatModal.addChild(statText)
+      // Пунктирная линия (dotted) по нижнему краю текста
+      const graphics = new PIXI.Graphics()
+      graphics.lineStyle(1, colors.ui.text.secondary, 0.5)
+      const dashLength = 3
+      const gapLength = 4
+      let currentX = lineStart
+      while (currentX < lineEnd) {
+        graphics.moveTo(currentX, y + 14)
+        graphics.lineTo(Math.min(currentX + dashLength, lineEnd), y + 14)
+        currentX += dashLength + gapLength
+      }
+      this.defeatModal.addChild(graphics)
+      
+      // Value справа
+      const valueText = new PIXI.Text(value, {
+        fontFamily: FONT,
+        fontSize: 16,
+        fill: colors.ui.text.primary
+      })
+      valueText.anchor.set(0, 0)
+      valueText.x = valueX
+      valueText.y = y
+      this.defeatModal.addChild(valueText)
     })
     
     // Кнопка продолжения
