@@ -207,7 +207,9 @@ export class Game {
           this.showDeckRequiredModal(validation.reason)
           return
         }
-        this.showMap(portalId)
+        
+        // Проверка кристаллов и диалог подтверждения
+        this.showPortalConfirmDialog(portalId)
       })
       this.screens['base'] = baseScreen
     } else {
@@ -516,13 +518,102 @@ export class Game {
     
     const fullText = `${randomPhrase}\n\n${rewardText}`
     
-    // Загружаем картинку Копейщицы (type 1)
-    const heroTexture = await PIXI.Assets.load('/assets/img/cards/type1.png')
+    // Загружаем картинку помощника
+    const heroTexture = await PIXI.Assets.load('/assets/img/cards/helper.png')
     
     // Показываем диалог
     this.dialog.show(heroTexture, fullText)
     
     // Сразу обновляем UI (не ждём закрытия)
     playerUI.update()
+  }
+
+  // Показать диалог подтверждения входа в портал
+  showPortalConfirmDialog(portalId) {
+    const cost = gameConfig.portalCost.crystals
+    const have = player.crystals
+    
+    if (have < cost) {
+      // Недостаточно кристаллов - показываем модалку с предупреждением
+      const modal = new Modal(this.app, {
+        title: t('portal.title'),
+        width: 400,
+        height: 160,
+        bgColor: colors.ui.panel.bg,
+        showCloseButton: true
+      })
+      
+      modal.setContent((content) => {
+        const text = new PIXI.Text(
+          t('portal.notEnough', { cost, have }),
+          { fontFamily: FONT, fontSize: 16, fill: colors.ui.text.defeat, wordWrap: true, wordWrapWidth: 350 }
+        )
+        text.anchor.set(0.5)
+        text.y = -20
+        content.addChild(text)
+      })
+      
+      modal.addToStage(this.app.stage)
+      modal.show()
+      return
+    }
+    
+    // Показываем модалку подтверждения
+    const modal = new Modal(this.app, {
+      title: t('portal.title'),
+      width: 400,
+      height: 200,
+      bgColor: colors.ui.panel.bg,
+      showCloseButton: false
+    })
+    
+    modal.setContent((content) => {
+      const text = new PIXI.Text(
+        t('portal.confirm', { cost, have }),
+        { fontFamily: FONT, fontSize: 16, fill: colors.ui.text.primary, wordWrap: true, wordWrapWidth: 350 }
+      )
+      text.anchor.set(0.5)
+      text.y = -30
+      content.addChild(text)
+    })
+    
+    // Кнопка отмены
+    const cancelBtn = new Button(t('portal.cancel'), {
+      width: 140,
+      height: 50,
+      color: colors.ui.button.reset,
+      app: this.app,
+      fontSize: 16
+    })
+    cancelBtn.setX(-80)
+    cancelBtn.setY(30)
+    cancelBtn.onClick = () => {
+      modal.hide()
+      this.app.stage.removeChild(modal.container)
+    }
+    modal.addChild(cancelBtn)
+    
+    // Кнопка активации
+    const activateBtn = new Button(t('portal.enter'), {
+      width: 140,
+      height: 50,
+      color: colors.ui.button.play,
+      app: this.app,
+      fontSize: 16
+    })
+    activateBtn.setX(80)
+    activateBtn.setY(30)
+    activateBtn.onClick = () => {
+      modal.hide()
+      this.app.stage.removeChild(modal.container)
+      // Списываем кристаллы
+      playerUI.spendCrystals(cost)
+      // Входим в портал
+      this.showMap(portalId)
+    }
+    modal.addChild(activateBtn)
+    
+    modal.addToStage(this.app.stage)
+    modal.show()
   }
 }

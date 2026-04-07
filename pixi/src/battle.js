@@ -667,7 +667,7 @@ export class Battle extends EventEmitter {
       width: 400,
       height: 40,
       fontSize: 26,
-      color: '#ffd700',
+      color: colors.ui.text.gold,
       align: 'center',
       shadow: true,
       app: this.app
@@ -787,7 +787,7 @@ export class Battle extends EventEmitter {
     let msgText = new PIXI.Text('', {
       fontFamily: FONT,
       fontSize: 22,
-      fill: '#ff6666',
+      fill: colors.ui.text.defeat,
       align: 'center'
     })
     msgText.anchor.set(0.5, 0)

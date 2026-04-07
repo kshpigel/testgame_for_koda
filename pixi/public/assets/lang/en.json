@@ -90,10 +90,10 @@
   },
   "dailyReward": {
     "title": "Daily Reward",
-    "npc": "Treasurer",
+    "npc": "Helper",
     "phrases": [
       "Take this, hero! Good luck!",
-      "The Treasurer is generous today!",
+      "The Helper is generous today!",
       "The treasury is full, warrior!",
       "Here's for your journey, brave one!",
       "The gold never runs out — play on!",
@@ -104,5 +104,12 @@
     "reward": "+{gold}💰 +{crystals}💎",
     "comeBack": "Come back tomorrow!",
     "alreadyReceived": "You've already received your reward today. Come back tomorrow!"
+  },
+  "portal": {
+    "title": "Portal Activation",
+    "enter": "Activate",
+    "cancel": "Cancel",
+    "confirm": "To enter the portal you need to sacrifice {cost}💎. You have {have}💎. Activate?",
+    "notEnough": "Not enough crystals! Need {cost}💎, you have {have}💎"
   }
 }
