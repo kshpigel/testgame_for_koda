@@ -151,6 +151,7 @@ this.container.addChild(this.enemyDisplay)
 ### 5. Улучшения UI
 - [ ] Drag&drop карт в руе
 - [ ] Заменить alert/prompt на игровые UI (на основе Modal)
+- [ ] Заменить emoji 💰/💎 на иконки (PNG 24x24 или 32x32)
 
 ## Реализованные фичи
 - [x] Бой и карта работают полностью
