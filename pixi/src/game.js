@@ -280,7 +280,14 @@ export class Game {
     // Получаем колоду по коду игрока (из DeckManager)
     const playerDeck = deckManager.getDeck(deckManager.getActiveDeckId())
     const sleeve = collectionManager.getSleeve(playerDeck.sleeveId || 1)
-    const battle = new Battle(this.app, playerDeck.cards, card_types, enemyData, this, sleeve)
+    
+    // Преобразуем массив ID карт в объекты карт с данными из card_types
+    const cardObjects = playerDeck.cards.map(cardId => {
+      const cardType = card_types.find(ct => ct.type === cardId)
+      return cardType ? { ...cardType } : { type: cardId, name: `Тип ${cardId}`, value: 0 }
+    })
+    
+    const battle = new Battle(this.app, cardObjects, card_types, enemyData, this, sleeve)
 
     // Показываем диалог врага перед боем
     this.showEnemyDialog(enemyData)
