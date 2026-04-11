@@ -6,7 +6,14 @@ const _config = {
   debug: false,  // Включить логи и debug рамки
   enemiesCount: 10,
   getCards: [],   // Карты для тестирования (будут в начале колоды)
-  lang: 'ru'      // Язык (ru, en, ...)
+  lang: 'ru',      // Язык (ru, en, ...)
+  
+  // Награды за победу
+  rewards: {
+    baseGold: 25,       // Базовая награда за победу
+    goldPerStep: 10,    // Золото за каждый оставшийся ход
+    bossCrystals: 5     // Кристаллы за победу над боссом
+  }
 }
 
 // Публичный API
@@ -18,7 +25,9 @@ export const config = {
   get getCards() { return _config.getCards },
   set getCards(v) { _config.getCards = v },
   get lang() { return _config.lang },
-  set lang(v) { _config.lang = v }
+  set lang(v) { _config.lang = v },
+  get rewards() { return _config.rewards },
+  set rewards(v) { _config.rewards = v }
 }
 
 // Логирование только в debug режиме
@@ -34,6 +43,11 @@ export async function loadConfig() {
   _config.enemiesCount = 10
   _config.getCards = []
   _config.lang = 'ru'
+  _config.rewards = {
+    baseGold: 25,
+    goldPerStep: 10,
+    bossCrystals: 5
+  }
 
   const paths = ['local_config.json', '/local_config.json']
 
@@ -46,6 +60,7 @@ export async function loadConfig() {
         if (localConfig.enemiesCount !== undefined) _config.enemiesCount = localConfig.enemiesCount
         if (localConfig.getCards !== undefined) _config.getCards = localConfig.getCards
         if (localConfig.lang !== undefined) _config.lang = localConfig.lang
+        if (localConfig.rewards) _config.rewards = { ..._config.rewards, ...localConfig.rewards }
         console.log('[Config] Loaded:', localConfig)
         console.log('[Config] getCards:', _config.getCards)
         break

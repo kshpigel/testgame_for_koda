@@ -78,7 +78,7 @@ export class Battle extends EventEmitter {
     
     // Инициализация статистики боя
     battleStats.reset()
-    battleStats.setEnemy(enemyData.name, enemyData.health)
+    battleStats.setEnemy(enemyData.name, enemyData.health, enemyData.isBoss || false)
     battleStats.deckSize = deck.length
     
     // Постоянные баффы (от DiscardBuff и т.д.)
@@ -635,10 +635,14 @@ export class Battle extends EventEmitter {
   }
 
   showVictory() {
+    // Устанавливаем остаток ходов для расчёта наград
+    battleStats.setStepsLeft(this.cntSteps)
+    
     // Завершаем статистику боя
     const remainingCards = this.currentDeck?.length || 0
     battleStats.finish(true, remainingCards)
     const reward = battleStats.calculateReward(this.enemyHealth)
+    const breakdown = reward.breakdown
     
     // Модальное окно победы
     this.victoryModal = new Modal(this.app, {
@@ -676,22 +680,33 @@ export class Battle extends EventEmitter {
     phraseText.y = -140
     this.victoryModal.addChild(phraseText)
     
-    // Статистика боя - форматированный список
+    // Статистика боя
     const stats = battleStats.getData()
     const statsData = [
       { label: t('battle.stats.steps'), value: stats.stepsPlayed },
       { label: t('battle.stats.cards_played'), value: stats.cardsPlayed },
       { label: t('battle.stats.cards_discarded'), value: stats.cardsDiscarded },
       { label: t('battle.stats.damage_dealt'), value: stats.damageDealt },
-      { label: t('battle.stats.enemy_hp'), value: stats.enemyMaxHealth - stats.enemyFinalHealth },
-      { label: t('battle.stats.gold'), value: `+${reward.gold}`, color: 'gold' },
-      { label: t('battle.stats.crystals'), value: `+${reward.crystals}`, color: 'crystals' }
+      { label: t('battle.stats.enemy_hp'), value: stats.enemyMaxHealth - stats.enemyFinalHealth }
     ]
     
-    // Вычисляем ширину самого длинного label для выравнивания
+    // Награды с детализацией
+    const rewardsData = [
+      { label: 'Золото за победу', value: `+${breakdown.base}`, color: 'gold' },
+      { label: `Оставшиеся ходы (${breakdown.steps / config.rewards.goldPerStep})`, value: `+${breakdown.steps}`, color: 'gold' },
+      { label: 'Добивание (урон)', value: `+${breakdown.overflow}`, color: 'gold' },
+      { label: 'Всего золота', value: `+${reward.gold}`, color: 'gold', bold: true },
+      { label: 'Кристаллы', value: `+${reward.crystals}`, color: 'crystals', bold: reward.crystals > 0 }
+    ]
+    
+    // Вычисляем ширину самого длинного label
     const tempText = new PIXI.Text('', { fontFamily: FONT, fontSize: 16 })
     let maxLabelWidth = 0
     statsData.forEach(item => {
+      tempText.text = item.label
+      if (tempText.width > maxLabelWidth) maxLabelWidth = tempText.width
+    })
+    rewardsData.forEach(item => {
       tempText.text = item.label
       if (tempText.width > maxLabelWidth) maxLabelWidth = tempText.width
     })
@@ -702,10 +717,11 @@ export class Battle extends EventEmitter {
     const lineEnd = valueX - 5
     let statsY = -100
     
+    // Обычная статистика
     statsData.forEach((item, i) => {
       const label = item.label
       const value = String(item.value)
-      const color = item.color === 'gold' ? colors.ui.text.gold : (item.color === 'crystals' ? colors.ui.text.crystals : colors.ui.text.primary)
+      const color = colors.ui.text.primary
       const y = statsY + i * 24
       
       // Label слева
@@ -719,7 +735,7 @@ export class Battle extends EventEmitter {
       labelText.y = y
       this.victoryModal.addChild(labelText)
       
-      // Пунктирная линия (dotted) по нижнему краю текста
+      // Пунктирная линия
       const graphics = new PIXI.Graphics()
       graphics.lineStyle(1, colors.ui.text.secondary, 0.5)
       const dashLength = 3
@@ -736,6 +752,62 @@ export class Battle extends EventEmitter {
       const valueText = new PIXI.Text(value, {
         fontFamily: FONT,
         fontSize: 16,
+        fill: color
+      })
+      valueText.anchor.set(0, 0)
+      valueText.x = valueX
+      valueText.y = y
+      this.victoryModal.addChild(valueText)
+    })
+    
+    // Разделитель перед наградами
+    const dividerY = statsY + statsData.length * 24 + 10
+    const divider = new PIXI.Graphics()
+    divider.lineStyle(2, colors.ui.text.secondary, 0.5)
+    divider.moveTo(labelX - 10, dividerY)
+    divider.lineTo(valueX + 50, dividerY)
+    this.victoryModal.addChild(divider)
+    
+    // Награды
+    const rewardsY = dividerY + 20
+    rewardsData.forEach((item, i) => {
+      const label = item.label
+      const value = String(item.value)
+      const color = item.color === 'gold' ? colors.ui.text.gold : (item.color === 'crystals' ? colors.ui.text.crystals : colors.ui.text.primary)
+      const y = rewardsY + i * 24
+      const fontSize = item.bold ? 18 : 16
+      const fontWeight = item.bold ? 'bold' : 'normal'
+      
+      // Label слева
+      const labelText = new PIXI.Text(label, {
+        fontFamily: FONT,
+        fontSize: fontSize,
+        fontWeight: fontWeight,
+        fill: color
+      })
+      labelText.anchor.set(0, 0)
+      labelText.x = labelX
+      labelText.y = y
+      this.victoryModal.addChild(labelText)
+      
+      // Пунктирная линия
+      const graphics = new PIXI.Graphics()
+      graphics.lineStyle(1, colors.ui.text.secondary, 0.5)
+      const dashLength = 3
+      const gapLength = 4
+      let currentX = lineStart
+      while (currentX < lineEnd) {
+        graphics.moveTo(currentX, y + (fontSize === 18 ? 16 : 14))
+        graphics.lineTo(Math.min(currentX + dashLength, lineEnd), y + (fontSize === 18 ? 16 : 14))
+        currentX += dashLength + gapLength
+      }
+      this.victoryModal.addChild(graphics)
+      
+      // Value справа
+      const valueText = new PIXI.Text(value, {
+        fontFamily: FONT,
+        fontSize: fontSize,
+        fontWeight: fontWeight,
         fill: color
       })
       valueText.anchor.set(0, 0)

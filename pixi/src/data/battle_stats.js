@@ -1,4 +1,5 @@
 import { player } from './player.js'
+import { config } from './config.js'
 
 // Класс для хранения статистики боя
 export class BattleStats {
@@ -21,12 +22,20 @@ export class BattleStats {
     this.isVictory = false      // Победа или поражение
     this.deckSize = 0           // Размер колоды в начале
     this.remainingCards = 0     // Карт осталось в колоде
+    this.stepsLeft = 0          // Остаток ходов
+    this.isBoss = false         // Босс или обычный враг
   }
   
   // Установить данные врага
-  setEnemy(name, maxHealth) {
+  setEnemy(name, maxHealth, isBoss = false) {
     this.enemyName = name
     this.enemyMaxHealth = maxHealth
+    this.isBoss = isBoss
+  }
+  
+  // Установить остаток ходов (для расчёта наград)
+  setStepsLeft(stepsLeft) {
+    this.stepsLeft = stepsLeft
   }
   
   // Записать результат боя
@@ -39,13 +48,25 @@ export class BattleStats {
   calculateReward(enemyHealth) {
     this.enemyFinalHealth = enemyHealth
     
-    // Формула: базовое золото + бонус за убитого врага
-    const baseGold = 25
-    const killBonus = this.isVictory ? Math.floor(enemyHealth * 0.5) : 0
-    this.goldEarned = baseGold + killBonus
+    // Получаем настройки наград из config
+    const { baseGold, goldPerStep, bossCrystals } = config.rewards
     
-    // Кристалы: 10% от золота (баланс 9/1), только за победу
-    this.crystalsEarned = this.isVictory ? Math.floor(this.goldEarned * 0.1) : 0
+    // Расчёт золота:
+    // 1. Базовая награда за победу
+    const goldBase = baseGold
+    
+    // 2. Бонус за оставшиеся ходы
+    const goldSteps = this.stepsLeft * goldPerStep
+    
+    // 3. Бонус за "добивание" (сверхурон = нанесённый урон - HP врага)
+    const overflowDamage = this.damageDealt - this.enemyMaxHealth
+    const goldOverflow = overflowDamage > 0 ? overflowDamage : 0
+    
+    // Итого золота
+    this.goldEarned = goldBase + goldSteps + goldOverflow
+    
+    // Кристаллы: только за босса
+    this.crystalsEarned = (this.isBoss && this.isVictory) ? bossCrystals : 0
     
     // Начислить игроку
     if (this.goldEarned > 0) {
@@ -57,7 +78,12 @@ export class BattleStats {
     
     return {
       gold: this.goldEarned,
-      crystals: this.crystalsEarned
+      crystals: this.crystalsEarned,
+      breakdown: {
+        base: goldBase,
+        steps: goldSteps,
+        overflow: goldOverflow
+      }
     }
   }
   
@@ -77,7 +103,9 @@ export class BattleStats {
       enemyFinalHealth: this.enemyFinalHealth,
       isVictory: this.isVictory,
       deckSize: this.deckSize,
-      remainingCards: this.remainingCards
+      remainingCards: this.remainingCards,
+      stepsLeft: this.stepsLeft,
+      isBoss: this.isBoss
     }
   }
 }
