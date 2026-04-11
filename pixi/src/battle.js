@@ -853,7 +853,7 @@ export class Battle extends EventEmitter {
     this.defeatModal = new Modal(this.app, {
       title: t('battle.defeat'),
       width: 500,
-      height: 550,
+      height: 450, // Уменьшена высота (нет наград)
       showCloseButton: false,
       onClose: () => {}
     })
@@ -867,7 +867,7 @@ export class Battle extends EventEmitter {
     })
     msgText.anchor.set(0.5, 0)
     msgText.x = 0
-    msgText.y = -120
+    msgText.y = -160 // Поднято ближе к заголовку
     this.defeatModal.addChild(msgText)
     
     // Статистика боя - форматированный список
@@ -906,7 +906,7 @@ export class Battle extends EventEmitter {
     const valueX = 120
     const lineStart = labelX + maxLabelWidth + 10
     const lineEnd = valueX - 5
-    let statsY = -80
+    let statsY = -120 // Поднято выше (было -80)
     
     statsData.forEach((item, i) => {
       const label = item.label
@@ -958,7 +958,7 @@ export class Battle extends EventEmitter {
       app: this.app
     })
     continueBtn.setX(0) // Центр окна
-    continueBtn.setY(180) // Поднята к центру модалки
+    continueBtn.setY(140) // Поднята ближе к статистике
     continueBtn.onClick = () => {
       this.defeatModal.hide()
       this.app.stage.removeChild(this.defeatModal.container)
