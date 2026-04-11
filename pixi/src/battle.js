@@ -183,9 +183,12 @@ export class Battle extends EventEmitter {
   }
 
   prepareDeck() {
-    this.currentDeck = this.deck.map(typeId => {
-      return this.cardTypes.find(t => t.type === typeId)
-    }).filter(Boolean)
+    // this.deck уже массив объектов карт
+    this.currentDeck = [...this.deck]
+    
+    log('[Battle.prepareDeck] this.deck length:', this.deck.length)
+    log('[Battle.prepareDeck] this.currentDeck length:', this.currentDeck.length)
+    log('[Battle.prepareDeck] first card:', this.currentDeck[0])
     
     // Если есть тестовые карты - берём их по порядку из getCards, остальные перемешиваем
     if (config.getCards && config.getCards.length > 0) {
@@ -648,7 +651,7 @@ export class Battle extends EventEmitter {
     this.victoryModal = new Modal(this.app, {
       title: t('battle.victory'),
       width: 500,
-      height: 400,
+      height: 550,
       showCloseButton: false,
       onClose: () => {}
     })
@@ -677,7 +680,7 @@ export class Battle extends EventEmitter {
       app: this.app
     })
     phraseText.setX(0)
-    phraseText.y = -140
+    phraseText.y = -200 // Опускаем ближе к заголовку (-260 + 60)
     this.victoryModal.addChild(phraseText)
     
     // Статистика боя
@@ -715,7 +718,7 @@ export class Battle extends EventEmitter {
     const valueX = 120
     const lineStart = labelX + maxLabelWidth + 10
     const lineEnd = valueX - 5
-    let statsY = -100
+    let statsY = -160 // Сразу под фразой
     
     // Обычная статистика
     statsData.forEach((item, i) => {
@@ -825,7 +828,7 @@ export class Battle extends EventEmitter {
       app: this.app
     })
     continueBtn.setX(0) // Центр окна
-    continueBtn.setY(110)
+    continueBtn.setY(180) // Поднята к центру модалки
     continueBtn.onClick = () => {
       this.victoryModal.hide()
       this.app.stage.removeChild(this.victoryModal.container)
@@ -850,7 +853,7 @@ export class Battle extends EventEmitter {
     this.defeatModal = new Modal(this.app, {
       title: t('battle.defeat'),
       width: 500,
-      height: 400,
+      height: 550,
       showCloseButton: false,
       onClose: () => {}
     })
@@ -955,7 +958,7 @@ export class Battle extends EventEmitter {
       app: this.app
     })
     continueBtn.setX(0) // Центр окна
-    continueBtn.setY(80)
+    continueBtn.setY(180) // Поднята к центру модалки
     continueBtn.onClick = () => {
       this.defeatModal.hide()
       this.app.stage.removeChild(this.defeatModal.container)
