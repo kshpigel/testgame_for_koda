@@ -320,11 +320,9 @@ export class Game {
     })
     
     battle.on('victory', () => {
-      // Награда уже начислена в battleStats.calculateReward()
+      // Награда уже начислена и показана в модалке победы (battleStats.calculateReward())
       player.addWin()
-      // Покажем сообщение о награде
-      const stats = battleStats.getData()
-      this.showMessage(t('game.victory_reward', { gold: stats.goldEarned, crystals: stats.crystalsEarned }), colors.ui.text.victory)
+      // Не показываем дополнительное сообщение - награды уже видны в модалке
     })
     
     battle.on('defeat', async () => {
