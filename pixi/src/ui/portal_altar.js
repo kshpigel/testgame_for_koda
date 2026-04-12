@@ -29,7 +29,6 @@ export class PortalAltar extends UINode {
       altar.scale.set(scale)
       altar.name = 'altarSprite'
       this.addChild(altar)
-      log('[PortalAltar] created with texture:', this.texture.baseTexture.resource?.source?.src?.substring(0, 50))
     } else {
       // Заглушка - серый круг
       const altar = new PIXI.Graphics()
@@ -38,7 +37,6 @@ export class PortalAltar extends UINode {
       altar.endFill()
       altar.name = 'altarSprite'
       this.addChild(altar)
-      log('[PortalAltar] created with fallback graphics')
     }
 
     // Обновляем статус (цвет/прозрачность)
