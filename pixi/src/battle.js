@@ -461,9 +461,14 @@ export class Battle extends EventEmitter {
   }
 
   playCards() {
-    if (this.isAnimating || this.isBlocked || this.cntSteps <= 0 || this.selectedCards.length <= 0) return
+    if (this.isAnimating || this.isBlocked || this.cntSteps <= 0 || this.selectedCards.length <= 0) {
+      log(`[Battle.playCards] Отмена: isAnimating=${this.isAnimating}, isBlocked=${this.isBlocked}, cntSteps=${this.cntSteps}, selectedCards=${this.selectedCards.length}`)
+      return
+    }
     
+    // Блокируем кнопки и ставим флаг АБСОЛЮТНО СРАЗУ
     this.isAnimating = true
+    this.setBlocked(true)
     
     // Применяем скиллы перед ходом
     const skipStep = this.applySkills()
@@ -473,13 +478,20 @@ export class Battle extends EventEmitter {
       summ += card.getValue()
     })
     
+    log(`[Battle.playCards] Ход ${battleStats.stepsPlayed + 1}: урон=${summ}, skipStep=${skipStep}`)
+    
+    // Всегда накапливаем урон (даже при KeepSteps)
+    battleStats.damageDealt += summ
+    
     this.enemyHealth -= summ
     if (!skipStep) {
       this.cntSteps--
       // Трекинг: засчитываем ход
       battleStats.stepsPlayed++
-      battleStats.damageDealt += summ
       battleStats.cardsPlayed += this.selectedCards.length
+      log(`[Battle.playCards] После хода: damageDealt=${battleStats.damageDealt}, steps=${battleStats.stepsPlayed}`)
+    } else {
+      log(`[Battle.playCards] KeepSteps активен - ход не тратится, но урон засчитан: damageDealt=${battleStats.damageDealt}`)
     }
     
     soundManager.play('attack')
@@ -638,13 +650,25 @@ export class Battle extends EventEmitter {
   }
 
   showVictory() {
+    // Обновляем UI перед показом модалки (чтобы счётчики были актуальны)
+    if (this.battleUI) {
+      this.battleUI.updateSteps(this.cntSteps)
+      this.battleUI.updateResets(this.cntReset)
+      this.battleUI.updateDeckCount(this.currentDeck.length)
+    }
+    
     // Устанавливаем остаток ходов для расчёта наград
     battleStats.setStepsLeft(this.cntSteps)
+    
+    // Сохраняем текущее HP врага ПЕРЕД обнулением (для статистики)
+    const finalEnemyHealth = this.enemyHealth
+    
+    log(`[Battle.showVictory] finalEnemyHealth=${finalEnemyHealth}, damageDealt=${battleStats.damageDealt}, enemyMaxHealth=${battleStats.enemyMaxHealth}`)
     
     // Завершаем статистику боя
     const remainingCards = this.currentDeck?.length || 0
     battleStats.finish(true, remainingCards)
-    const reward = battleStats.calculateReward(this.enemyHealth)
+    const reward = battleStats.calculateReward(finalEnemyHealth)
     const breakdown = reward.breakdown
     
     // Модальное окно победы
@@ -844,10 +868,13 @@ export class Battle extends EventEmitter {
   }
 
   showDefeat() {
+    // Сохраняем текущее HP врага ПЕРЕД расчётом (для статистики)
+    const finalEnemyHealth = this.enemyHealth
+    
     // Завершаем статистику боя
     const remainingCards = this.currentDeck?.length || 0
     battleStats.finish(false, remainingCards)
-    battleStats.calculateReward(this.enemyHealth)
+    battleStats.calculateReward(finalEnemyHealth)
     
     // Модальное окно поражения
     this.defeatModal = new Modal(this.app, {
