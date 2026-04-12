@@ -1,0 +1,12 @@
+{
+  "rewards": {
+    "victory": { "gold": 50, "crystals": 5 },
+    "step": { "gold": 5 },
+    "overdamage": { "gold": 10 },
+    "boss": { "gold": 100, "crystals": 20 }
+  },
+  "costs": {
+    "portal_premium": { "crystals": 10 },
+    "daily_reward": { "gold": 50, "crystals": 10 }
+  }
+}

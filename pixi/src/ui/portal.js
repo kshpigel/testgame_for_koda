@@ -15,6 +15,8 @@ export class Portal extends UINode {
     })
 
     this.texture = options.texture || null
+    this.portalType = options.portalType || 'random'
+    this.glowColor = options.glowColor || 0x00ff00
     this.onClick = options.onClick || null
     
     this.targetBrightness = 1
@@ -30,6 +32,8 @@ export class Portal extends UINode {
     
     this.glowFilter = new ColorMatrixFilter()
     this.glowFilter.brightness(1.5, false)
+    
+    this.status = options.status || 'active'
 
     this.create()
     this.setupInteraction()
@@ -49,32 +53,39 @@ export class Portal extends UINode {
       )
       portal.scale.set(scale)
       portal.name = 'portalSprite'
+      portal.tint = this.status === 'active' ? 0xFFFFFF : 0x888888
       this.addChild(portal)
     } else {
       // Заглушка
       const portal = new PIXI.Graphics()
-      portal.beginFill(0x00ff00, 0.7)
+      const color = this.status === 'active' ? this.glowColor : 0x888888
+      portal.beginFill(color, this.status === 'active' ? 0.7 : 0.4)
       portal.drawCircle(0, 0, this.width / 2)
       portal.endFill()
       portal.name = 'portalSprite'
       this.addChild(portal)
 
-      const label = new PIXI.Text('ПОРТАЛ', {
-        fontFamily: FONT,
-        fontSize: 16,
-        fontWeight: 'bold',
-        fill: '#ffffff'
-      })
-      label.anchor.set(0.5)
-      label.y = this.height / 2 + 20
-      this.addChild(label)
+      if (this.status !== 'active') {
+        const label = new PIXI.Text('🔒', {
+          fontFamily: FONT,
+          fontSize: 32,
+          fill: '#ffffff'
+        })
+        label.anchor.set(0.5)
+        this.addChild(label)
+      }
     }
   }
 
   setupInteraction() {
     this.eventMode = 'static'
-    this.cursor = 'pointer'
+    this.cursor = this.status === 'active' ? 'pointer' : 'default'
     this._isDestroying = false
+
+    if (this.status !== 'active') {
+      this.interactive = false
+      return
+    }
 
     this.on('pointerover', () => {
       if (this._destroyed || this._isDestroyed || this._isDestroying) return
@@ -94,6 +105,21 @@ export class Portal extends UINode {
       soundManager.play('click')
       if (this.onClick) this.onClick()
     })
+  }
+  
+  setStatus(status) {
+    this.status = status
+    const sprite = this.getChildByName('portalSprite')
+    if (sprite) {
+      sprite.tint = status === 'active' ? 0xFFFFFF : 0x888888
+    }
+    this.cursor = status === 'active' ? 'pointer' : 'default'
+    this.interactive = status === 'active'
+    
+    // Обновляем brightnes для неактивных порталов
+    if (status !== 'active') {
+      this.targetBrightness = 0.5
+    }
   }
   
   destroy(options) {

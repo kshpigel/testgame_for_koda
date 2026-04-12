@@ -1,5 +1,77 @@
-[
-  { "id": "portal_1", "hash": "a1b2c3d4e5f6" },
-  { "id": "portal_2", "hash": "f6e5d4c3b2a1" },
-  { "id": "portal_3", "hash": "1234567890ab" }
-]
+{
+  "positions": [
+    { "id": "portal_1", "x": 0.8, "y": 0.4 },
+    { "id": "portal_2", "x": 0.25, "y": 0.25 },
+    { "id": "portal_3", "x": 0.25, "y": 0.8 },
+    { "id": "portal_4", "x": 0.906, "y": 0.112 },
+    { "id": "portal_5", "x": 0.625, "y": 0.833 },
+    { "id": "portal_6", "x": 0.594, "y": 0.278 }
+  ],
+  "portals": [
+    {
+      "id": "portal_1",
+      "type": "random",
+      "altarType": "altar_1",
+      "status": "active",
+      "growthTimeMinutes": 60,
+      "lastWinTime": null
+    },
+    {
+      "id": "portal_2",
+      "type": "random",
+      "altarType": "altar_1",
+      "status": "locked",
+      "growthTimeMinutes": 120,
+      "unlockDelayMinutes": 60,
+      "lastWinTime": null
+    },
+    {
+      "id": "portal_3",
+      "type": "random",
+      "altarType": "altar_1",
+      "status": "locked",
+      "growthTimeMinutes": 180,
+      "unlockDelayMinutes": 180,
+      "lastWinTime": null
+    },
+    {
+      "id": "portal_4",
+      "type": "premium",
+      "altarType": "altar_2",
+      "status": "active",
+      "lastWinTime": null
+    },
+    {
+      "id": "portal_5",
+      "type": "premium",
+      "altarType": "altar_2",
+      "status": "active",
+      "lastWinTime": null
+    },
+    {
+      "id": "portal_6",
+      "type": "pvp",
+      "altarType": null,
+      "status": "active",
+      "lastWinTime": null
+    }
+  ],
+  "altarTypes": {
+    "altar_1": { "image": "/assets/img/altar_random.png" },
+    "altar_2": { "image": "/assets/img/altar_premium.png" }
+  },
+  "portalTypes": {
+    "random": {
+      "image": "/assets/img/portal_random.png",
+      "glowColor": 4384768
+    },
+    "premium": {
+      "image": "/assets/img/portal_premium.png",
+      "glowColor": 16766416
+    },
+    "pvp": {
+      "image": "/assets/img/portal_pvp.png",
+      "glowColor": 16711680
+    }
+  }
+}

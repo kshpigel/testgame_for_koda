@@ -7,6 +7,7 @@ import { log } from './data/config.js'
 import { soundManager } from './audio/sound_manager.js'
 import { player } from './data/player.js'
 import { Portal } from './ui/portal.js'
+import { PortalAltar } from './ui/portal_altar.js'
 import { Castle } from './ui/castle.js'
 import { Birds } from './ui/birds.js'
 import { Clouds } from './ui/clouds.js'
@@ -15,6 +16,7 @@ import { collectionManager } from './data/collection_manager.js'
 import { deckManager } from './data/deck_manager.js'
 import { t } from './data/i18n.js'
 import { playerUI } from './ui/player_ui.js'
+import { portalManager } from './data/portal_manager.js'
 
 const ASSETS = {
   bg: '/assets/img/base_bg.png',
@@ -38,6 +40,10 @@ export class BaseScreen extends EventEmitter {
   async init(completedPortals = []) {
     this.completedPortals = completedPortals
     log('[BaseScreen] init() called with completedPortals:', completedPortals)
+    
+    // Загружаем конфигурацию порталов
+    await portalManager.load()
+    
     await this.loadAssets()
     this.render()
     this.app.stage.addChild(this.container)
@@ -55,8 +61,31 @@ export class BaseScreen extends EventEmitter {
       this.assets[key] = { texture: PIXI.Assets.get(url) }
     }
     
+    // Загружаем ассеты алтарей
+    await this.loadAltarAssets()
+    
     // Загружаем ассеты карт (для хранилища и колоды)
     await this.loadCardAssets()
+  }
+  
+  async loadAltarAssets() {
+    const altarTypes = portalManager.altarTypes || {}
+    const urls = []
+    
+    Object.values(altarTypes).forEach(config => {
+      if (config.image) urls.push(config.image)
+    })
+    
+    if (urls.length > 0) {
+      await PIXI.Assets.load(urls)
+      
+      this.altarAssets = {}
+      Object.entries(altarTypes).forEach(([key, config]) => {
+        if (config.image) {
+          this.altarAssets[key] = { texture: PIXI.Assets.get(config.image) }
+        }
+      })
+    }
   }
   
   async loadCardAssets() {
@@ -129,9 +158,8 @@ export class BaseScreen extends EventEmitter {
     this.castle.setY(this.app.screen.height * 0.76)
     this.container.addChild(this.castle)
 
-    // Порталы - статические позиции
-    const positions = this.getPortalPositions()
-    this.createPortals(positions)
+    // Порталы - загружаем из PortalManager
+    this.createPortals()
     
     // Информация об игроке (левый верхний угол)
     this.createPlayerInfo()
@@ -152,37 +180,93 @@ export class BaseScreen extends EventEmitter {
   // Учитываем что Portal имеет pivot по центру (160px / 2 = 80px смещение)
   getPortalPositions(){return[{id:"portal_1",x:.863,y:.511},{id:"portal_2",x:.25,y:.25},{id:"portal_3",x:.25,y:.8},{id:"portal_4",x:.906,y:.112},{id:"portal_5",x:.625,y:.833},{id:"portal_6",x:.594,y:.278}]}
 
-  createPortals(positions) {
-    const texture = this.assets.portal?.texture || null
+  createPortals() {
     this.portals = []
+    this.portalAltars = []
 
     log('[BaseScreen] createPortals() START')
-    log('[BaseScreen]   positions:', positions.map(p => p.id))
+    
+    const allPortals = portalManager.getAllPortals()
+    log('[BaseScreen]   total portals:', allPortals.length)
     log('[BaseScreen]   completedPortals:', this.completedPortals)
 
-    // Фильтруем пройденные порталы
-    const activePositions = positions.filter(pos => 
-      !this.completedPortals.includes(pos.id)
-    )
+    allPortals.forEach(portalData => {
+      // Пропускаем пройденные порталы
+      if (this.completedPortals.includes(portalData.id)) {
+        log('[BaseScreen]   skipping completed portal:', portalData.id)
+        return
+      }
 
-    log('[BaseScreen]   activePositions:', activePositions.map(p => p.id))
+      const position = portalManager.getPosition(portalData.id)
+      if (!position) {
+        log('[BaseScreen]   no position for portal:', portalData.id)
+        return
+      }
 
-    activePositions.forEach(pos => {
+      const x = this.app.screen.width * position.x
+      const y = this.app.screen.height * position.y
+
+      // Проверяем доступность портала
+      const status = portalManager.getPortalStatus(portalData.id)
+      const isAvailable = portalManager.isPortalAvailable(portalData.id)
+
+      // Создаём алтарь (если есть)
+      if (portalData.altarType && this.altarAssets) {
+        const altarConfig = portalManager.getAltarConfig(portalData.altarType)
+        const altarTexture = altarConfig ? this.altarAssets[portalData.altarType]?.texture : null
+        
+        if (altarTexture) {
+          const altar = new PortalAltar({
+            texture: altarTexture,
+            width: 200,
+            height: 200,
+            app: this.app,
+            portalType: portalData.type,
+            status: isAvailable ? 'active' : status
+          })
+          altar.setX(x)
+          altar.setY(y)
+          altar.portalId = portalData.id
+          this.container.addChild(altar)
+          this.portalAltars.push(altar)
+        }
+      }
+
+      // Получаем конфиг портала (картинка, цвет свечения)
+      const portalConfig = portalManager.getPortalConfig(portalData.id)
+      const glowColor = portalConfig?.glowColor || 0x00ff00
+      
+      // Загружаем текстуру портала по типу
+      let portalTexture = null
+      if (portalConfig?.image) {
+        portalTexture = PIXI.Assets.get(portalConfig.image)
+      }
+      if (!portalTexture) {
+        portalTexture = this.assets.portal?.texture || null
+      }
+
+      // Создаём портал
       const portal = new Portal({
-        texture: texture,
-        scale: 1,
+        texture: portalTexture,
         width: 160,
         height: 160,
         app: this.app,
+        portalType: portalData.type,
+        glowColor: glowColor,
+        status: isAvailable ? 'active' : status,
         onClick: () => {
-          this.emit('start_game', pos.id)
+          if (isAvailable) {
+            this.emit('start_game', portalData.id)
+          }
         }
       })
-      portal.setX(this.app.screen.width * pos.x)
-      portal.setY(this.app.screen.height * pos.y)
-      portal.portalId = pos.id
+      portal.setX(x)
+      portal.setY(y)
+      portal.portalId = portalData.id
       this.container.addChild(portal)
       this.portals.push(portal)
+
+      log('[BaseScreen]   created portal:', portalData.id, 'type:', portalData.type, 'status:', status)
     })
   }
 
@@ -269,8 +353,25 @@ export class BaseScreen extends EventEmitter {
     // Защита от вызова после hide()
     if (this._isHiding) return
     
+    // Обновляем статусы порталов (проверка времени роста)
     if (this.portals) {
-      this.portals.forEach(p => p.update())
+      this.portals.forEach(p => {
+        const newStatus = portalManager.getPortalStatus(p.portalId)
+        if (p.status !== newStatus) {
+          p.setStatus(newStatus)
+        }
+        p.update()
+      })
+    }
+    
+    // Обновляем алтари
+    if (this.portalAltars) {
+      this.portalAltars.forEach(a => {
+        const newStatus = portalManager.getPortalStatus(a.portalId)
+        if (a.status !== newStatus) {
+          a.setStatus(newStatus)
+        }
+      })
     }
     
     if (this.castle) {

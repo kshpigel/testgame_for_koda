@@ -10,6 +10,7 @@ import { collectionManager } from './data/collection_manager.js'
 import { deckManager } from './data/deck_manager.js'
 import { enemies as allEnemies, initEnemies } from './data/enemies/index.js'
 import { config, log } from './data/config.js'
+import { portalManager } from './data/portal_manager.js'
 import { Z } from './data/z_index.js'
 import { maps } from './data/maps.js'
 import { FONT } from './data/fonts.js'
@@ -307,6 +308,8 @@ export class Game {
           log('[Game] completedPortals BEFORE:', [...this.completedPortals])
           if (portalId && !this.completedPortals.includes(portalId)) {
             this.completedPortals.push(portalId)
+            // Отмечаем портал как пройденный в PortalManager
+            portalManager.markPortalCompleted(portalId)
           }
           log('[Game] completedPortals AFTER:', [...this.completedPortals])
           log('[Game] calling showBase()...')
