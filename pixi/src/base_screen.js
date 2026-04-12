@@ -207,6 +207,11 @@ export class BaseScreen extends EventEmitter {
     playerUI.update()
   }
 
+  // Показать информацию о колоде (вызывается при инициализации)
+  showDeckInfo() {
+    playerUI.update()
+  }
+
   // Позиции порталов на базе (статические позиции в долях экрана 1920×1080)
   // Учитываем что Portal имеет pivot по центру (160px / 2 = 80px смещение)
   getPortalPositions(){return[{id:"portal_1",x:.863,y:.511},{id:"portal_2",x:.25,y:.25},{id:"portal_3",x:.25,y:.8},{id:"portal_4",x:.906,y:.112},{id:"portal_5",x:.625,y:.833},{id:"portal_6",x:.594,y:.278}]}
