@@ -55,7 +55,10 @@ export class PortalRenderer {
       
       // Пропускаем скрытые и пройденные
       if (status === 'hidden' || completedPortals.includes(portalData.id)) return
-      if (!portalData.altarType || !this.altarAssets) return
+      if (!portalData.altarType || !this.altarAssets) {
+        log('[PortalRenderer]   skipping altar:', portalData.id, 'altarType:', portalData.altarType, 'altarAssets:', !!this.altarAssets)
+        return
+      }
 
       const position = portalManager.getPosition(portalData.id)
       if (!position) return
@@ -65,7 +68,12 @@ export class PortalRenderer {
 
       const altarConfig = portalManager.getAltarConfig(portalData.altarType)
       const altarTexture = altarConfig ? this.altarAssets[portalData.altarType]?.texture : null
-      if (!altarTexture) return
+      if (!altarTexture) {
+        log('[PortalRenderer]   no texture for altar:', portalData.id, 'altarType:', portalData.altarType)
+        return
+      }
+
+      log('[PortalRenderer]   creating altar:', portalData.id, 'texture:', !!altarTexture)
 
       const isAvailable = portalManager.isPortalAvailable(portalData.id)
       const altarStatus = isAvailable ? 'active' : status
