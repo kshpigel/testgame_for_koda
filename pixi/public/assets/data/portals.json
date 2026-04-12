@@ -12,8 +12,8 @@
       "id": "portal_1",
       "type": "random",
       "altarType": "altar_1",
-      "status": "active",
-      "growthTimeMinutes": 2,
+      "status": "locked",
+      "growthTimeMinutes": 1,
       "growthStartTime": null,
       "lastWinTime": null
     },

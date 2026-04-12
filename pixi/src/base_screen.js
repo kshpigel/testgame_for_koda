@@ -8,6 +8,7 @@ import { soundManager } from './audio/sound_manager.js'
 import { player } from './data/player.js'
 import { Portal } from './ui/portal.js'
 import { PortalAltar } from './ui/portal_altar.js'
+import { Modal } from './ui/modal.js'
 import { Castle } from './ui/castle.js'
 import { Birds } from './ui/birds.js'
 import { Clouds } from './ui/clouds.js'
@@ -232,6 +233,7 @@ export class BaseScreen extends EventEmitter {
         
         if (altarTexture) {
           const isAvailable = portalManager.isPortalAvailable(portalData.id)
+          const altarStatus = isAvailable ? 'active' : status
           
           const altar = new PortalAltar({
             texture: altarTexture,
@@ -239,12 +241,24 @@ export class BaseScreen extends EventEmitter {
             height: 75,
             app: this.app,
             portalType: portalData.type,
-            status: isAvailable ? 'active' : status
+            status: altarStatus
           })
           altar.setX(x)
           altar.setY(y + 60)
           altar.portalId = portalData.id
-          altar.zIndex = 20 // Алтари над птицами/облаками, но под порталами
+          altar.zIndex = 20
+          altar.eventMode = 'static'
+          altar.cursor = 'pointer'
+          
+          // Обработчик клика на алтарь
+          altar.on('pointerdown', () => {
+            if (status === 'locked' || status === 'growing') {
+              this.showPortalNotReadyModal(portalData.id, status)
+            } else if (portalData.type === 'premium') {
+              this.showPremiumPortalModal(portalData.id)
+            }
+          })
+          
           this.container.addChild(altar)
           this.portalAltars.push(altar)
         }
@@ -335,6 +349,61 @@ export class BaseScreen extends EventEmitter {
     // Сохраняем ссылку на функцию для корректного удаления
     this._tickerCallback = () => this.update()
     this.app.ticker.add(this._tickerCallback)
+  }
+
+  // Показать модалку "Портал не готов"
+  showPortalNotReadyModal(portalId, status) {
+    const timeLeft = portalManager.getTimeUntilAvailable(portalId)
+    const timeStr = portalManager.formatTime(timeLeft)
+    
+    const title = status === 'growing' ? 'Портал растёт...' : 'Портал закрыт'
+    const message = `Портал будет доступен через ${timeStr}`
+    
+    const modal = new Modal(this.app, {
+      title,
+      message,
+      buttons: [{ text: 'OK', action: () => modal.destroy() }]
+    })
+    
+    this.container.addChild(modal)
+  }
+
+  // Показать модалку премиум портала
+  showPremiumPortalModal(portalId) {
+    const cost = portalManager.getPremiumPortalCost(portalId)
+    const player = this.game?.player || { crystals: 0 }
+    
+    const title = 'Активировать портал'
+    const message = `Активировать премиум портал за ${cost} кристаллов?`
+    
+    const buttons = [
+      { 
+        text: 'Да', 
+        action: () => {
+          if (player.crystals >= cost) {
+            const result = portalManager.activatePremiumPortal(portalId, player.crystals)
+            if (result.success) {
+              // Списать кристаллы
+              player.crystals -= cost
+              player.save()
+              this.updateDeckInfo()
+              this.showPortalNotReadyModal(portalId, 'active')
+            }
+          } else {
+            const errModal = new Modal(this.app, {
+              title: 'Недостаточно кристаллов',
+              message: `У вас только ${player.crystals} кристаллов, нужно ${cost}`,
+              buttons: [{ text: 'OK', action: () => errModal.destroy() }]
+            })
+            this.container.addChild(errModal)
+          }
+        }
+      },
+      { text: 'Нет', action: () => {} }
+    ]
+    
+    const modal = new Modal(this.app, { title, message, buttons })
+    this.container.addChild(modal)
   }
 
   hide() {
