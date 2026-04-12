@@ -323,11 +323,19 @@ export class BaseScreen extends EventEmitter {
       portal.setX(x)
       portal.setY(y)
       portal.portalId = portalData.id
-      portal.zIndex = 30 // Порталы на переднем плане
+      portal.zIndex = 30
+      
+      // Скрываем locked порталы
+      if (status === 'locked') {
+        portal.alpha = 0
+        portal.eventMode = 'none'
+        portal.interactive = false
+      }
+      
       this.container.addChild(portal)
       this.portals.push(portal)
 
-      log('[BaseScreen]   created portal:', portalData.id, 'type:', portalData.type, 'status:', status)
+      log('[BaseScreen]   created portal:', portalData.id, 'type:', portalData.type, 'status:', status, 'alpha:', portal.alpha)
     })
   }
 
@@ -368,7 +376,7 @@ export class BaseScreen extends EventEmitter {
   // Показать модалку премиум портала
   showPremiumPortalModal(portalId) {
     const cost = portalManager.getPremiumPortalCost(portalId)
-    const player = this.game?.player || player
+    const crystals = player.crystals || 0
     
     const title = 'Активировать портал'
     const message = `Активировать премиум портал за ${cost} кристаллов?`
@@ -377,8 +385,8 @@ export class BaseScreen extends EventEmitter {
       { 
         text: 'Да', 
         action: () => {
-          if (player.crystals >= cost) {
-            const result = portalManager.activatePremiumPortal(portalId, player.crystals)
+          if (crystals >= cost) {
+            const result = portalManager.activatePremiumPortal(portalId, crystals)
             if (result.success) {
               // Списать кристаллы
               player.crystals -= cost
@@ -388,11 +396,10 @@ export class BaseScreen extends EventEmitter {
           } else {
             const errModal = new Modal(this.app, {
               title: 'Недостаточно кристаллов',
-              message: `У вас только ${player.crystals} кристаллов, нужно ${cost}`,
+              message: `У вас только ${crystals} кристаллов, нужно ${cost}`,
               buttons: [{ text: 'OK', action: () => errModal.destroy() }]
             })
             this.container.addChild(errModal.container)
-            return
           }
         }
       },
