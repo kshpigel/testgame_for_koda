@@ -140,14 +140,14 @@ export class BaseScreen extends EventEmitter {
   render() {
     log('[BaseScreen] render() START')
     
-    // Фон и база
-    const bg = new PIXI.Sprite.from(ASSETS.bg)
+    // Фон и база (из уже загруженных ассетов)
+    const bg = new PIXI.Sprite(this.assets.bg.texture)
     bg.width = this.app.screen.width
     bg.height = this.app.screen.height
     bg.zIndex = 0
     this.container.addChild(bg)
 
-    const base = new PIXI.Sprite.from(ASSETS.base)
+    const base = new PIXI.Sprite(this.assets.base.texture)
     base.width = this.app.screen.width * 0.6
     base.height = this.app.screen.height * 0.4
     base.x = (this.app.screen.width - base.width) / 2
