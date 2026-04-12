@@ -4,13 +4,13 @@ import * as PIXI from 'pixi.js'
  * Анимация птиц на фоне (галочка, 5-7px, по диагонали)
  * Без спрайтов - рисуем через Graphics
  */
-export class Birds {
+export class Birds extends PIXI.Container {
   constructor(app, options = {}) {
+    super()
     this.app = app
     this.count = options.count || 4
     this.speed = options.speed || 0.8
     this.birds = []
-    this.container = new PIXI.Container()
     
     this.init()
   }
@@ -21,7 +21,7 @@ export class Birds {
       
       // Начальная позиция - случайно по экрану
       bird.x = Math.random() * this.app.screen.width
-      bird.y = Math.random() * (this.app.screen.height * 0.4) // В верхней части
+      bird.y = Math.random() * (this.app.screen.height * 0.4)
       
       // Скорость с небольшим разбросом
       bird.vx = -(this.speed + Math.random() * 0.4)
@@ -36,11 +36,11 @@ export class Birds {
       bird.wingSpeed = 0.15 + Math.random() * 0.1
       
       this.birds.push(bird)
-      this.container.addChild(bird)
+      this.addChild(bird)
     }
     
     // Подписка на ticker
-    this.app.ticker.add(this.update)
+    this.app.ticker.add(this.update, this)
   }
 
   createBird() {

@@ -5,17 +5,17 @@ import { BlurFilter } from 'pixi.js'
  * Анимация облаков на фоне (полупрозрачные, плывут по диагонали)
  * Генерируем текстуры с blur один раз при инициализации
  */
-export class Clouds {
+export class Clouds extends PIXI.Container {
   constructor(app, options = {}) {
+    super()
     this.app = app
-    this.count = options.count || 12 // Увеличено с 6 до 12
+    this.count = options.count || 12
     this.speed = options.speed || 0.15
     this.clouds = []
-    this.container = new PIXI.Container()
-    this.container.zIndex = 10
+    this.zIndex = 10
     
     this.cloudTextures = []
-    this.generateCloudTextures(15) // Увеличено с 10 до 15 для разнообразия
+    this.generateCloudTextures(15)
     this.init()
   }
 
@@ -84,10 +84,10 @@ export class Clouds {
       cloud.scale.set(1.5 + Math.random() * 1.0) // 1.5-2.5 вместо 1.0-1.5
       
       this.clouds.push(cloud)
-      this.container.addChild(cloud)
+      this.addChild(cloud)
     }
     
-    this.app.ticker.add(this.update)
+    this.app.ticker.add(this.update, this)
   }
 
   update = (delta) => {
