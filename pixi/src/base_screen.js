@@ -69,8 +69,12 @@ export class BaseScreen extends EventEmitter {
       this.assets[key] = { texture: PIXI.Assets.get(url) }
     }
     
+    log('[BaseScreen] loaded main assets:', Object.keys(this.assets))
+    
     // Загружаем ассеты алтарей
     await this.loadAltarAssets()
+    
+    log('[BaseScreen] altarAssets:', this.altarAssets ? Object.keys(this.altarAssets) : 'null')
     
     // Загружаем ассеты карт (для хранилища и колоды)
     await this.loadCardAssets()
@@ -79,6 +83,9 @@ export class BaseScreen extends EventEmitter {
   async loadAltarAssets() {
     const altarTypes = portalManager.altarTypes || {}
     const portalTypes = portalManager.portalTypes || {}
+    
+    log('[BaseScreen] loadAltarAssets - altarTypes:', Object.keys(altarTypes), 'portalTypes:', Object.keys(portalTypes))
+    
     const urls = []
     
     Object.values(altarTypes).forEach(config => {
@@ -90,13 +97,17 @@ export class BaseScreen extends EventEmitter {
       if (config.image) urls.push(config.image)
     })
     
+    log('[BaseScreen] loading URLs:', urls)
+    
     if (urls.length > 0) {
       await PIXI.Assets.load(urls)
       
       this.altarAssets = {}
       Object.entries(altarTypes).forEach(([key, config]) => {
         if (config.image) {
-          this.altarAssets[key] = { texture: PIXI.Assets.get(config.image) }
+          const tex = PIXI.Assets.get(config.image)
+          log('[BaseScreen] altarAssets[' + key + ']:', !!tex, config.image)
+          this.altarAssets[key] = { texture: tex }
         }
       })
       
