@@ -8,8 +8,8 @@ export class PortalManager {
     this.altarTypes = null
     this.positions = null
     this.growthConfig = {
-      testMode: true, // Включаем тестовый режим (1 мин)
-      growthTimeMinutes: 1 // Время роста портала в тестовом режиме
+      testMode: true, // Включаем тестовый режим (10 сек)
+      growthTimeMinutes: 10 / 60 // 10 секунд в минутах (10/60 = 0.167)
     }
   }
 
