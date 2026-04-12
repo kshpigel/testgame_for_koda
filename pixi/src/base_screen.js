@@ -497,6 +497,12 @@ export class BaseScreen extends EventEmitter {
         const newStatus = portalManager.getPortalStatus(p.portalId)
         if (p.status !== newStatus) {
           p.setStatus(newStatus)
+          // Обновляем alpha при смене статуса
+          if (newStatus === 'locked') {
+            p.alpha = 0
+          } else {
+            p.alpha = 1
+          }
         }
         p.update()
       })
