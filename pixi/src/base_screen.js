@@ -238,19 +238,23 @@ export class BaseScreen extends EventEmitter {
 
   // Показать модалку "Портал не готов"
   showPortalNotReadyModal(portalId, status) {
+    log('[BaseScreen] showPortalNotReadyModal called:', portalId, status)
     const timeLeft = portalManager.getTimeUntilAvailable(portalId)
     const timeStr = portalManager.formatTime(timeLeft)
     
     const title = status === 'growing' ? 'Портал растёт...' : 'Портал закрыт'
     const message = `Портал будет доступен через ${timeStr}`
     
+    log('[BaseScreen] creating modal:', title, message)
     const modal = new Modal(this.app, {
       title,
       message,
       buttons: [{ text: 'OK', action: () => modal.destroy() }]
     })
-    modal.container.zIndex = 100
+    modal.container.zIndex = 200
     this.container.addChild(modal.container)
+    modal.show() // Показываем модалку
+    log('[BaseScreen] modal added and shown, container children:', this.container.children.length)
   }
 
   // Показать модалку премиум портала
@@ -279,8 +283,9 @@ export class BaseScreen extends EventEmitter {
               message: `У вас только ${crystals} кристаллов, нужно ${cost}`,
               buttons: [{ text: 'OK', action: () => errModal.destroy() }]
             })
-            errModal.container.zIndex = 100
+            errModal.container.zIndex = 200
             this.container.addChild(errModal.container)
+            errModal.show()
           }
         }
       },
@@ -288,8 +293,9 @@ export class BaseScreen extends EventEmitter {
     ]
     
     const modal = new Modal(this.app, { title, message, buttons })
-    modal.container.zIndex = 100
+    modal.container.zIndex = 200
     this.container.addChild(modal.container)
+    modal.show()
   }
 
   hide() {

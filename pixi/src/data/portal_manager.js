@@ -267,9 +267,6 @@ export class PortalManager {
     // Активные порталы доступны
     if (portal.status === 'active') return true
     
-    // Премиум порталы доступны за оплату
-    if (portal.type === 'premium') return true
-    
     // Скрытые порталы недоступны
     if (portal.status === 'hidden') return false
     

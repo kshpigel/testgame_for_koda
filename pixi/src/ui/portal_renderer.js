@@ -167,7 +167,12 @@ export class PortalRenderer {
    */
   _onAltarClick(portalData) {
     const status = portalManager.getPortalStatus(portalData.id)
-    log('[PortalRenderer] clicked altar:', portalData.id, 'status:', status, 'type:', portalData.type)
+    log('[PortalRenderer] clicked altar:', portalData.id, 'status:', status, 'type:', portalData.type, 'baseScreen:', !!this.baseScreen)
+
+    if (!this.baseScreen) {
+      log('[PortalRenderer] ERROR: baseScreen is null!')
+      return
+    }
 
     if (status === 'locked') {
       this.baseScreen.showPortalNotReadyModal(portalData.id, 'locked')
@@ -182,12 +187,21 @@ export class PortalRenderer {
    * Обработчик клика на портал
    */
   _onPortalClick(portalData, portalStatus) {
-    log('[PortalRenderer] portal clicked:', portalData.id, 'status:', portalStatus)
+    log('[PortalRenderer] portal clicked:', portalData.id, 'status:', portalStatus, 'type:', portalData.type, 'baseScreen:', !!this.baseScreen)
+
+    if (!this.baseScreen) {
+      log('[PortalRenderer] ERROR: baseScreen is null!')
+      return
+    }
 
     if (portalStatus === 'active') {
+      // Активный портал - старт игры (как было раньше)
       this.container.emit('start_game', portalData.id)
     } else if (portalStatus === 'growing') {
       this.baseScreen.showPortalNotReadyModal(portalData.id, 'growing')
+    } else if (portalData.type === 'premium') {
+      // Премиум портал не активен - показываем модалку активации
+      this.baseScreen.showPremiumPortalModal(portalData.id)
     }
   }
 

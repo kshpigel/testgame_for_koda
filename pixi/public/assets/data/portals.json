@@ -55,7 +55,7 @@
       "id": "portal_6",
       "type": "premium",
       "altarType": "altar_2",
-      "status": "active",
+      "status": "locked",
       "cost": { "crystals": 100 },
       "lastWinTime": null
     }
