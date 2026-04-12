@@ -37,18 +37,18 @@
     },
     {
       "id": "portal_4",
+      "type": "pvp",
+      "altarType": null,
+      "status": "hidden",
+      "lastWinTime": null
+    },
+    {
+      "id": "portal_5",
       "type": "random",
       "altarType": "altar_1",
       "status": "locked",
       "growthTimeMinutes": 2,
       "growthStartTime": null,
-      "lastWinTime": null
-    },
-    {
-      "id": "portal_5",
-      "type": "pvp",
-      "altarType": null,
-      "status": "hidden",
       "lastWinTime": null
     },
     {
