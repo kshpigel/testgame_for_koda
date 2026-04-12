@@ -203,32 +203,23 @@ export class BaseScreen extends EventEmitter {
     log('[BaseScreen]   total portals:', allPortals.length)
     log('[BaseScreen]   completedPortals:', this.completedPortals)
 
+    // Сначала создаём ВСЕ алтари (включая закрытые порталы)
     allPortals.forEach(portalData => {
-      // Пропускаем пройденные порталы
-      if (this.completedPortals.includes(portalData.id)) {
-        log('[BaseScreen]   skipping completed portal:', portalData.id)
-        return
-      }
-
       const position = portalManager.getPosition(portalData.id)
-      if (!position) {
-        log('[BaseScreen]   no position for portal:', portalData.id)
-        return
-      }
+      if (!position) return
 
       const x = this.app.screen.width * position.x
       const y = this.app.screen.height * position.y
 
-      // Проверяем доступность портала
-      const status = portalManager.getPortalStatus(portalData.id)
-      const isAvailable = portalManager.isPortalAvailable(portalData.id)
-
-      // Создаём алтарь (если есть)
+      // Создаём алтарь для всех порталов с altarType
       if (portalData.altarType && this.altarAssets) {
         const altarConfig = portalManager.getAltarConfig(portalData.altarType)
         const altarTexture = altarConfig ? this.altarAssets[portalData.altarType]?.texture : null
         
         if (altarTexture) {
+          const status = portalManager.getPortalStatus(portalData.id)
+          const isAvailable = portalManager.isPortalAvailable(portalData.id)
+          
           const altar = new PortalAltar({
             texture: altarTexture,
             width: 75,
@@ -238,12 +229,31 @@ export class BaseScreen extends EventEmitter {
             status: isAvailable ? 'active' : status
           })
           altar.setX(x)
-          altar.setY(y + 60) // Опускаем на 60px вниз
+          altar.setY(y + 60)
           altar.portalId = portalData.id
           this.container.addChild(altar)
           this.portalAltars.push(altar)
         }
       }
+    })
+
+    // Затем создаём только активные порталы (над алтарями)
+    allPortals.forEach(portalData => {
+      // Пропускаем пройденные порталы
+      if (this.completedPortals.includes(portalData.id)) {
+        log('[BaseScreen]   skipping completed portal:', portalData.id)
+        return
+      }
+
+      const position = portalManager.getPosition(portalData.id)
+      if (!position) return
+
+      const x = this.app.screen.width * position.x
+      const y = this.app.screen.height * position.y
+
+      // Проверяем доступность портала
+      const status = portalManager.getPortalStatus(portalData.id)
+      const isAvailable = portalManager.isPortalAvailable(portalData.id)
 
       // Получаем конфиг портала (картинка, цвет свечения)
       const portalConfig = portalManager.getPortalConfig(portalData.id)
