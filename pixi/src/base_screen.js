@@ -218,14 +218,14 @@ export class BaseScreen extends EventEmitter {
         if (altarTexture) {
           const altar = new PortalAltar({
             texture: altarTexture,
-            width: 200,
-            height: 200,
+            width: 75,
+            height: 75,
             app: this.app,
             portalType: portalData.type,
             status: isAvailable ? 'active' : status
           })
           altar.setX(x)
-          altar.setY(y)
+          altar.setY(y + 100) // Опускаем на 100px вниз
           altar.portalId = portalData.id
           this.container.addChild(altar)
           this.portalAltars.push(altar)

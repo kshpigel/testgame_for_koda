@@ -4,8 +4,8 @@ import { UINode } from './ui_node.js'
 export class PortalAltar extends UINode {
   constructor(options = {}) {
     super({
-      width: options.width || 200,
-      height: options.height || 200,
+      width: options.width || 75,
+      height: options.height || 75,
       app: options.app || null,
       scaleSpeed: 0.15
     })
