@@ -12,9 +12,12 @@ export class Clouds extends PIXI.Container {
     this.count = options.count || 12
     this.speed = options.speed || 0.15
     this.clouds = []
+    this.cloudTextures = []
     this.zIndex = 10
     
-    this.cloudTextures = []
+    // Включаем сортировку детей по zIndex
+    this.sortableChildren = true
+    
     this.generateCloudTextures(15)
     this.init()
   }
@@ -22,8 +25,8 @@ export class Clouds extends PIXI.Container {
   // Генерируем текстуры облаков с blur один раз
   generateCloudTextures(count) {
     const renderTexture = PIXI.RenderTexture.create({ 
-      width: 300, // Увеличено с 200 до 300
-      height: 150 // Увеличено с 100 до 150
+      width: 300,
+      height: 150
     })
     
     for (let i = 0; i < count; i++) {
@@ -46,12 +49,12 @@ export class Clouds extends PIXI.Container {
       cloud.drawEllipse(20, -12, 28, 16)
       cloud.endFill()
       
-      // Применяем blur (уменьшено с 25 до 12)
+      // Применяем blur
       const blurFilter = new BlurFilter(12)
       cloud.filters = [blurFilter]
       
       // Рендерим в текстуру
-      cloud.position.set(150, 75) // Центр нового размера
+      cloud.position.set(150, 75)
       this.app.renderer.render(cloud, { renderTexture })
       
       // Создаём текстуру из renderTexture
@@ -67,21 +70,23 @@ export class Clouds extends PIXI.Container {
   }
 
   init() {
+    const screenW = this.app.screen.width || 1920
+    const screenH = this.app.screen.height || 1080
     for (let i = 0; i < this.count; i++) {
       const texture = this.cloudTextures[i % this.cloudTextures.length]
       const cloud = new PIXI.Sprite(texture)
       cloud.anchor.set(0.5)
       
       // Начальная позиция
-      cloud.x = Math.random() * this.app.screen.width * 1.2
-      cloud.y = Math.random() * this.app.screen.height * 0.6
+      cloud.x = Math.random() * screenW * 1.2
+      cloud.y = Math.random() * screenH * 0.6
       
       // Движение по диагонали
       cloud.vx = -(this.speed + Math.random() * 0.1)
       cloud.vy = this.speed * 0.4 + Math.random() * 0.15
       
-      // Размер (увеличено x2.5)
-      cloud.scale.set(1.5 + Math.random() * 1.0) // 1.5-2.5 вместо 1.0-1.5
+      // Размер
+      cloud.scale.set(1.5 + Math.random() * 1.0)
       
       this.clouds.push(cloud)
       this.addChild(cloud)
@@ -91,16 +96,35 @@ export class Clouds extends PIXI.Container {
   }
 
   update = (delta) => {
-    const screenW = this.app.screen.width
-    const screenH = this.app.screen.height
+    const screenW = this.app.screen.width || 1920
+    const screenH = this.app.screen.height || 1080
+    
+    // Защита от NaN
+    if (isNaN(screenW) || isNaN(screenH) || screenW <= 0 || screenH <= 0) {
+      return
+    }
+    
+    // Ограничиваем delta чтобы избежать бешеной скорости при лагах
+    delta = Math.min(delta, 2)
+    
+    if (this.clouds.length === 0) {
+      return
+    }
     
     this.clouds.forEach(cloud => {
       cloud.x += cloud.vx * delta
       cloud.y += cloud.vy * delta
       
+      // Проверка на NaN
+      if (isNaN(cloud.x) || isNaN(cloud.y)) {
+        cloud.x = Math.random() * screenW
+        cloud.y = Math.random() * screenH
+        return
+      }
+      
       // Увеличенные границы для больших облаков
       if (cloud.x < -300 || cloud.y > screenH + 150) {
-        cloud.x = screenW + 50 + Math.random() * 200 // Больше случайности по X
+        cloud.x = screenW + 50 + Math.random() * 200
         cloud.y = -150 - Math.random() * 80
         cloud.vx = -(this.speed + Math.random() * 0.1)
         cloud.vy = this.speed * 0.4 + Math.random() * 0.15
@@ -108,7 +132,7 @@ export class Clouds extends PIXI.Container {
     })
   }
 
-  destroy() {
+  destroy(options) {
     // Защита от повторного destroy
     if (this._destroyed) return
     this._destroyed = true
@@ -117,34 +141,11 @@ export class Clouds extends PIXI.Container {
       this.app.ticker.remove(this.update)
     } catch (e) {}
     
-    // Сначала очищаем clouds массив (спрайты)
-    if (this.clouds) {
-      this.clouds = []
-    }
-    
-    // Удаляем children из container вручную
-    if (this.container && this.container.children) {
-      const children = this.container.children.slice()
-      children.forEach(child => {
-        try {
-          this.container.removeChild(child)
-        } catch (e) {}
-      })
-    }
-    
-    // Уничтожаем container
-    try {
-      if (this.container) {
-        this.container.destroy({ children: true })
-        this.container = null
-      }
-    } catch (e) {
-      console.warn('[Clouds] container.destroy error:', e)
-    }
-    
-    // Текстуры НЕ уничтожаем здесь - они создаются из renderTexture один раз
-    // и могут использоваться в других местах (хотя в данном случае нет)
+    this.clouds = []
     this.cloudTextures = []
     this._renderTexture = null
+    
+    // Уничтожаем сам контейнер
+    super.destroy(options || { children: true })
   }
 }

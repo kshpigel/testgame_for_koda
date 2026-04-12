@@ -12,16 +12,21 @@ export class Birds extends PIXI.Container {
     this.speed = options.speed || 0.8
     this.birds = []
     
+    // Включаем сортировку детей по zIndex
+    this.sortableChildren = true
+    
     this.init()
   }
 
   init() {
+    const screenW = this.app.screen.width || 1920
+    const screenH = this.app.screen.height || 1080
     for (let i = 0; i < this.count; i++) {
       const bird = this.createBird()
       
       // Начальная позиция - случайно по экрану
-      bird.x = Math.random() * this.app.screen.width
-      bird.y = Math.random() * (this.app.screen.height * 0.4)
+      bird.x = Math.random() * screenW
+      bird.y = Math.random() * (screenH * 0.4)
       
       // Скорость с небольшим разбросом
       bird.vx = -(this.speed + Math.random() * 0.4)
@@ -45,7 +50,7 @@ export class Birds extends PIXI.Container {
 
   createBird() {
     const bird = new PIXI.Graphics()
-    const size = 5 + Math.random() * 2 // 5-7px от центра до конца крыла
+    const size = 5 + Math.random() * 2
     
     // Рисуем птицу "галочкой" с анимацией махания
     const draw = (wingOffset) => {
@@ -70,17 +75,36 @@ export class Birds extends PIXI.Container {
   }
 
   update = (delta) => {
-    const screenW = this.app.screen.width
-    const screenH = this.app.screen.height
+    const screenW = this.app.screen.width || 1920
+    const screenH = this.app.screen.height || 1080
     
-    this.birds.forEach(bird => {
+    // Защита от NaN
+    if (isNaN(screenW) || isNaN(screenH) || screenW <= 0 || screenH <= 0) {
+      return
+    }
+    
+    // Ограничиваем delta чтобы избежать бешеной скорости при лагах
+    delta = Math.min(delta, 2)
+    
+    if (this.birds.length === 0) {
+      return
+    }
+    
+    this.birds.forEach((bird, idx) => {
       // Движение по диагонали
       bird.x += bird.vx * delta
       bird.y += bird.vy * delta
       
+      // Проверка на NaN
+      if (isNaN(bird.x) || isNaN(bird.y)) {
+        bird.x = Math.random() * screenW
+        bird.y = Math.random() * (screenH * 0.4)
+        return
+      }
+      
       // Анимация крыльев (взмах вверх-вниз)
       bird.wingPhase += bird.wingSpeed * delta
-      const wingOffset = Math.sin(bird.wingPhase) // от -1 до 1
+      const wingOffset = Math.sin(bird.wingPhase)
       bird.draw(wingOffset)
       
       // Если птица улетела за левый или нижний край - перемещаем наверх-вправо
@@ -91,24 +115,18 @@ export class Birds extends PIXI.Container {
     })
   }
 
-  destroy() {
+  destroy(options) {
     // Защита от повторного destroy
     if (this._destroyed) return
     this._destroyed = true
     
-    this.app.ticker.remove(this.update)
+    try {
+      this.app.ticker.remove(this.update)
+    } catch (e) {}
     
-    // Удаляем все bird Graphics из контейнера вручную
-    this.birds.forEach(bird => {
-      if (bird && this.container.children.includes(bird)) {
-        this.container.removeChild(bird)
-      }
-    })
     this.birds = []
     
-    // Теперь уничтожаем container
-    if (this.container) {
-      this.container.destroy({ children: true })
-    }
+    // Уничтожаем сам контейнер
+    super.destroy(options || { children: true })
   }
 }

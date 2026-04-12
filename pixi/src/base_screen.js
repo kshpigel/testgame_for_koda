@@ -181,11 +181,13 @@ export class BaseScreen extends EventEmitter {
     this.birds = new Birds(this.app)
     this.birds.y = 50
     this.birds.zIndex = 100
+    this.birds.alpha = 1
     this.container.addChild(this.birds)
 
     // Облака
     this.clouds = new Clouds(this.app)
     this.clouds.zIndex = 101
+    this.clouds.alpha = 1
     this.container.addChild(this.clouds)
 
     // UI
@@ -353,9 +355,7 @@ export class BaseScreen extends EventEmitter {
       this.portalRenderer.update()
     }
     
-    // Обновляем птиц и облака
-    if (this.birds) this.birds.update()
-    if (this.clouds) this.clouds.update()
+    // Birds и Clouds сами обновляются через свой ticker, здесь ничего не делаем
   }
 
   scaleToCover(sprite, targetWidth, targetHeight) {
