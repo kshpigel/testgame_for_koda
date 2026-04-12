@@ -364,14 +364,13 @@ export class BaseScreen extends EventEmitter {
       message,
       buttons: [{ text: 'OK', action: () => modal.destroy() }]
     })
-    
-    this.container.addChild(modal)
+    this.container.addChild(modal.container)
   }
 
   // Показать модалку премиум портала
   showPremiumPortalModal(portalId) {
     const cost = portalManager.getPremiumPortalCost(portalId)
-    const player = this.game?.player || { crystals: 0 }
+    const player = this.game?.player || player
     
     const title = 'Активировать портал'
     const message = `Активировать премиум портал за ${cost} кристаллов?`
@@ -387,7 +386,6 @@ export class BaseScreen extends EventEmitter {
               player.crystals -= cost
               player.save()
               this.updateDeckInfo()
-              this.showPortalNotReadyModal(portalId, 'active')
             }
           } else {
             const errModal = new Modal(this.app, {
@@ -395,7 +393,8 @@ export class BaseScreen extends EventEmitter {
               message: `У вас только ${player.crystals} кристаллов, нужно ${cost}`,
               buttons: [{ text: 'OK', action: () => errModal.destroy() }]
             })
-            this.container.addChild(errModal)
+            this.container.addChild(errModal.container)
+            return
           }
         }
       },
@@ -403,7 +402,7 @@ export class BaseScreen extends EventEmitter {
     ]
     
     const modal = new Modal(this.app, { title, message, buttons })
-    this.container.addChild(modal)
+    this.container.addChild(modal.container)
   }
 
   hide() {
