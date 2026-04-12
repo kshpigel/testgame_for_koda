@@ -225,7 +225,7 @@ export class BaseScreen extends EventEmitter {
             status: isAvailable ? 'active' : status
           })
           altar.setX(x)
-          altar.setY(y + 100) // Опускаем на 100px вниз
+          altar.setY(y + 25) // Опускаем на 25px вниз
           altar.portalId = portalData.id
           this.container.addChild(altar)
           this.portalAltars.push(altar)
