@@ -402,6 +402,12 @@ export class BaseScreen extends EventEmitter {
     // Защита от вызова после hide()
     if (this._isHiding) return
     
+    // Проверяем завершение роста всех порталов
+    const randomPortals = portalManager.getRandomPortals()
+    randomPortals.forEach(portal => {
+      portalManager.checkPortalGrowthComplete(portal.id)
+    })
+    
     // Обновляем статусы порталов (проверка времени роста)
     if (this.portals) {
       this.portals.forEach(p => {

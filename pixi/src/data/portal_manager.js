@@ -8,8 +8,8 @@ export class PortalManager {
     this.altarTypes = null
     this.positions = null
     this.growthConfig = {
-      testMode: true, // Включаем тестовый режим (2 мин)
-      growthTimeMinutes: 2 // Время роста портала в тестовом режиме
+      testMode: true, // Включаем тестовый режим (1 мин)
+      growthTimeMinutes: 1 // Время роста портала в тестовом режиме
     }
   }
 
@@ -138,7 +138,7 @@ export class PortalManager {
       portal.growthStartTime = null
       log('[PortalManager] portal', id, 'is now active')
       
-      // Запускаем рост следующего портала
+      // Сразу запускаем рост следующего портала
       this.startNextPortalGrowth()
       
       return true
@@ -149,9 +149,14 @@ export class PortalManager {
 
   // Запустить рост следующего портала в очереди
   startNextPortalGrowth() {
-    const nextPortal = this.getNextPortalInQueue()
-    if (nextPortal) {
-      this.startPortalGrowth(nextPortal.id)
+    // Ищем любой locked портал
+    const randomPortals = this.getRandomPortals()
+    const nextLocked = randomPortals.find(p => p.status === 'locked')
+    if (nextLocked) {
+      log('[PortalManager] starting growth for next portal:', nextLocked.id)
+      this.startPortalGrowth(nextLocked.id)
+    } else {
+      log('[PortalManager] no locked portals, all active or growing')
     }
   }
 
@@ -167,7 +172,10 @@ export class PortalManager {
       return false
     }
     
-    // Находим последний пройденный портал (active + lastWinTime !== null)
+    const maxGrowthTime = this.growthConfig.growthTimeMinutes * 4 * 60 * 1000 // N * 4
+    const now = Date.now()
+    
+    // Проверяем последний пройденный портал
     let lastCompletedPortal = null
     for (const portal of randomPortals) {
       if (portal.status === 'active' && portal.lastWinTime !== null) {
@@ -176,9 +184,6 @@ export class PortalManager {
         }
       }
     }
-    
-    const maxGrowthTime = this.growthConfig.growthTimeMinutes * 4 * 60 * 1000 // N * 4
-    const now = Date.now()
     
     // Если есть пройденный портал и прошло N*4 минут - все активны
     if (lastCompletedPortal && now - lastCompletedPortal.lastWinTime >= maxGrowthTime) {
@@ -190,15 +195,13 @@ export class PortalManager {
       return true
     }
     
-    // Если есть active портал без lastWinTime - он ещё не пройден, ждём
-    const activeWithoutWin = randomPortals.find(p => p.status === 'active' && p.lastWinTime === null)
-    if (activeWithoutWin) {
-      log('[PortalManager] portal', activeWithoutWin.id, 'is active but not completed, waiting')
-      return false
+    // Нет растущего - запускаем следующий locked портал в очереди
+    const nextLocked = randomPortals.find(p => p.status === 'locked')
+    if (nextLocked) {
+      log('[PortalManager] starting growth for', nextLocked.id)
+      this.startPortalGrowth(nextLocked.id)
     }
     
-    // Нет растущего, нет active без lastWinTime - запускаем следующий в очереди
-    this.startNextPortalGrowth()
     return false
   }
 
@@ -249,8 +252,11 @@ export class PortalManager {
     portal.status = 'locked'
     log('[PortalManager] marked', id, 'as completed, lastWinTime:', portal.lastWinTime)
     
-    // Запускаем рост следующего портала
-    this.startNextPortalGrowth()
+    // Портал встал в очередь - запустим следующий, если никто не растёт
+    const growingPortal = this.getRandomPortals().find(p => p.status === 'growing')
+    if (!growingPortal) {
+      this.startNextPortalGrowth()
+    }
   }
 
   // Проверить доступность портала
