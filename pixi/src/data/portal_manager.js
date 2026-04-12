@@ -1,3 +1,4 @@
+import * as PIXI from 'pixi.js'
 import { log } from '../data/config.js'
 
 export class PortalManager {
