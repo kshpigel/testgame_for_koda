@@ -252,6 +252,7 @@ export class BaseScreen extends EventEmitter {
           
           // Обработчик клика на алтарь
           altar.on('pointerdown', () => {
+            log('[BaseScreen] clicked altar:', portalData.id, 'status:', status, 'type:', portalData.type)
             if (status === 'locked' || status === 'growing') {
               this.showPortalNotReadyModal(portalData.id, status)
             } else if (portalData.type === 'premium') {

@@ -22,7 +22,7 @@
       "type": "random",
       "altarType": "altar_1",
       "status": "locked",
-      "growthTimeMinutes": 2,
+      "growthTimeMinutes": 1,
       "growthStartTime": null,
       "lastWinTime": null
     },
@@ -31,7 +31,7 @@
       "type": "random",
       "altarType": "altar_1",
       "status": "locked",
-      "growthTimeMinutes": 2,
+      "growthTimeMinutes": 1,
       "growthStartTime": null,
       "lastWinTime": null
     },
@@ -47,7 +47,7 @@
       "type": "random",
       "altarType": "altar_1",
       "status": "locked",
-      "growthTimeMinutes": 2,
+      "growthTimeMinutes": 1,
       "growthStartTime": null,
       "lastWinTime": null
     },
