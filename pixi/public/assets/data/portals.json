@@ -60,7 +60,7 @@
   ],
   "altarTypes": {
     "altar_1": { "image": "/assets/img/altar_random.png" },
-    "altar_2": { "image": "/assets/img/altar_premium.png" }
+    "altar_2": { "image": "/assets/img/altar_premium.png?v=2" }
   },
   "portalTypes": {
     "random": {
@@ -68,7 +68,7 @@
       "glowColor": 4384768
     },
     "premium": {
-      "image": "/assets/img/portal_premium.png?v=2",
+      "image": "/assets/img/portal_premium.png?v=3",
       "glowColor": 16766416
     },
     "pvp": {
