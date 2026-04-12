@@ -47,22 +47,9 @@ export class PortalAltar extends UINode {
     const sprite = this.getChildByName('altarSprite')
     if (!sprite) return
 
-    // Алтари всегда полностью видны (статичные)
+    // Алтари всегда одинаковые (статичные, без разницы по статусу)
     sprite.alpha = 1
-    
-    switch (this.status) {
-      case 'active':
-        sprite.tint = 0xFFFFFF
-        break
-      case 'locked':
-        sprite.tint = 0x888888 // Серый, но полностью виден
-        break
-      case 'growing':
-        sprite.tint = 0xAAAAAA // Светло-серый, но полностью виден
-        break
-      default:
-        sprite.tint = 0xFFFFFF
-    }
+    sprite.tint = 0xFFFFFF
   }
 
   setStatus(status) {

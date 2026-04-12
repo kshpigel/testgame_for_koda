@@ -160,7 +160,14 @@ export class PortalManager {
     const randomPortals = this.getRandomPortals()
     if (randomPortals.length === 0) return false
     
-    // Находим последний активный портал (или тот, который был пройден последним)
+    // Если есть растущий портал - ничего не делаем
+    const growingPortal = randomPortals.find(p => p.status === 'growing')
+    if (growingPortal) {
+      log('[PortalManager] portal', growingPortal.id, 'is growing, waiting')
+      return false
+    }
+    
+    // Находим последний пройденный портал (active + lastWinTime !== null)
     let lastCompletedPortal = null
     for (const portal of randomPortals) {
       if (portal.status === 'active' && portal.lastWinTime !== null) {
@@ -170,21 +177,11 @@ export class PortalManager {
       }
     }
     
-    // Если нет пройденных порталов, запускаем первый
-    if (!lastCompletedPortal) {
-      log('[PortalManager] no completed portals, starting growth for first portal')
-      const firstLocked = randomPortals.find(p => p.status === 'locked')
-      if (firstLocked) {
-        this.startPortalGrowth(firstLocked.id)
-      }
-      return false
-    }
-    
     const maxGrowthTime = this.growthConfig.growthTimeMinutes * 4 * 60 * 1000 // N * 4
     const now = Date.now()
     
-    // Если прошло N*4 минут с последнего прохождения, все порталы активны
-    if (now - lastCompletedPortal.lastWinTime >= maxGrowthTime) {
+    // Если есть пройденный портал и прошло N*4 минут - все активны
+    if (lastCompletedPortal && now - lastCompletedPortal.lastWinTime >= maxGrowthTime) {
       log('[PortalManager] all portals should be active (player returned after long break)')
       randomPortals.forEach(p => {
         p.status = 'active'
@@ -193,13 +190,14 @@ export class PortalManager {
       return true
     }
     
-    // Если есть растущий портал, ничего не делаем
-    const growingPortal = randomPortals.find(p => p.status === 'growing')
-    if (growingPortal) {
+    // Если есть active портал без lastWinTime - он ещё не пройден, ждём
+    const activeWithoutWin = randomPortals.find(p => p.status === 'active' && p.lastWinTime === null)
+    if (activeWithoutWin) {
+      log('[PortalManager] portal', activeWithoutWin.id, 'is active but not completed, waiting')
       return false
     }
     
-    // Запускаем следующий портал в очереди
+    // Нет растущего, нет active без lastWinTime - запускаем следующий в очереди
     this.startNextPortalGrowth()
     return false
   }
