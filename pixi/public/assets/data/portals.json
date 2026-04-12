@@ -3,9 +3,9 @@
     { "id": "portal_1", "x": 0.8, "y": 0.4 },
     { "id": "portal_2", "x": 0.25, "y": 0.25 },
     { "id": "portal_3", "x": 0.25, "y": 0.8 },
-    { "id": "portal_4", "x": 0.906, "y": 0.112 },
+    { "id": "portal_4", "x": 0.594, "y": 0.278 },
     { "id": "portal_5", "x": 0.625, "y": 0.833 },
-    { "id": "portal_6", "x": 0.594, "y": 0.278 }
+    { "id": "portal_6", "x": 0.906, "y": 0.112 }
   ],
   "portals": [
     {
@@ -36,8 +36,8 @@
     },
     {
       "id": "portal_4",
-      "type": "premium",
-      "altarType": "altar_2",
+      "type": "pvp",
+      "altarType": null,
       "status": "active",
       "lastWinTime": null
     },
@@ -50,8 +50,8 @@
     },
     {
       "id": "portal_6",
-      "type": "pvp",
-      "altarType": null,
+      "type": "premium",
+      "altarType": "altar_2",
       "status": "active",
       "lastWinTime": null
     }
