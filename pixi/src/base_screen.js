@@ -251,11 +251,18 @@ export class BaseScreen extends EventEmitter {
       }
     })
 
-    // Затем создаём только активные порталы (над алтарями)
+    // Затем создаём только активные и растущие порталы (над алтарями)
     allPortals.forEach(portalData => {
       // Пропускаем пройденные порталы
       if (this.completedPortals.includes(portalData.id)) {
         log('[BaseScreen]   skipping completed portal:', portalData.id)
+        return
+      }
+      
+      // Пропускаем скрытые порталы
+      const status = portalManager.getPortalStatus(portalData.id)
+      if (status === 'hidden') {
+        log('[BaseScreen]   skipping hidden portal:', portalData.id)
         return
       }
 
@@ -265,9 +272,12 @@ export class BaseScreen extends EventEmitter {
       const x = this.app.screen.width * position.x
       const y = this.app.screen.height * position.y
 
-      // Проверяем доступность портала
-      const status = portalManager.getPortalStatus(portalData.id)
+      // Рендерим только active и growing порталы
       const isAvailable = portalManager.isPortalAvailable(portalData.id)
+      if (!isAvailable && status !== 'growing') {
+        log('[BaseScreen]   skipping locked portal:', portalData.id, 'status:', status)
+        return
+      }
 
       // Получаем конфиг портала (картинка, цвет свечения)
       const portalConfig = portalManager.getPortalConfig(portalData.id)

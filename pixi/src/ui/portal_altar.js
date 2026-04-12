@@ -47,21 +47,20 @@ export class PortalAltar extends UINode {
     const sprite = this.getChildByName('altarSprite')
     if (!sprite) return
 
+    // Алтари всегда полностью видны (статичные)
+    sprite.alpha = 1
+    
     switch (this.status) {
       case 'active':
-        sprite.alpha = 1
         sprite.tint = 0xFFFFFF
         break
       case 'locked':
-        sprite.alpha = 0.4
-        sprite.tint = 0x555555
+        sprite.tint = 0x888888 // Серый, но полностью виден
         break
       case 'growing':
-        sprite.alpha = 0.6
-        sprite.tint = 0xAAAAAA
+        sprite.tint = 0xAAAAAA // Светло-серый, но полностью виден
         break
       default:
-        sprite.alpha = 1
         sprite.tint = 0xFFFFFF
     }
   }
