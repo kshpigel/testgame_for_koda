@@ -253,8 +253,10 @@ export class BaseScreen extends EventEmitter {
           // Обработчик клика на алтарь
           altar.on('pointerdown', () => {
             log('[BaseScreen] clicked altar:', portalData.id, 'status:', status, 'type:', portalData.type)
-            if (status === 'locked' || status === 'growing') {
-              this.showPortalNotReadyModal(portalData.id, status)
+            if (status === 'locked') {
+              this.showPortalNotReadyModal(portalData.id, 'locked')
+            } else if (status === 'growing') {
+              this.showPortalNotReadyModal(portalData.id, 'growing')
             } else if (portalData.type === 'premium') {
               this.showPremiumPortalModal(portalData.id)
             }
@@ -315,8 +317,11 @@ export class BaseScreen extends EventEmitter {
         glowColor: glowColor,
         status: portalStatus, // Передаем правильный статус (active/growing/locked)
         onClick: () => {
+          log('[BaseScreen] portal clicked:', portalData.id, 'status:', portalStatus)
           if (portalStatus === 'active') {
             this.emit('start_game', portalData.id)
+          } else if (portalStatus === 'growing') {
+            this.showPortalNotReadyModal(portalData.id, 'growing')
           }
         }
       })
@@ -325,11 +330,13 @@ export class BaseScreen extends EventEmitter {
       portal.portalId = portalData.id
       portal.zIndex = 30
       
-      // Скрываем locked порталы
+      // Скрываем locked порталы, active и growing видим
       if (status === 'locked') {
         portal.alpha = 0
         portal.eventMode = 'none'
         portal.interactive = false
+      } else {
+        portal.alpha = 1
       }
       
       this.container.addChild(portal)
@@ -370,6 +377,7 @@ export class BaseScreen extends EventEmitter {
       message,
       buttons: [{ text: 'OK', action: () => modal.destroy() }]
     })
+    modal.container.zIndex = 100
     this.container.addChild(modal.container)
   }
 
@@ -399,6 +407,7 @@ export class BaseScreen extends EventEmitter {
               message: `У вас только ${crystals} кристаллов, нужно ${cost}`,
               buttons: [{ text: 'OK', action: () => errModal.destroy() }]
             })
+            errModal.container.zIndex = 100
             this.container.addChild(errModal.container)
           }
         }
@@ -407,6 +416,7 @@ export class BaseScreen extends EventEmitter {
     ]
     
     const modal = new Modal(this.app, { title, message, buttons })
+    modal.container.zIndex = 100
     this.container.addChild(modal.container)
   }
 
