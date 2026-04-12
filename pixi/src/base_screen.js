@@ -209,8 +209,16 @@ export class BaseScreen extends EventEmitter {
     log('[BaseScreen]   total portals:', allPortals.length)
     log('[BaseScreen]   completedPortals:', this.completedPortals)
 
-    // Сначала создаём ВСЕ алтари (включая закрытые порталы)
+    // Сначала создаём ВСЕ алтари (включая закрытые порталы, но не скрытые)
     allPortals.forEach(portalData => {
+      const status = portalManager.getPortalStatus(portalData.id)
+      
+      // Пропускаем скрытые порталы (PvP)
+      if (status === 'hidden') {
+        log('[BaseScreen]   skipping hidden portal:', portalData.id)
+        return
+      }
+      
       const position = portalManager.getPosition(portalData.id)
       if (!position) return
 
@@ -223,7 +231,6 @@ export class BaseScreen extends EventEmitter {
         const altarTexture = altarConfig ? this.altarAssets[portalData.altarType]?.texture : null
         
         if (altarTexture) {
-          const status = portalManager.getPortalStatus(portalData.id)
           const isAvailable = portalManager.isPortalAvailable(portalData.id)
           
           const altar = new PortalAltar({

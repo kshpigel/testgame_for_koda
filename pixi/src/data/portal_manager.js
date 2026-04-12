@@ -158,24 +158,49 @@ export class PortalManager {
   // Проверить, все ли порталы должны быть активны (игрок вернулся после долгого перерыва)
   checkAllPortalsAvailable() {
     const randomPortals = this.getRandomPortals()
-    const maxGrowthTime = this.growthConfig.growthTimeMinutes * 4 * 60 * 1000 // N * 4
+    if (randomPortals.length === 0) return false
     
-    // Проверяем последний случайный портал
-    if (randomPortals.length > 0) {
-      const lastPortal = randomPortals[randomPortals.length - 1]
-      const lastWinTime = lastPortal.lastWinTime || 0
-      
-      // Если прошло N*4 минут с последнего прохождения, все порталы активны
-      if (Date.now() - lastWinTime >= maxGrowthTime) {
-        log('[PortalManager] all portals should be active (player returned after long break)')
-        randomPortals.forEach(p => {
-          p.status = 'active'
-          p.growthStartTime = null
-        })
-        return true
+    // Находим последний активный портал (или тот, который был пройден последним)
+    let lastCompletedPortal = null
+    for (const portal of randomPortals) {
+      if (portal.status === 'active' && portal.lastWinTime !== null) {
+        if (!lastCompletedPortal || portal.lastWinTime > lastCompletedPortal.lastWinTime) {
+          lastCompletedPortal = portal
+        }
       }
     }
     
+    // Если нет пройденных порталов, запускаем первый
+    if (!lastCompletedPortal) {
+      log('[PortalManager] no completed portals, starting growth for first portal')
+      const firstLocked = randomPortals.find(p => p.status === 'locked')
+      if (firstLocked) {
+        this.startPortalGrowth(firstLocked.id)
+      }
+      return false
+    }
+    
+    const maxGrowthTime = this.growthConfig.growthTimeMinutes * 4 * 60 * 1000 // N * 4
+    const now = Date.now()
+    
+    // Если прошло N*4 минут с последнего прохождения, все порталы активны
+    if (now - lastCompletedPortal.lastWinTime >= maxGrowthTime) {
+      log('[PortalManager] all portals should be active (player returned after long break)')
+      randomPortals.forEach(p => {
+        p.status = 'active'
+        p.growthStartTime = null
+      })
+      return true
+    }
+    
+    // Если есть растущий портал, ничего не делаем
+    const growingPortal = randomPortals.find(p => p.status === 'growing')
+    if (growingPortal) {
+      return false
+    }
+    
+    // Запускаем следующий портал в очереди
+    this.startNextPortalGrowth()
     return false
   }
 
