@@ -189,7 +189,8 @@ export class BaseScreen extends EventEmitter {
     this.container.addChild(this.clouds)
 
     // UI
-    playerUI.init(this.app, this.container)
+    const playerUIContainer = playerUI.create(this.app)
+    this.container.addChild(playerUIContainer)
     this.showDeckInfo()
 
     log('[BaseScreen] render() END')
