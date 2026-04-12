@@ -43,7 +43,7 @@ export class Castle extends UINode {
   create() {
     if (this.texture) {
       const castle = new PIXI.Sprite(this.texture)
-      castle.anchor.set(0.5, 1) // Низ по центру - как в base_screen
+      castle.anchor.set(0.5) // Центр для UINode
       const scale = Math.min(
         this.width / castle.texture.width,
         this.height / castle.texture.height
@@ -55,7 +55,7 @@ export class Castle extends UINode {
       // Заглушка
       const castle = new PIXI.Graphics()
       castle.beginFill(0x4444ff, 0.7)
-      castle.drawRect(-50, -this.height, 100, this.height)
+      castle.drawRect(-50, -50, 100, 100)
       castle.endFill()
       castle.name = 'castleSprite'
       this.addChild(castle)

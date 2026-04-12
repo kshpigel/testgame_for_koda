@@ -23,10 +23,11 @@ export class PortalRenderer {
   }
 
   /**
-   * Инициализация с ассетами алтарей
+   * Инициализация с ассетами алтарей и порталов
    */
-  init(altarAssets) {
+  init(altarAssets, portalAssets) {
     this.altarAssets = altarAssets
+    this.portalAssets = portalAssets
   }
 
   /**
@@ -125,11 +126,11 @@ export class PortalRenderer {
 
       const portalType = portalManager.getPortalType(portalData.id)
       let portalTexture = null
-      if (this.altarAssets && this.altarAssets[portalType]) {
-        portalTexture = this.altarAssets[portalType].texture
+      if (this.portalAssets && this.portalAssets[portalType]) {
+        portalTexture = this.portalAssets[portalType].texture
       }
       if (!portalTexture) {
-        portalTexture = this.app.assets?.portal?.texture || null
+        portalTexture = this.app?.assets?.portal?.texture || null
       }
 
       const portal = new Portal({
