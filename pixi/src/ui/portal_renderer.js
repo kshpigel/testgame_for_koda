@@ -13,10 +13,10 @@ import { log } from '../data/config.js'
  * - Обработчики кликов на порталы и алтари
  */
 export class PortalRenderer {
-  constructor(container, app, game) {
+  constructor(container, app, baseScreen) {
     this.container = container
     this.app = app
-    this.game = game
+    this.baseScreen = baseScreen
     this.portals = []
     this.portalAltars = []
     this.altarAssets = null
@@ -139,8 +139,10 @@ export class PortalRenderer {
         height: 160,
         app: this.app,
         portalType: portalData.type,
+        portalId: portalData.id,
         glowColor: glowColor,
         status: portalStatus,
+        baseScreen: this.baseScreen,
         onClick: () => this._onPortalClick(portalData, portalStatus)
       })
       portal.setX(x)
@@ -168,11 +170,11 @@ export class PortalRenderer {
     log('[PortalRenderer] clicked altar:', portalData.id, 'status:', status, 'type:', portalData.type)
 
     if (status === 'locked') {
-      this.game.baseScreen.showPortalNotReadyModal(portalData.id, 'locked')
+      this.baseScreen.showPortalNotReadyModal(portalData.id, 'locked')
     } else if (status === 'growing') {
-      this.game.baseScreen.showPortalNotReadyModal(portalData.id, 'growing')
+      this.baseScreen.showPortalNotReadyModal(portalData.id, 'growing')
     } else if (portalData.type === 'premium') {
-      this.game.baseScreen.showPremiumPortalModal(portalData.id)
+      this.baseScreen.showPremiumPortalModal(portalData.id)
     }
   }
 
@@ -185,7 +187,7 @@ export class PortalRenderer {
     if (portalStatus === 'active') {
       this.container.emit('start_game', portalData.id)
     } else if (portalStatus === 'growing') {
-      this.game.baseScreen.showPortalNotReadyModal(portalData.id, 'growing')
+      this.baseScreen.showPortalNotReadyModal(portalData.id, 'growing')
     }
   }
 

@@ -16,8 +16,10 @@ export class Portal extends UINode {
 
     this.texture = options.texture || null
     this.portalType = options.portalType || 'random'
+    this.portalId = options.portalId || null
     this.glowColor = options.glowColor || 0x00ff00
     this.onClick = options.onClick || null
+    this.baseScreen = options.baseScreen || null
     
     this.targetBrightness = 1
     
