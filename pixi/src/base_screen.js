@@ -70,9 +70,15 @@ export class BaseScreen extends EventEmitter {
   
   async loadAltarAssets() {
     const altarTypes = portalManager.altarTypes || {}
+    const portalTypes = portalManager.portalTypes || {}
     const urls = []
     
     Object.values(altarTypes).forEach(config => {
+      if (config.image) urls.push(config.image)
+    })
+    
+    // Загружаем ассеты порталов по типам
+    Object.values(portalTypes).forEach(config => {
       if (config.image) urls.push(config.image)
     })
     
@@ -83,6 +89,13 @@ export class BaseScreen extends EventEmitter {
       Object.entries(altarTypes).forEach(([key, config]) => {
         if (config.image) {
           this.altarAssets[key] = { texture: PIXI.Assets.get(config.image) }
+        }
+      })
+      
+      this.portalAssets = {}
+      Object.entries(portalTypes).forEach(([key, config]) => {
+        if (config.image) {
+          this.portalAssets[key] = { texture: PIXI.Assets.get(config.image) }
         }
       })
     }
@@ -236,10 +249,11 @@ export class BaseScreen extends EventEmitter {
       const portalConfig = portalManager.getPortalConfig(portalData.id)
       const glowColor = portalConfig?.glowColor || 0x00ff00
       
-      // Загружаем текстуру портала по типу
+      // Загружаем текстуру портала по типу из кэша
       let portalTexture = null
-      if (portalConfig?.image) {
-        portalTexture = PIXI.Assets.get(portalConfig.image)
+      const portalType = portalManager.getPortalType(portalData.id)
+      if (this.portalAssets && this.portalAssets[portalType]) {
+        portalTexture = this.portalAssets[portalType].texture
       }
       if (!portalTexture) {
         portalTexture = this.assets.portal?.texture || null
