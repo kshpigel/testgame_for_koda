@@ -146,12 +146,14 @@ export class BaseScreen extends EventEmitter {
       this.container.addChild(bg)
     }
 
-    // Птицы на фоне
+    // Птицы на фоне (под замком и порталами)
     this.birds = new Birds(this.app, { count: 12, speed: 0.6 })
+    this.birds.container.zIndex = 10
     this.container.addChild(this.birds.container)
     
-    // Облака на фоне
+    // Облака на фоне (под замком и порталами)
     this.clouds = new Clouds(this.app, { count: 8, speed: 0.15 })
+    this.clouds.container.zIndex = 11
     this.container.addChild(this.clouds.container)
 
     // База - Замок (по центру горизонтально, 2/3 сверху)
@@ -231,6 +233,7 @@ export class BaseScreen extends EventEmitter {
           altar.setX(x)
           altar.setY(y + 60)
           altar.portalId = portalData.id
+          altar.zIndex = 20 // Алтари над птицами/облаками, но под порталами
           this.container.addChild(altar)
           this.portalAltars.push(altar)
         }
@@ -287,6 +290,7 @@ export class BaseScreen extends EventEmitter {
       portal.setX(x)
       portal.setY(y)
       portal.portalId = portalData.id
+      portal.zIndex = 30 // Порталы на переднем плане
       this.container.addChild(portal)
       this.portals.push(portal)
 
