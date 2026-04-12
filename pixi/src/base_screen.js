@@ -6,8 +6,6 @@ import { colors } from './data/colors.js'
 import { log } from './data/config.js'
 import { soundManager } from './audio/sound_manager.js'
 import { player } from './data/player.js'
-import { Portal } from './ui/portal.js'
-import { PortalAltar } from './ui/portal_altar.js'
 import { Modal } from './ui/modal.js'
 import { Castle } from './ui/castle.js'
 import { Birds } from './ui/birds.js'
@@ -18,6 +16,7 @@ import { deckManager } from './data/deck_manager.js'
 import { t } from './data/i18n.js'
 import { playerUI } from './ui/player_ui.js'
 import { portalManager } from './data/portal_manager.js'
+import { PortalRenderer } from './ui/portal_renderer.js'
 
 const ASSETS = {
   bg: '/assets/img/base_bg.png',
@@ -36,6 +35,7 @@ export class BaseScreen extends EventEmitter {
     this.container.zIndex = Z.bgBase
     this.assets = {}
     this._tickerCallback = null
+    this.portalRenderer = null
   }
 
   async init(completedPortals = []) {
@@ -47,6 +47,9 @@ export class BaseScreen extends EventEmitter {
     
     // Загружаем конфигурацию порталов
     await portalManager.load()
+    
+    // Создаём PortalRenderer
+    this.portalRenderer = new PortalRenderer(this.container, this.app, this)
     
     await this.loadAssets()
     this.render()
@@ -135,54 +138,49 @@ export class BaseScreen extends EventEmitter {
 
   render() {
     log('[BaseScreen] render() START')
-    this.container.removeChildren()
+    
+    // Фон и база
+    const bg = new PIXI.Sprite.from(ASSETS.bg)
+    bg.width = this.app.screen.width
+    bg.height = this.app.screen.height
+    bg.zIndex = 0
+    this.container.addChild(bg)
 
-    // Фон (cover)
-    if (this.assets.bg && this.assets.bg.texture) {
-      const bg = new PIXI.Sprite(this.assets.bg.texture)
-      this.scaleToCover(bg, this.app.screen.width, this.app.screen.height)
-      this.container.addChild(bg)
-    } else {
-      const bg = new PIXI.Graphics()
-      bg.beginFill(colors.background.map)
-      bg.drawRect(0, 0, this.app.screen.width, this.app.screen.height)
-      bg.endFill()
-      this.container.addChild(bg)
-    }
+    const base = new PIXI.Sprite.from(ASSETS.base)
+    base.width = this.app.screen.width * 0.6
+    base.height = this.app.screen.height * 0.4
+    base.x = (this.app.screen.width - base.width) / 2
+    base.y = this.app.screen.height * 0.5
+    base.zIndex = 10
+    this.container.addChild(base)
 
-    // База - Замок (по центру горизонтально, 2/3 сверху)
-    const baseTexture = this.assets.base?.texture || null
-    // Объединяем базовые ассеты и ассеты карт
-    const allAssets = { ...this.assets, ...this.cardAssets }
-    this.castle = new Castle({
-      texture: baseTexture,
-      width: 220,
-      height: 220,
-      app: this.app,
-      cardTypes: this.cardTypes || [],
-      assets: allAssets,
-      baseScreen: this // Передаём ссылку на себя для обновления UI
-    })
-    this.castle.setX(this.app.screen.width / 2)
-    this.castle.setY(this.app.screen.height * 0.76)
-    this.castle.zIndex = 10 // Замок над фоном
+    // Порталы и алтари
+    this.portalRenderer.init(this.assets)
+    this.portalRenderer.render(this.completedPortals)
+
+    // Замок (castle)
+    this.castle = new Castle(this.app, this.assets.base)
+    this.castle.x = (this.app.screen.width - this.castle.width) / 2
+    this.castle.y = this.app.screen.height * 0.5
+    this.castle.zIndex = 10
     this.container.addChild(this.castle)
 
-    // Порталы - загружаем из PortalManager
-    this.createPortals()
-    
-    // Птицы на фоне (ПОВЕРХ всех объектов для реализма)
-    this.birds = new Birds(this.app, { count: 12, speed: 0.6 })
-    this.birds.container.zIndex = 100 // Птицы на самом верху
-    this.container.addChild(this.birds.container)
-    
-    // Облака на фоне (ПОВЕРХ всех объектов для реализма)
-    this.clouds = new Clouds(this.app, { count: 8, speed: 0.15 })
-    this.clouds.container.zIndex = 101 // Облака над птицами
-    this.container.addChild(this.clouds.container)
-    
-    // Информация об игроке (левый верхний угол)
-    this.createPlayerInfo()
+    // Птицы
+    this.birds = new Birds(this.app)
+    this.birds.y = 50
+    this.birds.zIndex = 100
+    this.container.addChild(this.birds)
+
+    // Облака
+    this.clouds = new Clouds(this.app)
+    this.clouds.zIndex = 101
+    this.container.addChild(this.clouds)
+
+    // UI
+    playerUI.init(this.app, this.container)
+    this.showDeckInfo()
+
+    log('[BaseScreen] render() END')
   }
 
   createPlayerInfo() {
@@ -199,152 +197,6 @@ export class BaseScreen extends EventEmitter {
   // Позиции порталов на базе (статические позиции в долях экрана 1920×1080)
   // Учитываем что Portal имеет pivot по центру (160px / 2 = 80px смещение)
   getPortalPositions(){return[{id:"portal_1",x:.863,y:.511},{id:"portal_2",x:.25,y:.25},{id:"portal_3",x:.25,y:.8},{id:"portal_4",x:.906,y:.112},{id:"portal_5",x:.625,y:.833},{id:"portal_6",x:.594,y:.278}]}
-
-  createPortals() {
-    this.portals = []
-    this.portalAltars = []
-
-    log('[BaseScreen] createPortals() START')
-    
-    const allPortals = portalManager.getAllPortals()
-    log('[BaseScreen]   total portals:', allPortals.length)
-    log('[BaseScreen]   completedPortals:', this.completedPortals)
-
-    // Сначала создаём ВСЕ алтари (включая закрытые порталы, но не скрытые)
-    allPortals.forEach(portalData => {
-      const status = portalManager.getPortalStatus(portalData.id)
-      
-      // Пропускаем скрытые порталы (PvP)
-      if (status === 'hidden') {
-        log('[BaseScreen]   skipping hidden portal:', portalData.id)
-        return
-      }
-      
-      const position = portalManager.getPosition(portalData.id)
-      if (!position) return
-
-      const x = this.app.screen.width * position.x
-      const y = this.app.screen.height * position.y
-
-      // Создаём алтарь для всех порталов с altarType
-      if (portalData.altarType && this.altarAssets) {
-        const altarConfig = portalManager.getAltarConfig(portalData.altarType)
-        const altarTexture = altarConfig ? this.altarAssets[portalData.altarType]?.texture : null
-        
-        if (altarTexture) {
-          const isAvailable = portalManager.isPortalAvailable(portalData.id)
-          const altarStatus = isAvailable ? 'active' : status
-          
-          const altar = new PortalAltar({
-            texture: altarTexture,
-            width: 75,
-            height: 75,
-            app: this.app,
-            portalType: portalData.type,
-            status: altarStatus
-          })
-          altar.setX(x)
-          altar.setY(y + 60)
-          altar.portalId = portalData.id
-          altar.zIndex = 20
-          altar.eventMode = 'static'
-          altar.cursor = 'pointer'
-          
-          // Обработчик клика на алтарь
-          altar.on('pointerdown', () => {
-            log('[BaseScreen] clicked altar:', portalData.id, 'status:', status, 'type:', portalData.type)
-            if (status === 'locked') {
-              this.showPortalNotReadyModal(portalData.id, 'locked')
-            } else if (status === 'growing') {
-              this.showPortalNotReadyModal(portalData.id, 'growing')
-            } else if (portalData.type === 'premium') {
-              this.showPremiumPortalModal(portalData.id)
-            }
-          })
-          
-          this.container.addChild(altar)
-          this.portalAltars.push(altar)
-        }
-      }
-    })
-
-    // Затем создаём ВСЕ порталы (active, growing, locked)
-    allPortals.forEach(portalData => {
-      // Пропускаем пройденные порталы
-      if (this.completedPortals.includes(portalData.id)) {
-        log('[BaseScreen]   skipping completed portal:', portalData.id)
-        return
-      }
-      
-      // Пропускаем скрытые порталы
-      const status = portalManager.getPortalStatus(portalData.id)
-      if (status === 'hidden') {
-        log('[BaseScreen]   skipping hidden portal:', portalData.id)
-        return
-      }
-
-      const position = portalManager.getPosition(portalData.id)
-      if (!position) return
-
-      const x = this.app.screen.width * position.x
-      const y = this.app.screen.height * position.y
-
-      // Получаем статус портала
-      const isAvailable = portalManager.isPortalAvailable(portalData.id)
-      const portalStatus = isAvailable ? 'active' : status
-
-      // Получаем конфиг портала (картинка, цвет свечения)
-      const portalConfig = portalManager.getPortalConfig(portalData.id)
-      const glowColor = portalConfig?.glowColor || 0x00ff00
-      
-      // Загружаем текстуру портала по типу из кэша
-      let portalTexture = null
-      const portalType = portalManager.getPortalType(portalData.id)
-      if (this.portalAssets && this.portalAssets[portalType]) {
-        portalTexture = this.portalAssets[portalType].texture
-      }
-      if (!portalTexture) {
-        portalTexture = this.assets.portal?.texture || null
-      }
-
-      // Создаём портал
-      const portal = new Portal({
-        texture: portalTexture,
-        width: 160,
-        height: 160,
-        app: this.app,
-        portalType: portalData.type,
-        glowColor: glowColor,
-        status: portalStatus, // Передаем правильный статус (active/growing/locked)
-        onClick: () => {
-          log('[BaseScreen] portal clicked:', portalData.id, 'status:', portalStatus)
-          if (portalStatus === 'active') {
-            this.emit('start_game', portalData.id)
-          } else if (portalStatus === 'growing') {
-            this.showPortalNotReadyModal(portalData.id, 'growing')
-          }
-        }
-      })
-      portal.setX(x)
-      portal.setY(y)
-      portal.portalId = portalData.id
-      portal.zIndex = 30
-      
-      // Скрываем locked порталы, active и growing видим
-      if (status === 'locked') {
-        portal.alpha = 0
-        portal.eventMode = 'none'
-        portal.interactive = false
-      } else {
-        portal.alpha = 1
-      }
-      
-      this.container.addChild(portal)
-      this.portals.push(portal)
-
-      log('[BaseScreen]   created portal:', portalData.id, 'type:', portalData.type, 'status:', status, 'alpha:', portal.alpha)
-    })
-  }
 
   fadeIn() {
     // Останавливаем музыку карты и запускаем музыку базы
@@ -433,22 +285,15 @@ export class BaseScreen extends EventEmitter {
       this._tickerCallback = null
     }
     
-    // Удаляем порталы ПЕРЕД birds/clouds (чтобы остановить их update первыми)
-    if (this.portals && this.portals.length > 0) {
-      log('[BaseScreen] destroying portals, count:', this.portals.length)
-      // Копируем массив чтобы не модифицировать во время итерации
-      const portalsCopy = [...this.portals]
-      this.portals = []
-      portalsCopy.forEach((p, i) => {
-        log('[BaseScreen] destroying portal', i)
-        if (p && p.destroy) {
-          try {
-            p.destroy()
-          } catch (e) {
-            console.error('[BaseScreen] error destroying portal:', e)
-          }
-        }
-      })
+    // Удаляем порталы и алтари
+    if (this.portalRenderer) {
+      log('[BaseScreen] destroying portalRenderer')
+      try {
+        this.portalRenderer.destroy()
+      } catch (e) {
+        console.error('[BaseScreen] error destroying portalRenderer:', e)
+      }
+      this.portalRenderer = null
     }
     
     // Удаляем птиц
@@ -485,52 +330,14 @@ export class BaseScreen extends EventEmitter {
     // Защита от вызова после hide()
     if (this._isHiding) return
     
-    // Проверяем завершение роста всех порталов
-    const randomPortals = portalManager.getRandomPortals()
-    randomPortals.forEach(portal => {
-      portalManager.checkPortalGrowthComplete(portal.id)
-    })
-    
-    // Обновляем статусы порталов (проверка времени роста)
-    if (this.portals) {
-      this.portals.forEach(p => {
-        const newStatus = portalManager.getPortalStatus(p.portalId)
-        if (p.status !== newStatus) {
-          p.setStatus(newStatus)
-          // Обновляем alpha при смене статуса
-          if (newStatus === 'locked') {
-            p.alpha = 0
-          } else {
-            p.alpha = 1
-          }
-        }
-        p.update()
-      })
+    // Обновляем порталы и алтари
+    if (this.portalRenderer) {
+      this.portalRenderer.update()
     }
     
-    // Обновляем алтари
-    if (this.portalAltars) {
-      this.portalAltars.forEach(a => {
-        const newStatus = portalManager.getPortalStatus(a.portalId)
-        if (a.status !== newStatus) {
-          a.setStatus(newStatus)
-        }
-      })
-    }
-    
-    if (this.castle) {
-      this.castle.update()
-    }
-  }
-
-  removePortal(portalId) {
-    if (!this.portals) return
-    const idx = this.portals.findIndex(p => p.portalId === portalId)
-    if (idx !== -1) {
-      const portal = this.portals[idx]
-      this.container.removeChild(portal)
-      this.portals.splice(idx, 1)
-    }
+    // Обновляем птиц и облака
+    if (this.birds) this.birds.update()
+    if (this.clouds) this.clouds.update()
   }
 
   scaleToCover(sprite, targetWidth, targetHeight) {
