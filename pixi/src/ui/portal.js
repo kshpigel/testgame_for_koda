@@ -79,11 +79,15 @@ export class Portal extends UINode {
 
   setupInteraction() {
     this.eventMode = 'static'
-    this.cursor = this.status === 'active' ? 'pointer' : 'default'
     this._isDestroying = false
 
-    if (this.status !== 'active') {
-      this.interactive = false
+    // Активные и растущие порталы кликабельны
+    const isClickable = this.status === 'active' || this.status === 'growing'
+    this.cursor = isClickable ? 'pointer' : 'default'
+    this.interactive = isClickable
+
+    if (!isClickable) {
+      // Неактивные порталы (locked) не взаимодействуют
       return
     }
 
@@ -111,14 +115,17 @@ export class Portal extends UINode {
     this.status = status
     const sprite = this.getChildByName('portalSprite')
     if (sprite) {
-      sprite.tint = status === 'active' ? 0xFFFFFF : 0x888888
+      sprite.tint = status === 'active' ? 0xFFFFFF : (status === 'growing' ? 0xAAAAAA : 0x888888)
     }
-    this.cursor = status === 'active' ? 'pointer' : 'default'
-    this.interactive = status === 'active'
     
-    // Обновляем brightnes для неактивных порталов
+    // Активные и растущие порталы кликабельны
+    const isClickable = status === 'active' || status === 'growing'
+    this.cursor = isClickable ? 'pointer' : 'default'
+    this.interactive = isClickable
+    
+    // Обновляем brightness для неактивных порталов
     if (status !== 'active') {
-      this.targetBrightness = 0.5
+      this.targetBrightness = status === 'growing' ? 1 : 0.5
     }
   }
   

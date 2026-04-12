@@ -266,7 +266,7 @@ export class BaseScreen extends EventEmitter {
       }
     })
 
-    // Затем создаём только активные и растущие порталы (над алтарями)
+    // Затем создаём ВСЕ порталы (active, growing, locked)
     allPortals.forEach(portalData => {
       // Пропускаем пройденные порталы
       if (this.completedPortals.includes(portalData.id)) {
@@ -287,12 +287,9 @@ export class BaseScreen extends EventEmitter {
       const x = this.app.screen.width * position.x
       const y = this.app.screen.height * position.y
 
-      // Рендерим только active и growing порталы
+      // Получаем статус портала
       const isAvailable = portalManager.isPortalAvailable(portalData.id)
-      if (!isAvailable && status !== 'growing') {
-        log('[BaseScreen]   skipping locked portal:', portalData.id, 'status:', status)
-        return
-      }
+      const portalStatus = isAvailable ? 'active' : status
 
       // Получаем конфиг портала (картинка, цвет свечения)
       const portalConfig = portalManager.getPortalConfig(portalData.id)
@@ -316,9 +313,9 @@ export class BaseScreen extends EventEmitter {
         app: this.app,
         portalType: portalData.type,
         glowColor: glowColor,
-        status: isAvailable ? 'active' : status,
+        status: portalStatus, // Передаем правильный статус (active/growing/locked)
         onClick: () => {
-          if (isAvailable) {
+          if (portalStatus === 'active') {
             this.emit('start_game', portalData.id)
           }
         }
