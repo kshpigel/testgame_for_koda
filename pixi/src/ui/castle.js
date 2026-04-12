@@ -12,20 +12,20 @@ import { DeckEditor } from './deck_editor.js'
 import { t } from '../data/i18n.js'
 
 export class Castle extends UINode {
-  constructor(options = {}) {
+  constructor(app, texture, width = 220, height = 220) {
     super({
-      width: options.width || 220,
-      height: options.height || 220,
-      app: options.app || null,
+      width: width,
+      height: height,
+      app: app,
       scaleSpeed: 0.15
     })
 
-    this.app = options.app || null
-    this.texture = options.texture || null
-    this.onClick = options.onClick || null
-    this.cardTypes = options.cardTypes || []
-    this.assets = options.assets || {}
-    this.baseScreen = options.baseScreen || null // Ссылка на базу для обновления UI
+    this.app = app
+    this.texture = texture
+    this.onClick = null
+    this.cardTypes = []
+    this.assets = {}
+    this.baseScreen = null
     this.gridRenderer = null
     this._tickerCallback = null
     
@@ -36,8 +36,10 @@ export class Castle extends UINode {
     this.create()
     this.setupInteraction()
     
-    // Debug рамка
-    this.updateDebug()
+    // Debug рамка (только если включён debug)
+    if (config.debug) {
+      this.updateDebug()
+    }
   }
 
   create() {

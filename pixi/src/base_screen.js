@@ -170,10 +170,13 @@ export class BaseScreen extends EventEmitter {
     this.portalRenderer.init(this.altarAssets, this.portalAssets)
     this.portalRenderer.render(this.completedPortals)
 
-    // Замок (castle)
-    this.castle = new Castle(this.app, this.assets.base.texture)
-    this.castle.x = (this.app.screen.width - this.castle.width) / 2
-    this.castle.y = this.app.screen.height * 0.5
+    // Замок (castle) - используем размеры текстуры
+    const castleTexture = this.assets.base.texture
+    const castleWidth = castleTexture.width * 0.4
+    const castleHeight = castleTexture.height * 0.4
+    this.castle = new Castle(this.app, castleTexture, castleWidth, castleHeight)
+    this.castle.x = (this.app.screen.width - castleWidth) / 2
+    this.castle.y = this.app.screen.height * 0.55
     this.castle.zIndex = 10
     this.container.addChild(this.castle)
 
