@@ -41,6 +41,9 @@ export class BaseScreen extends EventEmitter {
     this.completedPortals = completedPortals
     log('[BaseScreen] init() called with completedPortals:', completedPortals)
     
+    // Включаем сортировку детей по zIndex
+    this.container.sortableChildren = true
+    
     // Загружаем конфигурацию порталов
     await portalManager.load()
     
