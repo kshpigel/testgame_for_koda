@@ -48,10 +48,11 @@ export class BaseScreen extends EventEmitter {
     // Загружаем конфигурацию порталов
     await portalManager.load()
     
-    // Создаём PortalRenderer
+    await this.loadAssets()
+    
+    // Создаём PortalRenderer ПОСЛЕ загрузки ассетов
     this.portalRenderer = new PortalRenderer(this.container, this.app, this)
     
-    await this.loadAssets()
     this.render()
     this.app.stage.addChild(this.container)
     this.app.stage.sortChildren()
