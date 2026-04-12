@@ -68,7 +68,7 @@
       "glowColor": 4384768
     },
     "premium": {
-      "image": "/assets/img/portal_premium.png",
+      "image": "/assets/img/portal_premium.png?v=2",
       "glowColor": 16766416
     },
     "pvp": {
