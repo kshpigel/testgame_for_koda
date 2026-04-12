@@ -149,16 +149,6 @@ export class BaseScreen extends EventEmitter {
       this.container.addChild(bg)
     }
 
-    // Птицы на фоне (под замком и порталами)
-    this.birds = new Birds(this.app, { count: 12, speed: 0.6 })
-    this.birds.container.zIndex = 10
-    this.container.addChild(this.birds.container)
-    
-    // Облака на фоне (под замком и порталами)
-    this.clouds = new Clouds(this.app, { count: 8, speed: 0.15 })
-    this.clouds.container.zIndex = 11
-    this.container.addChild(this.clouds.container)
-
     // База - Замок (по центру горизонтально, 2/3 сверху)
     const baseTexture = this.assets.base?.texture || null
     // Объединяем базовые ассеты и ассеты карт
@@ -174,10 +164,21 @@ export class BaseScreen extends EventEmitter {
     })
     this.castle.setX(this.app.screen.width / 2)
     this.castle.setY(this.app.screen.height * 0.76)
+    this.castle.zIndex = 10 // Замок над фоном
     this.container.addChild(this.castle)
 
     // Порталы - загружаем из PortalManager
     this.createPortals()
+    
+    // Птицы на фоне (ПОВЕРХ всех объектов для реализма)
+    this.birds = new Birds(this.app, { count: 12, speed: 0.6 })
+    this.birds.container.zIndex = 100 // Птицы на самом верху
+    this.container.addChild(this.birds.container)
+    
+    // Облака на фоне (ПОВЕРХ всех объектов для реализма)
+    this.clouds = new Clouds(this.app, { count: 8, speed: 0.15 })
+    this.clouds.container.zIndex = 101 // Облака над птицами
+    this.container.addChild(this.clouds.container)
     
     // Информация об игроке (левый верхний угол)
     this.createPlayerInfo()
