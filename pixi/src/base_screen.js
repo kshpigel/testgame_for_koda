@@ -158,25 +158,22 @@ export class BaseScreen extends EventEmitter {
     bg.zIndex = 0
     this.container.addChild(bg)
 
-    const base = new PIXI.Sprite(this.assets.base.texture)
-    base.width = this.app.screen.width * 0.6
-    base.height = this.app.screen.height * 0.4
-    base.x = (this.app.screen.width - base.width) / 2
-    base.y = this.app.screen.height * 0.5
-    base.zIndex = 10
-    this.container.addChild(base)
-
     // Порталы и алтари
     this.portalRenderer.init(this.altarAssets, this.portalAssets)
     this.portalRenderer.render(this.completedPortals)
 
-    // Замок (castle) - используем размеры текстуры
+    // Замок (castle) - фиксированный размер 220x220 (как было раньше)
     const castleTexture = this.assets.base.texture
-    const castleWidth = castleTexture.width * 0.4
-    const castleHeight = castleTexture.height * 0.4
-    this.castle = new Castle(this.app, castleTexture, castleWidth, castleHeight)
-    this.castle.x = (this.app.screen.width - castleWidth) / 2
-    this.castle.y = this.app.screen.height * 0.55
+    const CASTLE_WIDTH = 220
+    const CASTLE_HEIGHT = 220
+    this.castle = new Castle(this.app, castleTexture, CASTLE_WIDTH, CASTLE_HEIGHT)
+    // Передаём карточки и ассеты для отображения в хранилище/редакторе
+    this.castle.cardTypes = this.cardTypes
+    this.castle.assets = this.cardAssets || {}
+    this.castle.baseScreen = this
+    // Позиционируем по центру экрана (Castle использует pivot по центру)
+    this.castle.setX(this.app.screen.width / 2)
+    this.castle.setY(this.app.screen.height * 0.55)
     this.castle.zIndex = 10
     this.container.addChild(this.castle)
 
