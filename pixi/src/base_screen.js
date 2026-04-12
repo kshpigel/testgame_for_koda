@@ -167,7 +167,7 @@ export class BaseScreen extends EventEmitter {
     this.container.addChild(base)
 
     // Порталы и алтари
-    this.portalRenderer.init(this.assets)
+    this.portalRenderer.init(this.altarAssets)
     this.portalRenderer.render(this.completedPortals)
 
     // Замок (castle)
