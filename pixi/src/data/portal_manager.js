@@ -22,7 +22,7 @@ export class PortalManager {
       this.positions = data.positions || []
 
       data.portals.forEach(p => {
-        this.portalsData.set(p.id, p)
+        this.portalsData.set(p.id, { ...p })
       })
 
       log('[PortalManager] loaded', this.portalsData.size, 'portals')
@@ -149,15 +149,28 @@ export class PortalManager {
 
   // Запустить рост следующего портала в очереди
   startNextPortalGrowth() {
-    // Ищем любой locked портал
-    const randomPortals = this.getRandomPortals()
-    const nextLocked = randomPortals.find(p => p.status === 'locked')
-    if (nextLocked) {
-      log('[PortalManager] starting growth for next portal:', nextLocked.id)
-      this.startPortalGrowth(nextLocked.id)
-    } else {
+    // Ищем locked портал с НАИМЕНЬШИМ lastWinTime (пройден раньше всех)
+    // Для новых порталов lastWinTime = null — они идут первыми
+    const randomPortals = this.getRandomPortals().filter(p => p.status === 'locked')
+    if (randomPortals.length === 0) {
       log('[PortalManager] no locked portals, all active or growing')
+      return
     }
+    
+    // Сортируем: сначала порталы без lastWinTime (новые), потом по возрастанию времени
+    randomPortals.sort((a, b) => {
+      const timeA = a.lastWinTime || 0
+      const timeB = b.lastWinTime || 0
+      return timeA - timeB
+    })
+    
+    const nextLocked = randomPortals[0]
+    const timeInfo = nextLocked.lastWinTime 
+      ? `lastWinTime: ${new Date(nextLocked.lastWinTime).toLocaleTimeString()}`
+      : 'new portal'
+    
+    log('[PortalManager] starting growth for next portal:', nextLocked.id, timeInfo)
+    this.startPortalGrowth(nextLocked.id)
   }
 
   // Проверить, все ли порталы должны быть активны (игрок вернулся после долгого перерыва)
@@ -198,8 +211,8 @@ export class PortalManager {
     // Нет растущего - запускаем следующий locked портал в очереди
     const nextLocked = randomPortals.find(p => p.status === 'locked')
     if (nextLocked) {
-      log('[PortalManager] starting growth for', nextLocked.id)
-      this.startPortalGrowth(nextLocked.id)
+      log('[PortalManager] starting growth for next portal in queue')
+      this.startNextPortalGrowth()
     }
     
     return false
@@ -257,6 +270,7 @@ export class PortalManager {
     
     portal.lastWinTime = Date.now()
     portal.status = 'locked'
+    
     log('[PortalManager] marked', id, 'as completed, lastWinTime:', portal.lastWinTime)
     log('[PortalManager] portal status AFTER:', portal.status)
     
