@@ -246,16 +246,27 @@ export class PortalManager {
   // Пометить портал как пройденный
   markPortalCompleted(id) {
     const portal = this.getPortal(id)
-    if (!portal) return
+    if (!portal) {
+      log('[PortalManager] ERROR: portal not found:', id)
+      return
+    }
+    
+    log('[PortalManager] === markPortalCompleted called ===')
+    log('[PortalManager] portalId:', id)
+    log('[PortalManager] portal status BEFORE:', portal.status)
     
     portal.lastWinTime = Date.now()
     portal.status = 'locked'
     log('[PortalManager] marked', id, 'as completed, lastWinTime:', portal.lastWinTime)
+    log('[PortalManager] portal status AFTER:', portal.status)
     
     // Портал встал в очередь - запустим следующий, если никто не растёт
     const growingPortal = this.getRandomPortals().find(p => p.status === 'growing')
     if (!growingPortal) {
+      log('[PortalManager] no growing portal, starting next')
       this.startNextPortalGrowth()
+    } else {
+      log('[PortalManager] portal', growingPortal.id, 'is already growing')
     }
   }
 

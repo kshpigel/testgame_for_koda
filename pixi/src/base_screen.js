@@ -50,8 +50,10 @@ export class BaseScreen extends EventEmitter {
     
     await this.loadAssets()
     
-    // Создаём PortalRenderer ПОСЛЕ загрузки ассетов
-    this.portalRenderer = new PortalRenderer(this.container, this.app, this)
+    // Создаём PortalRenderer ТОЛЬКО ОДИН РАЗ
+    if (!this.portalRenderer) {
+      this.portalRenderer = new PortalRenderer(this.container, this.app, this)
+    }
     
     this.render()
     this.app.stage.addChild(this.container)
@@ -158,9 +160,8 @@ export class BaseScreen extends EventEmitter {
     bg.zIndex = 0
     this.container.addChild(bg)
 
-    // Порталы и алтари
+    // Порталы и алтари созданы в PortalRenderer.init() — здесь ничего не делаем
     this.portalRenderer.init(this.altarAssets, this.portalAssets)
-    this.portalRenderer.render(this.completedPortals)
 
     // Замок (castle) - фиксированный размер 220x220 (как было раньше)
     const castleTexture = this.assets.base.texture
@@ -276,6 +277,8 @@ export class BaseScreen extends EventEmitter {
               player.crystals -= cost
               player.save()
               this.updateDeckInfo()
+              // Запустить бой
+              this.emit('start_game', portalId)
             }
           } else {
             const errModal = new Modal(this.app, {
@@ -311,16 +314,8 @@ export class BaseScreen extends EventEmitter {
       this._tickerCallback = null
     }
     
-    // Удаляем порталы и алтари
-    if (this.portalRenderer) {
-      log('[BaseScreen] destroying portalRenderer')
-      try {
-        this.portalRenderer.destroy()
-      } catch (e) {
-        console.error('[BaseScreen] error destroying portalRenderer:', e)
-      }
-      this.portalRenderer = null
-    }
+    // НЕ уничтожаем portalRenderer - порталы должны оставаться (встать в очередь на рост)
+    // Просто скрываем контейнер
     
     // Удаляем птиц
     if (this.birds) {

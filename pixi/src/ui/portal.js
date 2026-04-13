@@ -83,18 +83,9 @@ export class Portal extends UINode {
     this.eventMode = 'static'
     this._isDestroying = false
 
-    // Активные и растущие порталы кликабельны
-    const isClickable = this.status === 'active' || this.status === 'growing'
-    this.cursor = isClickable ? 'pointer' : 'default'
-    this.interactive = isClickable
-
-    if (!isClickable) {
-      // Неактивные порталы (locked) не взаимодействуют
-      return
-    }
-
+    // Всегда вешаем обработчики, но проверяем статус в pointerdown
     this.on('pointerover', () => {
-      if (this._destroyed || this._isDestroyed || this._isDestroying) return
+      if (this._destroyed || this._isDestroyed || this._isDestroying || this.status !== 'active') return
       this.setScale(1.05)
       this.targetBrightness = 1.5
       soundManager.play('hover')
@@ -108,6 +99,10 @@ export class Portal extends UINode {
 
     this.on('pointerdown', () => {
       if (this._destroyed || this._isDestroyed || this._isDestroying) return
+      
+      // Только активные порталы реагируют на клик
+      if (this.status !== 'active') return
+      
       soundManager.play('click')
       if (this.onClick) this.onClick()
     })
@@ -120,8 +115,8 @@ export class Portal extends UINode {
       sprite.tint = status === 'active' ? 0xFFFFFF : (status === 'growing' ? 0xAAAAAA : 0x888888)
     }
     
-    // Активные и растущие порталы кликабельны
-    const isClickable = status === 'active' || status === 'growing'
+    // Активные порталы кликабельны
+    const isClickable = status === 'active'
     this.cursor = isClickable ? 'pointer' : 'default'
     this.interactive = isClickable
     

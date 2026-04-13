@@ -209,7 +209,7 @@ export class Game {
           return
         }
         
-        // Проверка кристаллов и диалог подтверждения
+        // Показываем диалог подтверждения (все порталы стоят 3 кристала)
         this.showPortalConfirmDialog(portalId)
       })
       this.screens['base'] = baseScreen
@@ -253,8 +253,17 @@ export class Game {
       mapScreen.on('exit_to_base', () => {
         // При выходе добавляем портал в пройденные
         const portalId = mapScreen.portalId
-        if (portalId && !this.completedPortals.includes(portalId)) {
-          this.completedPortals.push(portalId)
+        if (portalId) {
+          // Проверяем тип портала - премиум не добавляем в completed (циклический)
+          const portalData = portalManager.getPortal(portalId)
+          const isPremium = portalData?.type === 'premium'
+          
+          if (!isPremium && !this.completedPortals.includes(portalId)) {
+            this.completedPortals.push(portalId)
+          }
+          
+          // Обновляем статус портала в manager (скрыть его)
+          portalManager.markPortalCompleted(portalId)
         }
         this.showBase()
       })
@@ -306,11 +315,20 @@ export class Game {
           log('[Game] === VICTORY OVER BOSS ===')
           log('[Game] portalId:', portalId)
           log('[Game] completedPortals BEFORE:', [...this.completedPortals])
-          if (portalId && !this.completedPortals.includes(portalId)) {
-            this.completedPortals.push(portalId)
+          
+          if (portalId) {
+            // Проверяем тип портала - премиум не добавляем в completed (циклический)
+            const portalData = portalManager.getPortal(portalId)
+            const isPremium = portalData?.type === 'premium'
+            
+            if (!isPremium && !this.completedPortals.includes(portalId)) {
+              this.completedPortals.push(portalId)
+            }
+            
             // Отмечаем портал как пройденный в PortalManager
             portalManager.markPortalCompleted(portalId)
           }
+          
           log('[Game] completedPortals AFTER:', [...this.completedPortals])
           log('[Game] calling showBase()...')
           this.showBase()

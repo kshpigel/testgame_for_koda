@@ -8,9 +8,9 @@ import { log } from '../data/config.js'
  * PortalRenderer - управление порталами и алтарями на базе
  * 
  * Отвечает за:
- * - Создание/удаление порталов
- * - Обновление alpha при смене статуса (locked/growing/active)
- * - Обработчики кликов на порталы и алтари
+ * - Создание порталов и алтарей ОДИН РАЗ при init()
+ * - Обновление статусов через setStatus()
+ * - Управление очередью роста
  */
 export class PortalRenderer {
   constructor(container, app, baseScreen) {
@@ -20,6 +20,8 @@ export class PortalRenderer {
     this.portals = []
     this.portalAltars = []
     this.altarAssets = null
+    this.portalAssets = null
+    this.initialized = false
   }
 
   /**
@@ -28,38 +30,29 @@ export class PortalRenderer {
   init(altarAssets, portalAssets) {
     this.altarAssets = altarAssets
     this.portalAssets = portalAssets
+    
+    // Создаём порталы и алтари ОДИН РАЗ
+    if (!this.initialized) {
+      this._createAllPortalsAndAltars()
+      this.initialized = true
+    }
   }
 
   /**
-   * Создание всех порталов и алтарей
+   * Создание всех порталов и алтарей (вызывается один раз)
    */
-  render(completedPortals) {
-    log('[PortalRenderer] render() START, completedPortals:', completedPortals)
+  _createAllPortalsAndAltars() {
+    log('[PortalRenderer] _createAllPortalsAndAltars() called')
     
     const allPortals = portalManager.getAllPortals()
     
     // Создаём алтари
-    this._createAltars(allPortals, completedPortals)
-    
-    // Создаём порталы
-    this._createPortals(allPortals, completedPortals)
-    
-    log('[PortalRenderer] render() END, portals:', this.portals.length, 'altars:', this.portalAltars.length)
-  }
-
-  /**
-   * Создание алтарей
-   */
-  _createAltars(allPortals, completedPortals) {
     allPortals.forEach(portalData => {
       const status = portalManager.getPortalStatus(portalData.id)
       
       // Пропускаем скрытые и пройденные
-      if (status === 'hidden' || completedPortals.includes(portalData.id)) return
-      if (!portalData.altarType || !this.altarAssets) {
-        log('[PortalRenderer]   skipping altar:', portalData.id, 'altarType:', portalData.altarType, 'altarAssets:', !!this.altarAssets)
-        return
-      }
+      if (status === 'hidden') return
+      if (!portalData.altarType || !this.altarAssets) return
 
       const position = portalManager.getPosition(portalData.id)
       if (!position) return
@@ -69,12 +62,7 @@ export class PortalRenderer {
 
       const altarConfig = portalManager.getAltarConfig(portalData.altarType)
       const altarTexture = altarConfig ? this.altarAssets[portalData.altarType]?.texture : null
-      if (!altarTexture) {
-        log('[PortalRenderer]   no texture for altar:', portalData.id, 'altarType:', portalData.altarType)
-        return
-      }
-
-      log('[PortalRenderer]   creating altar:', portalData.id, 'texture:', !!altarTexture)
+      if (!altarTexture) return
 
       const isAvailable = portalManager.isPortalAvailable(portalData.id)
       const altarStatus = isAvailable ? 'active' : status
@@ -91,26 +79,27 @@ export class PortalRenderer {
       altar.setY(y + 60)
       altar.portalId = portalData.id
       altar.zIndex = 20
-      altar.eventMode = 'static'
-      altar.cursor = 'pointer'
 
-      // Обработчик клика на алтарь
-      altar.on('pointerdown', () => this._onAltarClick(portalData))
+      // Активные алтари кликабельны
+      if (altarStatus === 'active') {
+        altar.eventMode = 'static'
+        altar.cursor = 'pointer'
+        altar.on('pointerdown', () => this._onAltarClick(portalData))
+      } else {
+        altar.eventMode = 'none'
+        altar.cursor = 'default'
+      }
 
       this.container.addChild(altar)
       this.portalAltars.push(altar)
     })
-  }
-
-  /**
-   * Создание порталов
-   */
-  _createPortals(allPortals, completedPortals) {
+    
+    // Создаём порталы
     allPortals.forEach(portalData => {
       const status = portalManager.getPortalStatus(portalData.id)
       
-      // Пропускаем скрытые и пройденные
-      if (status === 'hidden' || completedPortals.includes(portalData.id)) return
+      // Пропускаем скрытые
+      if (status === 'hidden') return
 
       const position = portalManager.getPosition(portalData.id)
       if (!position) return
@@ -143,7 +132,7 @@ export class PortalRenderer {
         glowColor: glowColor,
         status: portalStatus,
         baseScreen: this.baseScreen,
-        onClick: () => this._onPortalClick(portalData, portalStatus)
+        onClick: () => this._onPortalClick(portalData.id)
       })
       portal.setX(x)
       portal.setY(y)
@@ -151,14 +140,49 @@ export class PortalRenderer {
       portal.zIndex = 30
 
       // Скрываем locked порталы
-      if (status === 'locked') {
-        portal.alpha = 0
-      }
+      portal.alpha = portalStatus === 'locked' ? 0 : 1
 
       this.container.addChild(portal)
       this.portals.push(portal)
 
-      log('[PortalRenderer]   created portal:', portalData.id, 'status:', status, 'alpha:', portal.alpha)
+      log('[PortalRenderer] created portal:', portalData.id, 'status:', portalStatus, 'alpha:', portal.alpha)
+    })
+    
+    log('[PortalRenderer] _createAllPortalsAndAltars() done, portals:', this.portals.length, 'altars:', this.portalAltars.length)
+  }
+
+  /**
+   * Обновление статусов порталов (вызывается каждый тик)
+   */
+  update() {
+    if (!this.portals || this.portals.length === 0) return
+
+    // Проверяем завершение роста
+    const randomPortals = portalManager.getRandomPortals()
+    randomPortals.forEach(portal => {
+      portalManager.checkPortalGrowthComplete(portal.id)
+    })
+
+    // Обновляем статусы и alpha
+    this.portals.forEach(p => {
+      const newStatus = portalManager.getPortalStatus(p.portalId)
+      if (p.status !== newStatus) {
+        p.setStatus(newStatus)
+        p.status = newStatus
+        log('[PortalRenderer] portal:', p.portalId, 'status changed to:', newStatus)
+      }
+      // Всегда обновляем alpha в зависимости от статуса
+      p.alpha = p.status === 'locked' ? 0 : 1
+      p.update()
+    })
+
+    // Обновляем алтари
+    this.portalAltars.forEach(a => {
+      const newStatus = portalManager.getPortalStatus(a.portalId)
+      if (a.status !== newStatus) {
+        a.setStatus(newStatus)
+        a.status = newStatus
+      }
     })
   }
 
@@ -174,11 +198,8 @@ export class PortalRenderer {
       return
     }
 
-    if (status === 'locked') {
-      this.baseScreen.showPortalNotReadyModal(portalData.id, 'locked')
-    } else if (status === 'growing') {
-      this.baseScreen.showPortalNotReadyModal(portalData.id, 'growing')
-    } else if (portalData.type === 'premium') {
+    // Только премиум порталы - показываем модалку активации
+    if (portalData.type === 'premium') {
       this.baseScreen.showPremiumPortalModal(portalData.id)
     }
   }
@@ -186,8 +207,10 @@ export class PortalRenderer {
   /**
    * Обработчик клика на портал
    */
-  _onPortalClick(portalData, portalStatus) {
-    log('[PortalRenderer] portal clicked:', portalData.id, 'status:', portalStatus, 'type:', portalData.type, 'baseScreen:', !!this.baseScreen)
+  _onPortalClick(portalId) {
+    const portalData = portalManager.getPortal(portalId)
+    const portalStatus = portalManager.getPortalStatus(portalId)
+    log('[PortalRenderer] portal clicked:', portalId, 'status:', portalStatus, 'type:', portalData?.type, 'baseScreen:', !!this.baseScreen)
 
     if (!this.baseScreen) {
       log('[PortalRenderer] ERROR: baseScreen is null!')
@@ -195,69 +218,8 @@ export class PortalRenderer {
     }
 
     if (portalStatus === 'active') {
-      // Активный портал - старт игры (как было раньше)
-      this.container.emit('start_game', portalData.id)
-    } else if (portalStatus === 'growing') {
-      this.baseScreen.showPortalNotReadyModal(portalData.id, 'growing')
-    } else if (portalData.type === 'premium') {
-      // Премиум портал не активен - показываем модалку активации
-      this.baseScreen.showPremiumPortalModal(portalData.id)
+      // Активный портал — эмитим событие на baseScreen (game.js слушает здесь)
+      this.baseScreen.emit('start_game', portalId)
     }
-  }
-
-  /**
-   * Обновление статусов порталов (вызывается каждый тик)
-   */
-  update() {
-    if (!this.portals) return
-
-    // Проверяем завершение роста
-    const randomPortals = portalManager.getRandomPortals()
-    randomPortals.forEach(portal => {
-      portalManager.checkPortalGrowthComplete(portal.id)
-    })
-
-    // Обновляем статусы и alpha
-    this.portals.forEach(p => {
-      const newStatus = portalManager.getPortalStatus(p.portalId)
-      if (p.status !== newStatus) {
-        p.setStatus(newStatus)
-        // Обновляем alpha при смене статуса
-        p.alpha = newStatus === 'locked' ? 0 : 1
-        log('[PortalRenderer] portal:', p.portalId, 'status:', newStatus, 'alpha:', p.alpha)
-      }
-      p.update()
-    })
-
-    // Обновляем алтари
-    this.portalAltars.forEach(a => {
-      const newStatus = portalManager.getPortalStatus(a.portalId)
-      if (a.status !== newStatus) {
-        a.setStatus(newStatus)
-      }
-    })
-  }
-
-  /**
-   * Удаление всех порталов и алтарей
-   */
-  destroy() {
-    log('[PortalRenderer] destroy() called, portals:', this.portals.length, 'altars:', this.portalAltars.length)
-
-    // Удаляем порталы первыми
-    this.portals.forEach(p => {
-      if (p && !p.destroyed) {
-        p.destroy({ children: true })
-      }
-    })
-    this.portals = []
-
-    // Затем алтари
-    this.portalAltars.forEach(a => {
-      if (a && !a.destroyed) {
-        a.destroy({ children: true })
-      }
-    })
-    this.portalAltars = []
   }
 }
