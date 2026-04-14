@@ -117,22 +117,17 @@ export class GameState {
     // Если уже есть растущий портал - ничего не делаем
     const growing = this.getGrowingPortal()
     if (growing) {
-      console.log('[GameState] checkNextPortalToGrow: portal', growing.id, 'is already growing')
       return
     }
 
     // Ищем следующий locked/hidden портал
     const nextLocked = this.getNextLockedPortal()
     if (!nextLocked) {
-      console.log('[GameState] checkNextPortalToGrow: no locked portals, all active')
       return
     }
 
     // Запускаем рост через PortalManager (устанавливает growthStartTime и меняет статус)
-    console.log('[GameState] checkNextPortalToGrow: starting growth for', nextLocked.id)
-    console.log('[GameState] window.portalManager exists:', !!window.portalManager)
     if (window.portalManager) {
-      console.log('[GameState] calling startPortalGrowth')
       window.portalManager.startPortalGrowth(nextLocked.id)
       // startPortalGrowth уже меняет статус в portalsData, синхронизируем GameState
       // НЕ вызываем setStatus - это вызовет цикл (setStatus -> checkNextPortalToGrow)
@@ -140,8 +135,6 @@ export class GameState {
       if (portal) {
         portal.status = 'growing'
       }
-    } else {
-      console.error('[GameState] window.portalManager NOT FOUND!')
     }
   }
 

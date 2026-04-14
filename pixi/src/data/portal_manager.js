@@ -123,18 +123,14 @@ export class PortalManager {
 
   // Запустить рост портала
   startPortalGrowth(id) {
-    console.log('[PortalManager] startPortalGrowth called with id:', id)
     const portal = this.getPortal(id)
     if (!portal) {
-      console.error('[PortalManager] startPortalGrowth: portal not found', id)
       return false
     }
     
-    console.log('[PortalManager] startPortalGrowth: portal found, current status:', portal.status)
     portal.status = 'growing'
     portal.growthStartTime = Date.now()
     
-    console.log('[PortalManager] started growth for', id, 'at', portal.growthStartTime, 'now:', Date.now())
     return true
   }
 
@@ -258,27 +254,18 @@ export class PortalManager {
   markPortalCompleted(id) {
     const portal = this.getPortal(id)
     if (!portal) {
-      log('[PortalManager] ERROR: portal not found:', id)
       return
     }
-    
-    log('[PortalManager] === markPortalCompleted called ===')
-    log('[PortalManager] portalId:', id)
-    log('[PortalManager] portal status BEFORE:', portal.status)
     
     // Обновляем данные
     portal.lastWinTime = Date.now()
     portal.status = 'hidden'
-    
-    log('[PortalManager] marked', id, 'as completed, lastWinTime:', portal.lastWinTime)
-    log('[PortalManager] portal status AFTER:', portal.status)
     
     // Обновляем статус в GameState
     gameState.setLastWinTime(id)
     gameState.setStatus(id, 'hidden')
     
     // Запускаем следующий портал сразу!
-    log('[PortalManager] checking next portal growth')
     gameState.checkNextPortalToGrow()
   }
 
@@ -327,7 +314,6 @@ export class PortalManager {
   syncGameStateFromPortals(randomPortals) {
     // Инициализируем GameState если ещё не сделан
     if (!gameState.initialized) {
-      log('[PortalManager] sync: initializing GameState')
       gameState.initFromPortals(randomPortals)
     }
 
@@ -336,14 +322,10 @@ export class PortalManager {
     gameState.portals.forEach(statePortal => {
       const managerPortal = this.getPortal(statePortal.id)
       if (managerPortal && managerPortal.status !== statePortal.status) {
-        log('[PortalManager] sync: updating manager portal', statePortal.id, statePortal.status)
         managerPortal.status = statePortal.status
         managerPortal.lastWinTime = statePortal.lastWinTime
       }
     })
-
-    // Лог для отладки: показать все порталы с growthStartTime
-    log('[PortalManager] sync: portal statuses:', gameState.portals.map(p => `${p.id}:${p.status}:${p.growthStartTime || 'null'}`))
 
     // Если никто не растёт и есть locked/hidden порталы — проверяем, можно ли запустить следующий
     const growing = gameState.getGrowingPortal()
@@ -352,14 +334,9 @@ export class PortalManager {
       const activeCount = gameState.countByStatus('active')
       if (activeCount === 0) {
         // Все порталы скрыты — запускаем следующий
-        log('[PortalManager] sync: no growing, all hidden, checking next')
         gameState.checkNextPortalToGrow()
-      } else {
-        log('[PortalManager] sync: still', activeCount, 'active portals, NOT starting growth')
       }
     }
-
-    gameState.debug()
   }
 
   // Получить прогресс роста портала (0-1)

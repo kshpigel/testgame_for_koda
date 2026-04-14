@@ -41,7 +41,6 @@ export class BaseScreen extends EventEmitter {
 
   async init(completedPortals = []) {
     this.completedPortals = completedPortals
-    log('[BaseScreen] init() called with completedPortals:', completedPortals)
     
     // Включаем сортировку детей по zIndex
     this.container.sortableChildren = true
@@ -49,12 +48,10 @@ export class BaseScreen extends EventEmitter {
     // Загружаем конфигурацию порталов
     await portalManager.load()
     
-    // Синхронизируем GameState с данными порталов (всегда, не только при первой инициализации)
+    // Синхронизируем GameState с данными порталов
     const randomPortals = portalManager.getRandomPortals()
     if (randomPortals.length > 0) {
-      log('[BaseScreen] syncing GameState with portals')
       portalManager.syncGameStateFromPortals(randomPortals)
-      gameState.debug()
     }
     
     await this.loadAssets()
