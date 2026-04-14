@@ -112,17 +112,30 @@ export class Portal extends UINode {
     this.status = status
     const sprite = this.getChildByName('portalSprite')
     if (sprite) {
-      sprite.tint = status === 'active' ? 0xFFFFFF : (status === 'growing' ? 0xAAAAAA : 0x888888)
+      // Разные цвета для разных статусов
+      if (status === 'active') {
+        sprite.tint = 0xFFFFFF
+      } else if (status === 'growing') {
+        sprite.tint = 0xAAAAAA
+      } else {
+        // locked, hidden - тёмный
+        sprite.tint = 0x888888
+      }
     }
     
-    // Активные порталы кликабельны
+    // Активные и растущие порталы кликабельны
     const isClickable = status === 'active'
     this.cursor = isClickable ? 'pointer' : 'default'
     this.interactive = isClickable
     
     // Обновляем brightness для неактивных порталов
-    if (status !== 'active') {
-      this.targetBrightness = status === 'growing' ? 1 : 0.5
+    if (status === 'active') {
+      this.targetBrightness = 1
+    } else if (status === 'growing') {
+      this.targetBrightness = 1
+    } else {
+      // locked - тусклый
+      this.targetBrightness = 0.5
     }
   }
   
@@ -167,6 +180,17 @@ export class Portal extends UINode {
     // Защита от вызова после destroy()
     if (this._destroyed || this._isDestroyed) return
     
+    // Locked порталы не анимируются
+    if (this.status === 'locked') {
+      super.updateScale()
+      this.scale.set(this._scale)
+      if (this._visualX !== undefined) {
+        this.x = this._visualX + this.pivot.x * this._scale
+        this.y = this._visualY + this.pivot.y * this._scale
+      }
+      return
+    }
+    
     // Сначала базовый scale от UINode (включая компенсацию позиции)
     super.updateScale()
     
@@ -204,7 +228,7 @@ export class Portal extends UINode {
         }
       }
       
-      // Вращение по часовой стрелке
+      // Вращение по часовой стрелке (только для active и growing)
       this.rotationOffset += this.rotationSpeed
       portalSprite.rotation = this.rotationOffset
     }

@@ -153,15 +153,10 @@ export class PortalRenderer {
 
   /**
    * Обновление статусов порталов (вызывается каждый тик)
+   * Примечание: checkPortalGrowthComplete вызывается из Game.updatePortals() глобально
    */
   update() {
     if (!this.portals || this.portals.length === 0) return
-
-    // Проверяем завершение роста
-    const randomPortals = portalManager.getRandomPortals()
-    randomPortals.forEach(portal => {
-      portalManager.checkPortalGrowthComplete(portal.id)
-    })
 
     // Обновляем статусы и alpha
     this.portals.forEach(p => {
@@ -171,8 +166,8 @@ export class PortalRenderer {
         p.status = newStatus
         log('[PortalRenderer] portal:', p.portalId, 'status changed to:', newStatus)
       }
-      // Всегда обновляем alpha в зависимости от статуса
-      p.alpha = p.status === 'locked' ? 0 : 1
+      // Скрыты только hidden порталы, locked тоже скрыты (ждут роста)
+      p.alpha = (p.status === 'hidden' || p.status === 'locked') ? 0 : 1
       p.update()
     })
 

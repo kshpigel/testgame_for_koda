@@ -60,6 +60,10 @@ export class Game {
     // Диалог (глобальный)
     this.dialog = new Dialog(this.app, this.app.stage)
     
+    // Глобальный тикер для PortalManager (рост порталов в фоне)
+    this._portalTicker = () => this.updatePortals()
+    this.app.ticker.add(this._portalTicker)
+    
     // Инициализация стартового экрана (без init - будет вызвано при показе)
     this.startScreen = new StartScreen(this.app, () => this.runLoading())
     this.startScreen.container.zIndex = Z.BG_START
@@ -641,5 +645,27 @@ export class Game {
     
     modal.addToStage(this.app.stage)
     modal.show()
+  }
+
+  // Глобальный тикер для обновления порталов (работает всегда, даже на карте/в бою)
+  updatePortals() {
+    if (!portalManager || !portalManager.portalsData) {
+      return
+    }
+    const randomPortals = portalManager.getRandomPortals()
+    randomPortals.forEach(portal => {
+      const completed = portalManager.checkPortalGrowthComplete(portal.id)
+      if (completed) {
+        console.log('[Game] Portal', portal.id, 'growth completed')
+      }
+    })
+  }
+
+  destroy() {
+    // Останавливаем глобальный тикер порталов
+    if (this._portalTicker) {
+      this.app.ticker.remove(this._portalTicker)
+      this._portalTicker = null
+    }
   }
 }

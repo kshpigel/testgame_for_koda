@@ -10,6 +10,7 @@ import { MapNode } from './ui/map_node.js'
 import { MapRenderer } from './ui/map_renderer.js'
 import { Button } from './ui/button.js'
 import { t } from './data/i18n.js'
+import { portalManager } from './data/portal_manager.js'
 
 export class MapScreen extends EventEmitter {
   constructor(app, mapData, enemies, game) {
@@ -26,6 +27,7 @@ export class MapScreen extends EventEmitter {
     
     this.cellSize = Math.min(app.screen.width, app.screen.height) / 20
     
+    this.portalId = null // ID портала, через который зашли на карту
     this.loadAssets()
   }
 
@@ -85,6 +87,11 @@ export class MapScreen extends EventEmitter {
       fontSize: 16,
       app: this.app,
       onClick: () => {
+        // Если зашли через портал - помечаем его как пройденный
+        if (this.portalId) {
+          log('[MapScreen] exit to base, marking portal', this.portalId, 'as completed')
+          portalManager.markPortalCompleted(this.portalId)
+        }
         this.emit('exit_to_base')
       }
     })

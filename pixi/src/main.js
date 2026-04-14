@@ -5,6 +5,7 @@ import { loadAllAssets } from './asset_loader.js'
 import { colors } from './data/colors.js'
 import { config, loadConfig, log } from './data/config.js'
 import { loadTranslations, t } from './data/i18n.js'
+import { portalManager } from './data/portal_manager.js'
 
 let gameInstance = null
 
@@ -105,6 +106,9 @@ async function init() {
 
   // Создаём игру (без старта)
   gameInstance = new Game(app)
+  
+  // Делаем portalManager доступным для GameState
+  window.portalManager = portalManager
   
   // Функция запуска загрузки при нажатии "Играть"
   async function startLoading() {

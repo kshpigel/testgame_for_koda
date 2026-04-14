@@ -1,5 +1,6 @@
 import * as PIXI from 'pixi.js'
 import { log } from '../data/config.js'
+import { gameState } from './game_state.js'
 
 export class PortalManager {
   constructor() {
@@ -16,19 +17,40 @@ export class PortalManager {
   async load() {
     try {
       const data = await PIXI.Assets.load('/assets/data/portals.json')
+      
+      // Сохраняем текущие статусы и growthStartTime перед перезагрузкой
+      const savedState = {}
+      if (this.portalsData) {
+        this.portalsData.forEach((portal, id) => {
+          savedState[id] = {
+            status: portal.status,
+            growthStartTime: portal.growthStartTime,
+            lastWinTime: portal.lastWinTime
+          }
+        })
+      }
+      
       this.portalsData = new Map()
       this.portalTypes = data.portalTypes || {}
       this.altarTypes = data.altarTypes || {}
       this.positions = data.positions || []
 
       data.portals.forEach(p => {
-        this.portalsData.set(p.id, { ...p })
+        const newPortal = { ...p }
+        // Восстанавливаем сохранённое состояние если есть
+        if (savedState[p.id]) {
+          newPortal.status = savedState[p.id].status
+          newPortal.growthStartTime = savedState[p.id].growthStartTime
+          newPortal.lastWinTime = savedState[p.id].lastWinTime
+        }
+        this.portalsData.set(p.id, newPortal)
       })
 
-      log('[PortalManager] loaded', this.portalsData.size, 'portals')
+      log('[PortalManager] loaded', this.portalsData.size, 'portals, restored', Object.keys(savedState).length, 'states')
       
-      // Проверяем, все ли порталы должны быть активны (игрок вернулся после долгого перерыва)
-      this.checkAllPortalsAvailable()
+      // Синхронизируем GameState и запускаем первый портал
+      const randomPortals = this.getRandomPortals()
+      this.syncGameStateFromPortals(randomPortals)
       
       return true
     } catch (e) {
@@ -71,17 +93,8 @@ export class PortalManager {
 
   // Получить следующий портал в очереди роста
   getNextPortalInQueue() {
-    const randomPortals = this.getRandomPortals()
-    
-    // Ищем портал со статусом 'growing'
-    const growingPortal = randomPortals.find(p => p.status === 'growing')
-    if (growingPortal) {
-      return growingPortal
-    }
-    
-    // Ищем первый locked портал
-    const lockedPortal = randomPortals.find(p => p.status === 'locked')
-    return lockedPortal || null
+    // Используем GameState для получения следующего портала
+    return gameState.getNextFromQueue()
   }
 
   // Проверить, растёт ли портал
@@ -110,13 +123,18 @@ export class PortalManager {
 
   // Запустить рост портала
   startPortalGrowth(id) {
+    console.log('[PortalManager] startPortalGrowth called with id:', id)
     const portal = this.getPortal(id)
-    if (!portal) return false
+    if (!portal) {
+      console.error('[PortalManager] startPortalGrowth: portal not found', id)
+      return false
+    }
     
+    console.log('[PortalManager] startPortalGrowth: portal found, current status:', portal.status)
     portal.status = 'growing'
     portal.growthStartTime = Date.now()
     
-    log('[PortalManager] started growth for', id, 'at', portal.growthStartTime)
+    console.log('[PortalManager] started growth for', id, 'at', portal.growthStartTime, 'now:', Date.now())
     return true
   }
 
@@ -133,13 +151,15 @@ export class PortalManager {
     const remaining = Math.max(0, growthTime - elapsed)
     
     if (remaining <= 0) {
-      // Рост завершён
+      // Рост завершён — обновляем статус в данных
       portal.status = 'active'
       portal.growthStartTime = null
-      log('[PortalManager] portal', id, 'is now active')
       
-      // Сразу запускаем рост следующего портала
-      this.startNextPortalGrowth()
+      // Обновляем статус в GameState (это автоматически проверит следующий портал)
+      gameState.setStatus(id, 'active')
+      gameState.setLastWinTime(id)
+      
+      log('[PortalManager] portal', id, 'is now active')
       
       return true
     }
@@ -149,28 +169,8 @@ export class PortalManager {
 
   // Запустить рост следующего портала в очереди
   startNextPortalGrowth() {
-    // Ищем locked портал с НАИМЕНЬШИМ lastWinTime (пройден раньше всех)
-    // Для новых порталов lastWinTime = null — они идут первыми
-    const randomPortals = this.getRandomPortals().filter(p => p.status === 'locked')
-    if (randomPortals.length === 0) {
-      log('[PortalManager] no locked portals, all active or growing')
-      return
-    }
-    
-    // Сортируем: сначала порталы без lastWinTime (новые), потом по возрастанию времени
-    randomPortals.sort((a, b) => {
-      const timeA = a.lastWinTime || 0
-      const timeB = b.lastWinTime || 0
-      return timeA - timeB
-    })
-    
-    const nextLocked = randomPortals[0]
-    const timeInfo = nextLocked.lastWinTime 
-      ? `lastWinTime: ${new Date(nextLocked.lastWinTime).toLocaleTimeString()}`
-      : 'new portal'
-    
-    log('[PortalManager] starting growth for next portal:', nextLocked.id, timeInfo)
-    this.startPortalGrowth(nextLocked.id)
+    // Используем GameState для запуска следующего портала
+    gameState.checkNextPortalToGrow()
   }
 
   // Проверить, все ли порталы должны быть активны (игрок вернулся после долгого перерыва)
@@ -179,9 +179,8 @@ export class PortalManager {
     if (randomPortals.length === 0) return false
     
     // Если есть растущий портал - ничего не делаем
-    const growingPortal = randomPortals.find(p => p.status === 'growing')
-    if (growingPortal) {
-      log('[PortalManager] portal', growingPortal.id, 'is growing, waiting')
+    if (gameState.currentGrowingPortalId) {
+      log('[PortalManager] portal', gameState.currentGrowingPortalId, 'is growing, waiting')
       return false
     }
     
@@ -205,15 +204,14 @@ export class PortalManager {
         p.status = 'active'
         p.growthStartTime = null
       })
+      // Сбрасываем GameState
+      gameState.reset()
+      this.syncGameStateFromPortals(randomPortals)
       return true
     }
     
-    // Нет растущего - запускаем следующий locked портал в очереди
-    const nextLocked = randomPortals.find(p => p.status === 'locked')
-    if (nextLocked) {
-      log('[PortalManager] starting growth for next portal in queue')
-      this.startNextPortalGrowth()
-    }
+    // Нет растущего - запускаем следующий из очереди
+    this.startNextPortalGrowth()
     
     return false
   }
@@ -268,20 +266,20 @@ export class PortalManager {
     log('[PortalManager] portalId:', id)
     log('[PortalManager] portal status BEFORE:', portal.status)
     
+    // Обновляем данные
     portal.lastWinTime = Date.now()
-    portal.status = 'locked'
+    portal.status = 'hidden'
     
     log('[PortalManager] marked', id, 'as completed, lastWinTime:', portal.lastWinTime)
     log('[PortalManager] portal status AFTER:', portal.status)
     
-    // Портал встал в очередь - запустим следующий, если никто не растёт
-    const growingPortal = this.getRandomPortals().find(p => p.status === 'growing')
-    if (!growingPortal) {
-      log('[PortalManager] no growing portal, starting next')
-      this.startNextPortalGrowth()
-    } else {
-      log('[PortalManager] portal', growingPortal.id, 'is already growing')
-    }
+    // Обновляем статус в GameState
+    gameState.setLastWinTime(id)
+    gameState.setStatus(id, 'hidden')
+    
+    // Запускаем следующий портал сразу!
+    log('[PortalManager] checking next portal growth')
+    gameState.checkNextPortalToGrow()
   }
 
   // Проверить доступность портала
@@ -323,6 +321,45 @@ export class PortalManager {
     if (portal.status === 'growing') return 'growing'
     
     return portal.status
+  }
+
+  // Синхронизировать GameState с данными порталов (вызывается при загрузке BaseScreen)
+  syncGameStateFromPortals(randomPortals) {
+    // Инициализируем GameState если ещё не сделан
+    if (!gameState.initialized) {
+      log('[PortalManager] sync: initializing GameState')
+      gameState.initFromPortals(randomPortals)
+    }
+
+    // Синхронизируем статусы ИЗ GameState В данные (не наоборот!)
+    // GameState - источник истины, portals.json только для начальной загрузки
+    gameState.portals.forEach(statePortal => {
+      const managerPortal = this.getPortal(statePortal.id)
+      if (managerPortal && managerPortal.status !== statePortal.status) {
+        log('[PortalManager] sync: updating manager portal', statePortal.id, statePortal.status)
+        managerPortal.status = statePortal.status
+        managerPortal.lastWinTime = statePortal.lastWinTime
+      }
+    })
+
+    // Лог для отладки: показать все порталы с growthStartTime
+    log('[PortalManager] sync: portal statuses:', gameState.portals.map(p => `${p.id}:${p.status}:${p.growthStartTime || 'null'}`))
+
+    // Если никто не растёт и есть locked/hidden порталы — проверяем, можно ли запустить следующий
+    const growing = gameState.getGrowingPortal()
+    if (!growing) {
+      // Проверяем, есть ли active порталы
+      const activeCount = gameState.countByStatus('active')
+      if (activeCount === 0) {
+        // Все порталы скрыты — запускаем следующий
+        log('[PortalManager] sync: no growing, all hidden, checking next')
+        gameState.checkNextPortalToGrow()
+      } else {
+        log('[PortalManager] sync: still', activeCount, 'active portals, NOT starting growth')
+      }
+    }
+
+    gameState.debug()
   }
 
   // Получить прогресс роста портала (0-1)

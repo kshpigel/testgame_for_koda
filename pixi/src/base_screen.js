@@ -25,6 +25,7 @@ const ASSETS = {
 }
 
 import { Z } from './data/z_index.js'
+import { gameState } from './data/game_state.js'
 
 export class BaseScreen extends EventEmitter {
   constructor(app, cardTypes = []) {
@@ -47,6 +48,14 @@ export class BaseScreen extends EventEmitter {
     
     // Загружаем конфигурацию порталов
     await portalManager.load()
+    
+    // Синхронизируем GameState с данными порталов (всегда, не только при первой инициализации)
+    const randomPortals = portalManager.getRandomPortals()
+    if (randomPortals.length > 0) {
+      log('[BaseScreen] syncing GameState with portals')
+      portalManager.syncGameStateFromPortals(randomPortals)
+      gameState.debug()
+    }
     
     await this.loadAssets()
     
