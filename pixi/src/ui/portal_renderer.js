@@ -193,6 +193,12 @@ export class PortalRenderer {
       return
     }
 
+    // Только активные порталы реагируют на клик
+    if (status !== 'active') {
+      log('[PortalRenderer] altar not active, ignoring click')
+      return
+    }
+
     // Только премиум порталы - показываем модалку активации
     if (portalData.type === 'premium') {
       this.baseScreen.showPremiumPortalModal(portalData.id)

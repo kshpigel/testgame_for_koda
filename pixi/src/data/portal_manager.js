@@ -257,6 +257,12 @@ export class PortalManager {
       return
     }
     
+    // Premium порталы не участвуют в очереди - ничего не делаем
+    if (portal.type === 'premium') {
+      log('[PortalManager] premium portal, skipping markPortalCompleted')
+      return
+    }
+    
     // Обновляем данные
     portal.lastWinTime = Date.now()
     portal.status = 'hidden'

@@ -25,6 +25,7 @@ export class GameState {
 
     this.portals = portalData.map(p => ({
       id: p.id,
+      type: p.type,  // Сохраняем тип (premium/random)
       status: p.status,
       lastWinTime: p.lastWinTime || null
     }))
@@ -86,10 +87,13 @@ export class GameState {
   /**
    * Получить первый locked/hidden портал для роста
    * Приоритет: новые порталы (без lastWinTime) > пройденные (по lastWinTime)
+   * Premium порталы исключаются из очереди
    */
   getNextLockedPortal() {
-    // Ищем locked или hidden порталы (оба ждут роста)
-    const waitingPortals = this.portals.filter(p => p.status === 'locked' || p.status === 'hidden')
+    // Ищем locked или hidden порталы (оба ждут роста), исключая premium
+    const waitingPortals = this.portals.filter(p => 
+      (p.status === 'locked' || p.status === 'hidden') && p.type !== 'premium'
+    )
     
     if (waitingPortals.length === 0) {
       return null
@@ -174,7 +178,7 @@ export class GameState {
     console.log('  initialized:', this.initialized)
     console.log('  portals:')
     this.portals.forEach(p => {
-      console.log('    -', p.id, ':', p.status, '(lastWinTime:', p.lastWinTime ? new Date(p.lastWinTime).toLocaleTimeString() : 'null', ')')
+      console.log('    -', p.id, '(' + p.type + '):', p.status, '(lastWinTime:', p.lastWinTime ? new Date(p.lastWinTime).toLocaleTimeString() : 'null', ')')
     })
     console.log('  growing:', this.getGrowingPortal()?.id || 'none')
     console.log('  next locked:', this.getNextLockedPortal()?.id || 'none')
