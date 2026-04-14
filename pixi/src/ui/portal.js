@@ -36,9 +36,14 @@ export class Portal extends UINode {
     this.glowFilter.brightness(1.5, false)
     
     this.status = options.status || 'active'
+    this.currentScale = 1
+    this.targetScale = 1
 
     this.create()
     this.setupInteraction()
+    
+    // Применяем статус после создания
+    this.setStatus(this.status)
     
     // Debug рамка
     this.updateDebug()
@@ -115,15 +120,18 @@ export class Portal extends UINode {
       // Разные цвета для разных статусов
       if (status === 'active') {
         sprite.tint = 0xFFFFFF
+        this.targetScale = 1
       } else if (status === 'growing') {
-        sprite.tint = 0xAAAAAA
+        sprite.tint = 0xFFFFFF
+        this.targetScale = 0.3
       } else {
         // locked, hidden - тёмный
         sprite.tint = 0x888888
+        this.targetScale = 0
       }
     }
     
-    // Активные и растущие порталы кликабельны
+    // Активные порталы кликабельны
     const isClickable = status === 'active'
     this.cursor = isClickable ? 'pointer' : 'default'
     this.interactive = isClickable
@@ -182,22 +190,30 @@ export class Portal extends UINode {
     
     // Locked порталы не анимируются
     if (this.status === 'locked') {
-      super.updateScale()
-      this.scale.set(this._scale)
+      this.scale.set(0)
       if (this._visualX !== undefined) {
-        this.x = this._visualX + this.pivot.x * this._scale
-        this.y = this._visualY + this.pivot.y * this._scale
+        this.x = this._visualX + this.pivot.x * 0
+        this.y = this._visualY + this.pivot.y * 0
       }
       return
     }
     
-    // Сначала базовый scale от UINode (включая компенсацию позиции)
-    super.updateScale()
+    // Плавная анимация scale (lerp к targetScale)
+    const scaleSpeed = 0.1
+    this.currentScale += (this.targetScale - this.currentScale) * scaleSpeed
     
-    // Мерцание добавляется к финальному scale
-    this.wobbleOffset += this.wobbleSpeed
-    const wobble = Math.sin(this.wobbleOffset) * this.wobbleAmount
-    const finalScale = this._scale * (1 + wobble)
+    // Если scale почти достигнут — фиксируем
+    if (Math.abs(this.targetScale - this.currentScale) < 0.01) {
+      this.currentScale = this.targetScale
+    }
+    
+    // Мерцание добавляется к финальному scale (только для active/growing)
+    let finalScale = this.currentScale
+    if (this.status !== 'locked' && this.currentScale > 0.01) {
+      this.wobbleOffset += this.wobbleSpeed
+      const wobble = Math.sin(this.wobbleOffset) * this.wobbleAmount
+      finalScale = this.currentScale * (1 + wobble)
+    }
     
     // Применяем scale с учетом компенсации позиции
     this.scale.set(finalScale)
