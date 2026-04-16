@@ -271,10 +271,10 @@ export class BaseScreen extends EventEmitter {
     const crystals = player.crystals || 0
     const isPremium = portal?.type === 'premium'
     
-    const title = isPremium ? 'Активировать премиум портал' : 'Войти в портал'
+    const title = isPremium ? t('portal.title_premium') : t('portal.title_random')
     const message = cost > 0 
-      ? `${isPremium ? 'Активировать премиум портал' : 'Войти в портал'} за ${cost} кристаллов?`
-      : 'Войти в портал?'
+      ? (isPremium ? t('portal.confirm_premium', { cost }) : t('portal.confirm_random', { cost }))
+      : t('portal.confirm_free')
     
     const buttons = [
       { 
@@ -300,9 +300,9 @@ export class BaseScreen extends EventEmitter {
             this.emit('start_game', portalId)
           } else {
             const errModal = new Modal(this.app, {
-              title: 'Недостаточно кристаллов',
-              message: `У вас только ${crystals} кристаллов, нужно ${cost}`,
-              buttons: [{ text: 'OK', action: () => errModal.destroy() }]
+              title: 'Ошибка',
+              message: t('portal.notEnough', { cost, have: crystals }),
+              buttons: [{ text: t('ui.close'), action: () => errModal.destroy() }]
             })
             errModal.container.zIndex = 200
             this.container.addChild(errModal.container)

@@ -106,10 +106,13 @@
     "alreadyReceived": "You've already received your reward today. Come back tomorrow!"
   },
   "portal": {
-    "title": "Portal Activation",
+    "title_premium": "Activate Premium Portal",
+    "title_random": "Enter Portal",
+    "confirm_premium": "Activate premium portal for {cost}💎?",
+    "confirm_random": "Enter portal for {cost}💎?",
+    "confirm_free": "Enter portal?",
     "enter": "Activate",
     "cancel": "Cancel",
-    "confirm": "To enter the portal you need to sacrifice {cost}💎. You have {have}💎. Activate?",
     "notEnough": "Not enough crystals! Need {cost}💎, you have {have}💎"
   }
 }
