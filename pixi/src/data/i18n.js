@@ -27,6 +27,12 @@ export async function loadTranslations(lang = 'ru') {
 // Пример: t('ui.save') -> "СОХРАНИТЬ"
 // Пример: t('validation.need_min_cards', { min: 16, current: 8 }) -> "Нужно минимум 16 карт (сейчас 8)"
 export function t(key, params = {}) {
+  // Отладка: логирование первого вызова для проверки загрузки
+  if (!_translations[_currentLang]) {
+    console.warn('[i18n] Translations not loaded yet for', _currentLang, 'key:', key)
+    return key
+  }
+  
   const keys = key.split('.')
   let value = _translations[_currentLang]
   
@@ -54,6 +60,7 @@ export function t(key, params = {}) {
   
   // Fallback на ключ
   if (value === undefined) {
+    console.warn('[i18n] Key not found:', key)
     return key
   }
   

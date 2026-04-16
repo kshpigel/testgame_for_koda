@@ -560,13 +560,15 @@ export class Game {
 
   // Показать диалог подтверждения входа в портал
   showPortalConfirmDialog(portalId) {
-    const cost = portalManager.getPremiumPortalCost(portalId)
+    const portal = portalManager.getPortal(portalId)
+    const cost = portalManager.getPortalCost(portalId)
     const have = player.crystals
+    const isPremium = portal?.type === 'premium'
     
     if (have < cost) {
       // Недостаточно кристаллов - показываем модалку с предупреждением
       const modal = new Modal(this.app, {
-        title: t('portal.title'),
+        title: isPremium ? t('portal.title_premium') : t('portal.title_random'),
         width: 400,
         height: 160,
         bgColor: colors.ui.panel.bg,
@@ -589,8 +591,12 @@ export class Game {
     }
     
     // Показываем модалку подтверждения
+    const title = cost > 0
+      ? (isPremium ? t('portal.confirm_premium', { cost }) : t('portal.confirm_random', { cost }))
+      : t('portal.confirm_free')
+    
     const modal = new Modal(this.app, {
-      title: t('portal.title'),
+      title: isPremium ? t('portal.title_premium') : t('portal.title_random'),
       width: 400,
       height: 200,
       bgColor: colors.ui.panel.bg,
@@ -599,7 +605,7 @@ export class Game {
     
     modal.setContent((content) => {
       const text = new PIXI.Text(
-        t('portal.confirm', { cost, have }),
+        title,
         { fontFamily: FONT, fontSize: 16, fill: colors.ui.text.primary, wordWrap: true, wordWrapWidth: 350 }
       )
       text.anchor.set(0.5)

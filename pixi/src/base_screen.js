@@ -278,7 +278,7 @@ export class BaseScreen extends EventEmitter {
     
     const buttons = [
       { 
-        text: 'Да', 
+        text: t('ui.continue'), 
         action: () => {
           if (crystals >= cost) {
             // Для премиум портала - списываем кристаллы через activatePremiumPortal
@@ -310,7 +310,7 @@ export class BaseScreen extends EventEmitter {
           }
         }
       },
-      { text: 'Нет', action: () => {} }
+      { text: t('ui.cancel'), action: () => {} }
     ]
     
     const modal = new Modal(this.app, { title, message, buttons })
