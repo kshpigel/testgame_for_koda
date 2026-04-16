@@ -56,7 +56,7 @@
       "type": "premium",
       "altarType": "altar_2",
       "status": "active",
-      "cost": { "crystals": 100 },
+      "cost": { "crystals": 200 },
       "lastWinTime": null
     }
   ],

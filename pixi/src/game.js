@@ -560,7 +560,7 @@ export class Game {
 
   // Показать диалог подтверждения входа в портал
   showPortalConfirmDialog(portalId) {
-    const cost = gameConfig.portalCost.crystals
+    const cost = portalManager.getPremiumPortalCost(portalId)
     const have = player.crystals
     
     if (have < cost) {

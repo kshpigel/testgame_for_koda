@@ -199,10 +199,12 @@ export class PortalRenderer {
       return
     }
 
-    // Только премиум порталы - показываем модалку активации
-    if (portalData.type === 'premium') {
-      this.baseScreen.showPremiumPortalModal(portalData.id)
-    }
+    // Клик по алтарю - показать модалку подтверждения
+    altarContainer.eventMode = true
+    altarContainer.hitArea = new PIXI.Rectangle(0, 0, altarWidth, altarHeight)
+    altarContainer.on('pointertap', () => {
+      this.baseScreen.showPortalConfirmModal(portalData.id)
+    })
   }
 
   /**

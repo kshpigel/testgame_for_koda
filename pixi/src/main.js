@@ -6,6 +6,7 @@ import { colors } from './data/colors.js'
 import { config, loadConfig, log } from './data/config.js'
 import { loadTranslations, t } from './data/i18n.js'
 import { portalManager } from './data/portal_manager.js'
+import { gamePrices } from './data/game_prices.js'
 
 let gameInstance = null
 
@@ -117,6 +118,10 @@ async function init() {
     // Загружаем шрифт
     startScreen.setLoadingText(t('loading.font'))
     await loadFont()
+    
+    // Загружаем цены
+    startScreen.setLoadingText('Загрузка цен...')
+    await gamePrices.load()
     
     // Загружаем звуки
     startScreen.setLoadingText(t('loading.sounds'))

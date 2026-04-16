@@ -264,28 +264,40 @@ export class BaseScreen extends EventEmitter {
     log('[BaseScreen] modal added and shown, container children:', this.container.children.length)
   }
 
-  // Показать модалку премиум портала
-  showPremiumPortalModal(portalId) {
-    const cost = portalManager.getPremiumPortalCost(portalId)
+  // Показать модалку подтверждения входа в портал
+  showPortalConfirmModal(portalId) {
+    const portal = portalManager.getPortal(portalId)
+    const cost = portalManager.getPortalCost(portalId)
     const crystals = player.crystals || 0
+    const isPremium = portal?.type === 'premium'
     
-    const title = 'Активировать портал'
-    const message = `Активировать премиум портал за ${cost} кристаллов?`
+    const title = isPremium ? 'Активировать премиум портал' : 'Войти в портал'
+    const message = cost > 0 
+      ? `${isPremium ? 'Активировать премиум портал' : 'Войти в портал'} за ${cost} кристаллов?`
+      : 'Войти в портал?'
     
     const buttons = [
       { 
         text: 'Да', 
         action: () => {
           if (crystals >= cost) {
-            const result = portalManager.activatePremiumPortal(portalId, crystals)
-            if (result.success) {
-              // Списать кристаллы
+            // Для премиум портала - списываем кристаллы через activatePremiumPortal
+            if (isPremium) {
+              const result = portalManager.activatePremiumPortal(portalId, crystals)
+              if (result.success) {
+                player.crystals -= cost
+                player.save()
+                this.updateDeckInfo()
+              }
+            }
+            // Для обычных порталов - просто списываем кристаллы
+            else if (cost > 0) {
               player.crystals -= cost
               player.save()
               this.updateDeckInfo()
-              // Запустить бой
-              this.emit('start_game', portalId)
             }
+            // Запустить бой
+            this.emit('start_game', portalId)
           } else {
             const errModal = new Modal(this.app, {
               title: 'Недостаточно кристаллов',

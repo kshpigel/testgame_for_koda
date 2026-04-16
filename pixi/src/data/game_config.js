@@ -8,9 +8,9 @@ export const gameConfig = {
     gold: configData.dailyReward?.gold || 50
   },
   
-  // Стоимость входа в портал
+  // Стоимость входа в портал (будет обновлено из game_prices.js при загрузке)
   portalCost: {
-    crystals: configData.portalCost?.crystals || 3
+    crystals: 200  // Временное значение, будет заменено на gamePrices.getPremiumPortalCost()
   },
   
   // Баланс наград

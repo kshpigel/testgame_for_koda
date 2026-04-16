@@ -1,6 +1,7 @@
 import * as PIXI from 'pixi.js'
 import { log } from '../data/config.js'
 import { gameState } from './game_state.js'
+import { gamePrices } from './game_prices.js'
 
 export class PortalManager {
   constructor() {
@@ -220,7 +221,7 @@ export class PortalManager {
       return { success: false, error: 'Not a premium portal' }
     }
     
-    const cost = portal.cost?.crystals || 0
+    const cost = gamePrices.getPremiumPortalCost()
     if (playerCrystals < cost) {
       log('[PortalManager] not enough crystals:', playerCrystals, 'needed:', cost)
       return { success: false, error: 'Not enough crystals', needed: cost, have: playerCrystals }
@@ -233,10 +234,28 @@ export class PortalManager {
     return { success: true, cost }
   }
 
-  // Получить стоимость премиум портала
-  getPremiumPortalCost(id) {
+  // Получить стоимость портала (для всех типов)
+  getPortalCost(id) {
     const portal = this.getPortal(id)
-    return portal?.cost?.crystals || 0
+    if (!portal) return 0
+    
+    // Премиум порталы
+    if (portal.type === 'premium') {
+      return gamePrices.getPremiumPortalCost()
+    }
+    
+    // Обычные случайные порталы
+    if (portal.type === 'random') {
+      return gamePrices.getRandomPortalCost()
+    }
+    
+    // PVP и другие - бесплатно
+    return 0
+  }
+
+  // Устаревший метод - использовать getPortalCost()
+  getPremiumPortalCost(id) {
+    return this.getPortalCost(id)
   }
 
   // Обновить статус портала
@@ -325,7 +344,11 @@ export class PortalManager {
 
     // Синхронизируем статусы ИЗ GameState В данные (не наоборот!)
     // GameState - источник истины, portals.json только для начальной загрузки
+    // ИСКЛЮЧАЕМ премиум порталы — они управляются отдельно
     gameState.portals.forEach(statePortal => {
+      // Пропускаем премиум порталы
+      if (statePortal.type === 'premium') return
+      
       const managerPortal = this.getPortal(statePortal.id)
       if (managerPortal && managerPortal.status !== statePortal.status) {
         managerPortal.status = statePortal.status

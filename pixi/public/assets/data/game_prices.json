@@ -6,7 +6,8 @@
     "boss": { "gold": 100, "crystals": 20 }
   },
   "costs": {
-    "portal_premium": { "crystals": 10 },
+    "portal_random": { "crystals": 3 },
+    "portal_premium": { "crystals": 200 },
     "daily_reward": { "gold": 50, "crystals": 10 }
   }
 }
