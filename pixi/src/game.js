@@ -226,8 +226,8 @@ export class Game {
           return
         }
         
-        // Показываем диалог подтверждения (все порталы стоят 3 кристала)
-        this.showPortalConfirmDialog(portalId)
+        // Сразу показываем карту (диалог подтверждения уже показан в baseScreen)
+        this.showMap(portalId)
       })
       this.screens['base'] = baseScreen
     } else {
