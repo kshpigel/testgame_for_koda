@@ -29,12 +29,14 @@ export class Dialog {
     this.chunks = []
     this.currentChunkIndex = 0
     this.onCloseCallback = null
+    this.extraButtonsData = null // Храним данные кнопок
   }
 
-  show(heroImage, text, onClose = null) {
+  show(heroImage, text, onClose = null, extraButtons = []) {
     this.fullText = text
     this.currentChunkIndex = 0
     this.onCloseCallback = onClose
+    this.extraButtons = extraButtons || []
 
     // Разбиваем текст на чанки
     this.chunks = this.calculateTextChunks(text)
@@ -49,8 +51,9 @@ export class Dialog {
 
     // Область для текста: ширина экрана - отступы - картинка
     const availableWidth = screenWidth - DIALOG_CONFIG.marginLeft - DIALOG_CONFIG.marginRight - DIALOG_CONFIG.imageWidth - DIALOG_CONFIG.marginLeft
-    // Высота для текста минус место на кнопку (примерно 40px)
-    const availableHeight = DIALOG_CONFIG.height - DIALOG_CONFIG.marginTop - DIALOG_CONFIG.marginBottom - 50
+    // Высота для текста минус место на кнопки (80px для extraButtons)
+    const extraButtonsHeight = this.extraButtons && this.extraButtons.length > 0 ? 80 : 40
+    const availableHeight = DIALOG_CONFIG.height - DIALOG_CONFIG.marginTop - DIALOG_CONFIG.marginBottom - extraButtonsHeight
 
     // Примерная ширина символа (для моноширинного шрифта примерно)
     const charWidth = 14
@@ -111,12 +114,11 @@ export class Dialog {
     const screenWidth = this.app.screen.width
     const y = this.app.screen.height - DIALOG_CONFIG.height
 
-    // Молочный фон (#F5E7CF)
+    bg.name = 'dialogBg'
     bg.beginFill(0xF5E7CF)
     bg.drawRect(0, y, screenWidth, DIALOG_CONFIG.height)
     bg.endFill()
 
-    // Красная полоса сверху (0x8c1300 = colors.ui.button.reset)
     bg.lineStyle(DIALOG_CONFIG.borderTopWidth, 0x8c1300)
     bg.moveTo(0, y)
     bg.lineTo(screenWidth, y)
@@ -132,6 +134,7 @@ export class Dialog {
       app: this.app,
       onClick: () => this.hide()
     })
+    closeBtn.name = 'closeBtn'
     closeBtn.setX(screenWidth - DIALOG_CONFIG.closeButtonSize / 2 - 20)
     closeBtn.setY(y + DIALOG_CONFIG.closeButtonSize / 2 + 10)
     this.dialogContainer.addChild(closeBtn)
@@ -139,6 +142,7 @@ export class Dialog {
     // Картинка героя слева
     if (heroImage) {
       const hero = new PIXI.Sprite(heroImage)
+      hero.name = 'heroSprite'
       hero.anchor.set(0.5, 0.5)
       // Масштабируем по ширине imageWidth
       const targetWidth = DIALOG_CONFIG.imageWidth
@@ -155,6 +159,12 @@ export class Dialog {
     this.textContainer.y = y + DIALOG_CONFIG.marginTop
     this.dialogContainer.addChild(this.textContainer)
 
+    // Создаём контейнер для кнопок (если есть extraButtons)
+    if (this.extraButtons && this.extraButtons.length > 0) {
+      this.extraButtonsContainer = new PIXI.Container()
+      this.dialogContainer.addChild(this.extraButtonsContainer)
+    }
+
     // Добавляем на сцену
     this.container.addChild(this.dialogContainer)
   }
@@ -163,14 +173,18 @@ export class Dialog {
     // Очищаем контейнер текста
     this.textContainer.removeChildren()
 
+    // Удаляем старые кнопки из dialogContainer (индекс от textContainer до конца)
+    const btnStartIndex = this.textContainer.index
+    if (this.dialogContainer.children.length > btnStartIndex + 1) {
+      const buttonsToRemove = this.dialogContainer.children.slice(btnStartIndex + 1)
+      buttonsToRemove.forEach(btn => {
+        this.dialogContainer.removeChild(btn)
+        btn.destroy()
+      })
+    }
+
     let chunk = this.chunks[this.currentChunkIndex]
     const isLastChunk = this.currentChunkIndex === this.chunks.length - 1
-    const y = this.app.screen.height - DIALOG_CONFIG.height + DIALOG_CONFIG.marginTop
-
-    // Добавляем "..." если не последний чанк
-    if (!isLastChunk) {
-      chunk = chunk.trim() + '...'
-    }
 
     // Текст чанка
     const textObj = new PIXI.Text(chunk, {
@@ -184,34 +198,101 @@ export class Dialog {
     textObj.y = 0
     this.textContainer.addChild(textObj)
 
-    // Кнопка "дальше..." или "закрыть" - оба красным
-    const buttonText = isLastChunk ? t('ui.close') : t('ui.continue') + '...'
-
-    const continueBtn = new PIXI.Text(buttonText, {
-      fontFamily: FONT,
-      fontSize: 24,
-      fontWeight: 'bold',
-      fill: '#aa0000'
-    })
-    continueBtn.anchor.set(0, 0.5)
-    continueBtn.x = 0
-    continueBtn.y = textObj.height + 20
-    continueBtn.eventMode = 'static'
-    continueBtn.cursor = 'pointer'
-    continueBtn.on('pointerdown', () => {
-      if (isLastChunk) {
-        this.hide()
-      } else {
-        this.currentChunkIndex++
-        this.showChunk()
+    // Рассчитываем необходимую высоту диалога
+    let buttonsHeight = 20 + 20 // отступ + кнопка текстом
+    if (this.extraButtons && this.extraButtons.length > 0) {
+      buttonsHeight = 45 + 20 // высота кнопки + отступ
+    }
+    
+    const neededHeight = textObj.height + buttonsHeight + DIALOG_CONFIG.marginTop + DIALOG_CONFIG.marginBottom
+    const maxHeight = this.app.screen.height - 100 // Оставляем отступ сверху
+    const dialogHeight = Math.min(Math.max(neededHeight, DIALOG_CONFIG.height), maxHeight)
+    const newY = this.app.screen.height - dialogHeight
+    
+    // Обновляем высоту фона диалога
+    const dialogBg = this.dialogContainer.getChildByName('dialogBg')
+    if (dialogBg) {
+      dialogBg.clear()
+      dialogBg.beginFill(0xF5E7CF)
+      dialogBg.drawRect(0, newY, this.app.screen.width, dialogHeight)
+      dialogBg.endFill()
+      dialogBg.lineStyle(DIALOG_CONFIG.borderTopWidth, 0x8c1300)
+      dialogBg.moveTo(0, newY)
+      dialogBg.lineTo(this.app.screen.width, newY)
+      
+      // Перемещаем кнопку закрытия
+      const closeBtn = this.dialogContainer.getChildByName('closeBtn')
+      if (closeBtn) {
+        closeBtn.setY(newY + DIALOG_CONFIG.closeButtonSize / 2 + 10)
       }
-    })
+      
+      // Перемещаем картинку героя
+      const hero = this.dialogContainer.getChildByName('heroSprite')
+      if (hero) {
+        hero.y = newY + dialogHeight / 2
+      }
+    }
 
-    this.textContainer.addChild(continueBtn)
+    // Если есть дополнительные кнопки - не добавляем текстовую кнопку "дальше..."
+    if (this.extraButtons && this.extraButtons.length > 0) {
+      // Пустой блок, extraButtons добавятся ниже
+    } else {
+      // Кнопка "дальше..." или "закрыть" - оба красным
+      const buttonText = isLastChunk ? t('ui.close') : t('ui.continue') + '...'
 
-    // Обновляем позицию контейнера текста по вертикали
-    const totalHeight = textObj.height + 20 + 20
-    this.textContainer.y = y + (DIALOG_CONFIG.height - DIALOG_CONFIG.marginTop - DIALOG_CONFIG.marginBottom - totalHeight) / 2
+      const continueBtn = new PIXI.Text(buttonText, {
+        fontFamily: FONT,
+        fontSize: 24,
+        fontWeight: 'bold',
+        fill: '#aa0000'
+      })
+      continueBtn.anchor.set(0, 0.5)
+      continueBtn.x = 0
+      continueBtn.y = textObj.height + 20
+      continueBtn.eventMode = 'static'
+      continueBtn.cursor = 'pointer'
+      continueBtn.on('pointerdown', () => {
+        if (isLastChunk) {
+          this.hide()
+        } else {
+          this.currentChunkIndex++
+          this.showChunk()
+        }
+      })
+
+      this.textContainer.addChild(continueBtn)
+    }
+
+    // Добавляем дополнительные кнопки (например, для портала)
+    if (this.extraButtons && this.extraButtons.length > 0 && this.extraButtonsContainer) {
+      const btnY = dialogHeight - 45 - 10
+      const btnX = DIALOG_CONFIG.marginLeft + DIALOG_CONFIG.imageWidth + DIALOG_CONFIG.marginLeft + 20
+      
+      this.extraButtons.forEach((btnConfig, index) => {
+        const btn = new Button(btnConfig.text, {
+          width: btnConfig.width || 140,
+          height: btnConfig.height || 45,
+          color: btnConfig.color || colors.ui.button.continue,
+          fontSize: btnConfig.fontSize || 18,
+          app: this.app,
+          onClick: () => {
+            this.hide()
+            if (btnConfig.onClick) {
+              btnConfig.onClick()
+            }
+          }
+        })
+        btn.x = btnX + index * 160
+        btn.y = btnY
+        this.extraButtonsContainer.addChild(btn)
+      })
+      buttonsHeight = 45 + 20
+    }
+
+    // Центрируем текст по вертикали (кнопки отдельно внизу)
+    const contentHeight = textObj.height + 20 + 20
+    const availableHeight = dialogHeight - DIALOG_CONFIG.marginTop - DIALOG_CONFIG.marginBottom
+    this.textContainer.y = newY + DIALOG_CONFIG.marginTop + (availableHeight - contentHeight) / 2
   }
 
   hide() {

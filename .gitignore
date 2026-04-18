@@ -1,5 +1,7 @@
 node_modules/
 dist/
+tmp/
+pixi/tmp/
 .DS_Store
 *.log
 .koda_tmp/

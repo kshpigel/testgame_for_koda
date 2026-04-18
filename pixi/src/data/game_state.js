@@ -2,6 +2,7 @@
  * GameState - глобальное состояние порталов
  * Единый источник истины для статусов порталов и очереди роста
  */
+import { log } from './config.js'
 
 export class GameState {
   constructor() {
@@ -17,22 +18,19 @@ export class GameState {
    * Инициализировать GameState из данных PortalManager
    * @param {Array} portalData - массив объектов порталов из PortalManager
    */
-  initFromPortals(portalData) {
-    if (this.initialized) {
-      console.warn('[GameState] already initialized, skipping')
-      return
-    }
-
-    this.portals = portalData.map(p => ({
-      id: p.id,
-      type: p.type,  // Сохраняем тип (premium/random)
-      status: p.status,
-      lastWinTime: p.lastWinTime || null
-    }))
-
+  initFromPortals(randomPortals) {
+    if (this.initialized) return
     this.initialized = true
-    console.log('[GameState] initialized with', this.portals.length, 'portals')
-    this.debug()
+    
+    // Копируем данные порталов (без lastWinTime для locked порталов)
+    this.portals = randomPortals.map(p => ({
+      id: p.id,
+      type: p.type,
+      status: p.status,
+      lastWinTime: p.status === 'locked' ? null : p.lastWinTime
+    }))
+    
+    log('[GameState] initialized with', this.portals.length, 'portals')
   }
 
   /**
@@ -50,22 +48,12 @@ export class GameState {
    * @param {string} newStatus - 'locked' | 'growing' | 'active' | 'hidden'
    */
   setStatus(portalId, newStatus) {
-    const portal = this.getPortal(portalId)
-    if (!portal) {
-      console.error('[GameState] setStatus: portal not found', portalId)
-      return
-    }
-
+    const portal = this.portals.find(p => p.id === portalId)
+    if (!portal) return
+    
     const oldStatus = portal.status
     portal.status = newStatus
-
-    // Синхронизируем с PortalManager
-    const managerPortal = portalManager.getPortal(portalId)
-    if (managerPortal) {
-      managerPortal.status = newStatus
-    }
-
-    console.log('[GameState] setStatus:', portalId, oldStatus, '->', newStatus)
+    log('[GameState] setStatus:', portalId, oldStatus, '->', newStatus)
 
     // После изменения статуса проверяем, нужно ли запустить следующий портал
     if (oldStatus === 'growing') {
@@ -174,23 +162,24 @@ export class GameState {
    * Вывести текущее состояние для отладки
    */
   debug() {
-    console.log('[GameState] DEBUG:')
-    console.log('  initialized:', this.initialized)
-    console.log('  portals:')
+    log('[GameState] DEBUG:')
+    log('  initialized:', this.initialized)
+    log('  portals:')
     this.portals.forEach(p => {
-      console.log('    -', p.id, '(' + p.type + '):', p.status, '(lastWinTime:', p.lastWinTime ? new Date(p.lastWinTime).toLocaleTimeString() : 'null', ')')
+      log('    -', p.id, '(' + p.type + '):', p.status, '(lastWinTime:', p.lastWinTime ? new Date(p.lastWinTime).toLocaleTimeString() : 'null', ')')
     })
-    console.log('  growing:', this.getGrowingPortal()?.id || 'none')
-    console.log('  next locked:', this.getNextLockedPortal()?.id || 'none')
+    log('  growing:', this.getGrowingPortal()?.id || 'none')
+    log('  next locked:', this.getNextLockedPortal()?.id || 'none')
   }
 
   /**
    * Сбросить состояние (для тестов или пересоздания)
    */
   reset() {
-    this.portals = []
     this.initialized = false
-    console.log('[GameState] reset')
+    this.currentGrowingPortalId = null
+    this.queue = []
+    log('[GameState] reset')
   }
 }
 

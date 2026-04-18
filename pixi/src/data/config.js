@@ -13,6 +13,9 @@ const _config = {
   enemyDifficultyBase: 0.5,  // Начальный множитель силы
   enemyDifficultyMax: 1.5,   // Конечный множитель силы (босс)
   
+  // Стоимость входа в портал
+  portalCost: 200,
+  
   // Награды за победу
   rewards: {
     baseGold: 25,       // Базовая награда за победу
@@ -33,6 +36,8 @@ export const config = {
   set enemyDifficultyBase(v) { _config.enemyDifficultyBase = v },
   get enemyDifficultyMax() { return _config.enemyDifficultyMax },
   set enemyDifficultyMax(v) { _config.enemyDifficultyMax = v },
+  get portalCost() { return _config.portalCost },
+  set portalCost(v) { _config.portalCost = v },
   get getCards() { return _config.getCards },
   set getCards(v) { _config.getCards = v },
   get lang() { return _config.lang },
@@ -57,6 +62,7 @@ export async function loadConfig() {
   _config.lang = 'ru'
   _config.enemyDifficultyBase = 0.5
   _config.enemyDifficultyMax = 1.5
+  _config.portalCost = 200
   _config.rewards = {
     baseGold: 25,
     goldPerStep: 10,
@@ -77,9 +83,10 @@ export async function loadConfig() {
         if (localConfig.enemyDifficultyMax !== undefined) _config.enemyDifficultyMax = localConfig.enemyDifficultyMax
         if (localConfig.getCards !== undefined) _config.getCards = localConfig.getCards
         if (localConfig.lang !== undefined) _config.lang = localConfig.lang
+        if (localConfig.portalCost !== undefined) _config.portalCost = localConfig.portalCost
         if (localConfig.rewards) _config.rewards = { ..._config.rewards, ...localConfig.rewards }
-        console.log('[Config] Loaded:', localConfig)
-        console.log('[Config] getCards:', _config.getCards)
+        log('[Config] Loaded:', localConfig)
+        log('[Config] getCards:', _config.getCards)
         break
       }
     } catch (e) { /* ignore */ }

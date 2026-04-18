@@ -1,5 +1,5 @@
 import * as PIXI from 'pixi.js'
-import { log } from '../data/config.js'
+import { log, config } from '../data/config.js'
 import { gameState } from './game_state.js'
 import { gamePrices } from './game_prices.js'
 

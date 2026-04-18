@@ -88,8 +88,18 @@ export class Player {
     this.save()
   }
 
+  setGold(amount) {
+    this.data.gold = amount
+    this.save()
+  }
+
   addCrystals(amount) {
     this.data.crystals += amount
+    this.save()
+  }
+
+  setCrystals(amount) {
+    this.data.crystals = amount
     this.save()
   }
 

@@ -3,7 +3,7 @@ import { ColorMatrixFilter } from 'pixi.js'
 import { EventEmitter } from 'events'
 import { FONT } from './data/fonts.js'
 import { colors } from './data/colors.js'
-import { log } from './data/config.js'
+import { log, config } from './data/config.js'
 import { soundManager } from './audio/sound_manager.js'
 import { player } from './data/player.js'
 import { Modal } from './ui/modal.js'
@@ -19,6 +19,7 @@ import { t } from './data/i18n.js'
 import { playerUI } from './ui/player_ui.js'
 import { portalManager } from './data/portal_manager.js'
 import { PortalRenderer } from './ui/portal_renderer.js'
+import { gamePrices } from './data/game_prices.js'
 
 const ASSETS = {
   bg: '/assets/img/base_bg.png',
@@ -268,12 +269,12 @@ export class BaseScreen extends EventEmitter {
   }
 
   // Показать диалог подтверждения входа в портал
-  showPortalConfirmModal(portalId) {
+  async showPortalConfirmModal(portalId) {
     if (!this.portalDialog) {
       this.portalDialog = new PortalDialog(this.app, this.container)
     }
     
-    this.portalDialog.show(portalId, (id) => {
+    await this.portalDialog.show(portalId, (id) => {
       const portal = portalManager.getPortal(id)
       const isPremium = portal?.type === 'premium'
       const cost = isPremium ? gamePrices.getPremiumPortalCost() : (config.portalCost || 200)
@@ -284,9 +285,9 @@ export class BaseScreen extends EventEmitter {
       if (result.success) {
         // Списываем валюту
         if (result.currency === 'gold') {
-          player.gold -= result.cost
+          player.setGold(player.gold - result.cost)
         } else {
-          player.crystals -= result.cost
+          player.setCrystals(player.crystals - result.cost)
         }
         player.save()
         this.updateDeckInfo()

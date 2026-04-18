@@ -147,15 +147,10 @@ export class Portal extends UINode {
     }
   }
   
-  destroy(options) {
-    // Защита от повторного destroy
-    if (this._destroyed) {
-      console.warn('[Portal] destroy: already destroyed, skipping')
-      return
-    }
-    this._destroyed = true
-    this._isDestroying = true
-    console.log('[Portal] destroy: called for', this.portalId)
+  destroy() {
+    if (this.destroyed) return
+    this.destroyed = true
+    log('[Portal] destroy: called for', this.portalId)
     
     // Очищаем фильтр ДО вызова super.destroy()
     if (this.glowFilter) {

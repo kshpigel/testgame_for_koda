@@ -105,5 +105,5 @@ export function initEnemies() {
     }
   })
 
-  console.log('[enemies] initialized with', enemies.length, 'enemies')
+  log('[enemies] initialized with', enemies.length, 'enemies')
 }

@@ -706,7 +706,8 @@ export class Game {
     randomPortals.forEach(portal => {
       const completed = portalManager.checkPortalGrowthComplete(portal.id)
       if (completed) {
-        console.log('[Game] Portal', portal.id, 'growth completed')
+        const portalId = portal.id
+      log('[Game] Portal', portalId, 'growth completed')
       }
     })
   }
