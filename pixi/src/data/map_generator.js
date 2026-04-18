@@ -1,4 +1,5 @@
 import { calculateDeckPower, getRecommendedHealth } from './deck_power.js'
+import { config } from './config.js'
 
 /**
  * Генератор карты с врагами
