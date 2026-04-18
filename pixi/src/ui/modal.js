@@ -30,6 +30,7 @@ export class Modal {
     this.bgColor = options.bgColor || colors.ui.panel.bg
     this.onClose = options.onClose || null
     this.showCloseButton = options.showCloseButton !== false // по умолчанию показываем
+    this.buttons = options.buttons || [] // массив кнопок { text, color, action }
     
     // Ограничения
     const maxW = this.app.screen.width - 100
@@ -106,6 +107,33 @@ export class Modal {
     this.content = new PIXI.Container()
     this.content.y = 30 // Отступ от заголовка
     this.window.addChild(this.content)
+    
+    // Кнопки внизу (если есть)
+    if (this.buttons && this.buttons.length > 0) {
+      const btnCount = this.buttons.length
+      const btnWidth = 100
+      const btnHeight = 40
+      const gap = 15
+      const totalWidth = btnCount * btnWidth + (btnCount - 1) * gap
+      const startX = -totalWidth / 2 + btnWidth / 2
+      const btnY = this.height / 2 - btnHeight / 2 - 15
+      
+      this.buttons.forEach((btnConfig, index) => {
+        const btn = new Button(btnConfig.text, {
+          width: btnWidth,
+          height: btnHeight,
+          color: btnConfig.color || colors.ui.button.continue,
+          fontSize: 18,
+          app: this.app
+        })
+        btn.setX(startX + index * (btnWidth + gap))
+        btn.setY(btnY)
+        btn.onClick = () => {
+          if (btnConfig.action) btnConfig.action()
+        }
+        this.window.addChild(btn)
+      })
+    }
   }
   
   // Установить контент (принимает функцию которая получает container)

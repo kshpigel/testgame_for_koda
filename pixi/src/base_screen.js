@@ -293,15 +293,6 @@ export class BaseScreen extends EventEmitter {
         this.updateDeckInfo()
         // Запустить бой
         this.emit('start_game', id)
-      } else {
-        const errModal = new Modal(this.app, {
-          title: 'Недостаточно средств',
-          message: t('portal.notEnough', { cost: result.needed, have: result.have }),
-          buttons: [{ text: t('ui.close'), action: () => errModal.destroy() }]
-        })
-        errModal.container.zIndex = 200
-        this.container.addChild(errModal.container)
-        errModal.show()
       }
     })
   }

@@ -20,6 +20,7 @@ export class PortalDialog {
     const playerGold = player.gold || 0
     const playerCrystals = player.crystals || 0
     const currencyName = isPremium ? 'кристаллов' : 'золота'
+    const hasEnough = isPremium ? playerCrystals >= cost : playerGold >= cost
     
     const title = isPremium ? t('portal.title_premium') : t('portal.title_random')
     const message = isPremium
@@ -47,8 +48,12 @@ export class PortalDialog {
         onClick: () => {
           if (onCancel) onCancel()
         }
-      },
-      {
+      }
+    ]
+    
+    // Если средств хватает - добавляем кнопку "Войти"
+    if (hasEnough) {
+      extraButtons.push({
         text: t('ui.confirm'),
         width: 140,
         height: 45,
@@ -57,8 +62,8 @@ export class PortalDialog {
         onClick: () => {
           if (onConfirm) onConfirm(portalId)
         }
-      }
-    ]
+      })
+    }
 
     // Используем Dialog с дополнительными кнопками
     this.dialog.show(heroTexture, fullText, null, extraButtons)
