@@ -88,15 +88,17 @@ export class MapGenerator {
 
   /**
    * Рассчитывает сложность врага на основе позиции и силы колоды
-   * Прогрессия: 0.8 → 1.0 → 1.2 → 1.5 → boss
+   * Прогрессия: 0.5 → 1.5 (настраивается через local_config)
    */
   calculateDifficulty(nodeIndex, totalNodes, deckOrCode) {
     if (totalNodes <= 1) return { difficulty: 'medium', health: 0 }
     
     const progress = nodeIndex / (totalNodes - 1)
     
-    // Линейная прогрессия множителя силы: 0.8 → 2.0
-    const powerMultiplier = 0.8 + progress * 1.2
+    // Линейная прогрессия множителя силы: 0.5 → 1.5
+    const baseMultiplier = config.enemyDifficultyBase || 0.5
+    const maxMultiplier = config.enemyDifficultyMax || 1.5
+    const powerMultiplier = baseMultiplier + progress * (maxMultiplier - baseMultiplier)
     
     const deckPower = calculateDeckPower(deckOrCode)
     const baseDamage = deckPower.damagePerStep || 10
@@ -106,9 +108,9 @@ export class MapGenerator {
     
     // Определяем уровень сложности по HP
     let difficulty
-    if (powerMultiplier >= 1.8) difficulty = 'boss'
-    else if (powerMultiplier >= 1.4) difficulty = 'strong'
-    else if (powerMultiplier >= 1.0) difficulty = 'medium'
+    if (powerMultiplier >= 1.3) difficulty = 'boss'
+    else if (powerMultiplier >= 1.0) difficulty = 'strong'
+    else if (powerMultiplier >= 0.7) difficulty = 'medium'
     else difficulty = 'easy'
     
     return { difficulty, health: enemyHealth }

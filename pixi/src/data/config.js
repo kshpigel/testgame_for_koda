@@ -9,6 +9,10 @@ const _config = {
   getCards: [],   // Карты для тестирования (будут в начале колоды)
   lang: 'ru',      // Язык (ru, en, ...)
   
+  // Настройки сложности врагов
+  enemyDifficultyBase: 0.5,  // Начальный множитель силы
+  enemyDifficultyMax: 1.5,   // Конечный множитель силы (босс)
+  
   // Награды за победу
   rewards: {
     baseGold: 25,       // Базовая награда за победу
@@ -25,6 +29,10 @@ export const config = {
   set enemiesCount(v) { _config.enemiesCount = v },
   get mapNodes() { return _config.mapNodes },
   set mapNodes(v) { _config.mapNodes = v },
+  get enemyDifficultyBase() { return _config.enemyDifficultyBase },
+  set enemyDifficultyBase(v) { _config.enemyDifficultyBase = v },
+  get enemyDifficultyMax() { return _config.enemyDifficultyMax },
+  set enemyDifficultyMax(v) { _config.enemyDifficultyMax = v },
   get getCards() { return _config.getCards },
   set getCards(v) { _config.getCards = v },
   get lang() { return _config.lang },
@@ -47,6 +55,8 @@ export async function loadConfig() {
   _config.mapNodes = 10
   _config.getCards = []
   _config.lang = 'ru'
+  _config.enemyDifficultyBase = 0.5
+  _config.enemyDifficultyMax = 1.5
   _config.rewards = {
     baseGold: 25,
     goldPerStep: 10,
@@ -63,6 +73,8 @@ export async function loadConfig() {
         if (localConfig.debug !== undefined) _config.debug = localConfig.debug
         if (localConfig.enemiesCount !== undefined) _config.enemiesCount = localConfig.enemiesCount
         if (localConfig.mapNodes !== undefined) _config.mapNodes = localConfig.mapNodes
+        if (localConfig.enemyDifficultyBase !== undefined) _config.enemyDifficultyBase = localConfig.enemyDifficultyBase
+        if (localConfig.enemyDifficultyMax !== undefined) _config.enemyDifficultyMax = localConfig.enemyDifficultyMax
         if (localConfig.getCards !== undefined) _config.getCards = localConfig.getCards
         if (localConfig.lang !== undefined) _config.lang = localConfig.lang
         if (localConfig.rewards) _config.rewards = { ..._config.rewards, ...localConfig.rewards }
