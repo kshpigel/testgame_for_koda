@@ -668,7 +668,7 @@ export class Battle extends EventEmitter {
     // Завершаем статистику боя
     const remainingCards = this.currentDeck?.length || 0
     battleStats.finish(true, remainingCards)
-    const reward = battleStats.calculateReward(finalEnemyHealth)
+    const reward = battleStats.calculateReward(finalEnemyHealth, this.enemyData?.difficulty || 'medium')
     const breakdown = reward.breakdown
     
     // Модальное окно победы

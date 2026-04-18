@@ -45,15 +45,18 @@ export class BattleStats {
   }
   
   // Рассчитать награду
-  calculateReward(enemyHealth) {
+  calculateReward(enemyHealth, difficulty = 'medium') {
     this.enemyFinalHealth = enemyHealth
     
     // Получаем настройки наград из config
-    const { baseGold, goldPerStep, bossCrystals } = config.rewards
+    const { baseGold, goldPerStep, bossCrystals, difficultyMultipliers } = config.rewards
+    
+    // Множитель сложности (дефолт 1.0)
+    const difficultyMult = difficultyMultipliers?.[difficulty] || 1.0
     
     // Расчёт золота:
-    // 1. Базовая награда за победу
-    const goldBase = baseGold
+    // 1. Базовая награда за победу × множитель сложности
+    const goldBase = Math.floor(baseGold * difficultyMult)
     
     // 2. Бонус за оставшиеся ходы
     const goldSteps = this.stepsLeft * goldPerStep
@@ -82,7 +85,9 @@ export class BattleStats {
       breakdown: {
         base: goldBase,
         steps: goldSteps,
-        overflow: goldOverflow
+        overflow: goldOverflow,
+        difficulty: difficulty,
+        difficultyMultiplier: difficultyMult
       }
     }
   }

@@ -338,7 +338,13 @@ export class Game {
     })
     
     // enemyData может быть либо картой (cardData), либо врагом (enemyData)
-    const battleEnemyData = enemyData.isBoss ? enemyData.enemyData : enemyData.cardData
+    let battleEnemyData = enemyData.isBoss ? enemyData.enemyData : enemyData.cardData
+    // Гарантируем что isBoss передан в battleEnemyData
+    if (enemyData.isBoss && !battleEnemyData.isBoss) {
+      battleEnemyData = { ...battleEnemyData, isBoss: true }
+    } else if (!enemyData.isBoss && !battleEnemyData.isBoss) {
+      battleEnemyData = { ...battleEnemyData, isBoss: false }
+    }
     
     const battle = new Battle(this.app, cardObjects, card_types, battleEnemyData, this, sleeve)
 
