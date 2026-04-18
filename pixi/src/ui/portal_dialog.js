@@ -14,20 +14,15 @@ export class PortalDialog {
   }
 
   async show(portalId, onConfirm, onCancel = null) {
-    const portal = portalManager.getPortal(portalId)
-    const isPremium = portal?.type === 'premium'
-    const cost = isPremium ? 200 : (config.portalCost || 200)
+    const cost = config.portalCost || 200  // Все порталы за 200 золота
     const playerGold = player.gold || 0
-    const playerCrystals = player.crystals || 0
-    const currencyName = isPremium ? 'кристаллов' : 'золота'
-    const hasEnough = isPremium ? playerCrystals >= cost : playerGold >= cost
+    const currencyName = 'золота'
+    const hasEnough = playerGold >= cost
     
-    const title = isPremium ? t('portal.title_premium') : t('portal.title_random')
-    const message = isPremium
-      ? t('portal.confirm_premium', { cost })
-      : t('portal.confirm_random', { cost })
+    const title = t('portal.title_random')  // Один заголовок для всех
+    const message = t('portal.confirm_random', { cost })
     
-    const fullText = `${title}\n\n${message}\n\nНужно: ${cost} ${currencyName}\nУ вас: ${isPremium ? playerCrystals : playerGold} ${currencyName}`
+    const fullText = `${title}\n\n${message}\n\nНужно: ${cost} ${currencyName}\nУ вас: ${playerGold} ${currencyName}`
 
     // Загружаем изображение персонажа (helper)
     let heroTexture = null

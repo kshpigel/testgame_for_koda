@@ -275,20 +275,11 @@ export class BaseScreen extends EventEmitter {
     }
     
     await this.portalDialog.show(portalId, (id) => {
-      const portal = portalManager.getPortal(id)
-      const isPremium = portal?.type === 'premium'
-      const cost = isPremium ? gamePrices.getPremiumPortalCost() : (config.portalCost || 200)
+      const cost = config.portalCost || 200  // Все порталы за 200 золота
       const playerGold = player.gold || 0
-      const playerCrystals = player.crystals || 0
       
-      const result = portalManager.activatePortal(id, playerGold, playerCrystals)
-      if (result.success) {
-        // Списываем валюту
-        if (result.currency === 'gold') {
-          player.setGold(player.gold - result.cost)
-        } else {
-          player.setCrystals(player.crystals - result.cost)
-        }
+      if (playerGold >= cost) {
+        player.setGold(player.gold - cost)
         player.save()
         this.updateDeckInfo()
         // Запустить бой
