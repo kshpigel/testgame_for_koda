@@ -66,8 +66,8 @@ export class Game {
     this._portalTicker = () => this.updatePortals()
     this.app.ticker.add(this._portalTicker)
     
-    // MapGenerator для генерации карты с врагами
-    this.mapGenerator = new MapGenerator(allCards, { enemies: allEnemies })
+    // MapGenerator для генерации карты с врагами (инициализируется после загрузки данных)
+    this.mapGenerator = null
     
     // Инициализация стартового экрана (без init - будет вызвано при показе)
     this.startScreen = new StartScreen(this.app, () => this.runLoading())
@@ -80,6 +80,14 @@ export class Game {
     // Версия игры
     this.versionText = null
     this.showVersion()
+  }
+  
+  /**
+   * Инициализирует MapGenerator после загрузки данных карт и врагов
+   */
+  initMapGenerator(cardsData, enemiesData) {
+    this.mapGenerator = new MapGenerator(cardsData, enemiesData)
+    log('[Game] MapGenerator initialized with', cardsData.cards?.length, 'cards and', enemiesData.enemies?.length, 'enemies')
   }
 
   setLoadingCallback(callback) {

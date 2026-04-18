@@ -264,8 +264,8 @@ export class MapScreen extends EventEmitter {
       // Создаём объект для MapNode с правильными полями
       const nodeForDisplay = {
         ...displayData,
-        name: displayData.name || (isBoss ? displayData.name : displayData.name),
-        health: isBoss ? displayData.health : (displayData.value || 0)
+        name: displayData.name || displayData.cardData?.name || `Карта ${node.cardId || node.enemyId}`,
+        health: displayData.health || displayData.value || 0
       }
       
       const mapNode = new MapNode(nodeForDisplay, index, this.currentEnemyIndex, this.assets, this.app, { layer: 'gameObject' })

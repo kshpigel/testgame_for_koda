@@ -131,8 +131,11 @@ async function init() {
     
     // Загружаем данные карт и врагов
     startScreen.setLoadingText('Загрузка данных...')
-    await loadCards()
-    await loadEnemies()
+    const cardsData = await loadCards()
+    const enemiesData = await loadEnemies()
+    
+    // Инициализируем MapGenerator с загруженными данными
+    gameInstance.initMapGenerator(cardsData, enemiesData)
     
     // Загружаем ассеты
     startScreen.setLoadingText('Загрузка графики...')
