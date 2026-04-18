@@ -267,41 +267,37 @@ export class BaseScreen extends EventEmitter {
   // Показать модалку подтверждения входа в портал
   showPortalConfirmModal(portalId) {
     const portal = portalManager.getPortal(portalId)
-    const cost = portalManager.getPortalCost(portalId)
-    const crystals = player.crystals || 0
     const isPremium = portal?.type === 'premium'
+    const cost = isPremium ? gamePrices.getPremiumPortalCost() : (config.portalCost || 200)
+    const playerGold = player.gold || 0
+    const playerCrystals = player.crystals || 0
     
     const title = isPremium ? t('portal.title_premium') : t('portal.title_random')
+    const currencyName = isPremium ? 'кристаллов' : 'золота'
     const message = cost > 0 
-      ? (isPremium ? t('portal.confirm_premium', { cost }) : t('portal.confirm_random', { cost }))
+      ? t('portal.confirm_expense', { cost, currency: currencyName })
       : t('portal.confirm_free')
     
     const buttons = [
       { 
         text: t('ui.continue'), 
         action: () => {
-          if (crystals >= cost) {
-            // Для премиум портала - списываем кристаллы через activatePremiumPortal
-            if (isPremium) {
-              const result = portalManager.activatePremiumPortal(portalId, crystals)
-              if (result.success) {
-                player.crystals -= cost
-                player.save()
-                this.updateDeckInfo()
-              }
+          const result = portalManager.activatePortal(portalId, playerGold, playerCrystals)
+          if (result.success) {
+            // Списываем валюту
+            if (result.currency === 'gold') {
+              player.gold -= result.cost
+            } else {
+              player.crystals -= result.cost
             }
-            // Для обычных порталов - просто списываем кристаллы
-            else if (cost > 0) {
-              player.crystals -= cost
-              player.save()
-              this.updateDeckInfo()
-            }
+            player.save()
+            this.updateDeckInfo()
             // Запустить бой
             this.emit('start_game', portalId)
           } else {
             const errModal = new Modal(this.app, {
-              title: 'Ошибка',
-              message: t('portal.notEnough', { cost, have: crystals }),
+              title: 'Недостаточно средств',
+              message: t('portal.notEnough', { cost: result.needed, have: result.have }),
               buttons: [{ text: t('ui.close'), action: () => errModal.destroy() }]
             })
             errModal.container.zIndex = 200
