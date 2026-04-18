@@ -256,56 +256,64 @@ export class Game {
     this.hideCurrentScreen()
     soundManager.playMusic('mapBg')
     
-    // Получаем активную колоду игрока
-    const activeDeckId = deckManager.getActiveDeckId()
-    const playerDeck = deckManager.getDeck(activeDeckId)
-    
-    // Генерируем узлы карты через MapGenerator
-    // Приоритет: mapNodes > enemiesCount (для обратной совместимости)
-    const numNodes = config.mapNodes || config.enemiesCount || 5
-    const generatedNodes = this.mapGenerator.generateMap(numNodes, playerDeck.cards, portalId)
-    
-    log('[Game] Generated map nodes:', generatedNodes.map(n => ({ 
-      id: n.id, 
-      type: n.type, 
-      cardId: n.cardId, 
-      enemyId: n.enemyId,
-      difficulty: n.difficulty 
-    })))
-    
     // Переиспользуем существующую карту или создаём новую
     let mapScreen = this.screens['map']
-    if (!mapScreen) {
-      const randomMap = maps[Math.floor(Math.random() * maps.length)]
-      mapScreen = new MapScreen(this.app, randomMap, generatedNodes, this)
-      mapScreen.on('enemy_click', (enemyData) => this.initBattle(enemyData))
-      mapScreen.on('exit_to_base', () => {
-        // При выходе добавляем портал в пройденные
-        const portalId = mapScreen.portalId
-        if (portalId) {
-          // Проверяем тип портала - премиум не добавляем в completed (циклический)
-          const portalData = portalManager.getPortal(portalId)
-          const isPremium = portalData?.type === 'premium'
-          
-          if (!isPremium && !this.completedPortals.includes(portalId)) {
-            this.completedPortals.push(portalId)
-          }
-          
-          // Обновляем статус портала в manager (скрыть его)
-          portalManager.markPortalCompleted(portalId)
-        }
-        this.showBase()
-      })
-      this.screens['map'] = mapScreen
-    } else {
-      // Обновляем узлы карты для переиспользуемого экрана
-      mapScreen.updateNodes(generatedNodes)
+    
+    // Если portalId не передан - используем текущий из экрана карты
+    if (portalId === undefined && mapScreen) {
+      portalId = mapScreen.portalId
     }
     
-    // Сохраняем portalId — не перезаписываем если уже установлен
-    if (portalId !== undefined) {
+    // Генерируем узлы карты ТОЛЬКО если это новый портал
+    if (!mapScreen || mapScreen.portalId !== portalId) {
+      // Получаем активную колоду игрока
+      const activeDeckId = deckManager.getActiveDeckId()
+      const playerDeck = deckManager.getDeck(activeDeckId)
+      
+      // Генерируем узлы карты через MapGenerator
+      // Приоритет: mapNodes > enemiesCount (для обратной совместимости)
+      const numNodes = config.mapNodes || config.enemiesCount || 5
+      const generatedNodes = this.mapGenerator.generateMap(numNodes, playerDeck.cards, portalId)
+      
+      log('[Game] Generated map nodes:', generatedNodes.map(n => ({ 
+        id: n.id, 
+        type: n.type, 
+        cardId: n.cardId, 
+        enemyId: n.enemyId,
+        difficulty: n.difficulty 
+      })))
+      
+      if (!mapScreen) {
+        const randomMap = maps[Math.floor(Math.random() * maps.length)]
+        mapScreen = new MapScreen(this.app, randomMap, generatedNodes, this)
+        mapScreen.on('enemy_click', (enemyData) => this.initBattle(enemyData))
+        mapScreen.on('exit_to_base', () => {
+          // При выходе добавляем портал в пройденные
+          const portalId = mapScreen.portalId
+          if (portalId) {
+            // Проверяем тип портала - премиум не добавляем в completed (циклический)
+            const portalData = portalManager.getPortal(portalId)
+            const isPremium = portalData?.type === 'premium'
+            
+            if (!isPremium && !this.completedPortals.includes(portalId)) {
+              this.completedPortals.push(portalId)
+            }
+            
+            // Обновляем статус портала в manager (скрыть его)
+            portalManager.markPortalCompleted(portalId)
+          }
+          this.showBase()
+        })
+        this.screens['map'] = mapScreen
+      } else {
+        // Обновляем узлы карты для переиспользуемого экрана
+        mapScreen.updateNodes(generatedNodes)
+      }
+      
+      // Сохраняем portalId
       mapScreen.portalId = portalId
     }
+    
     this.currentScreen = mapScreen
     mapScreen.show()
     this.drawDebugGrid()
