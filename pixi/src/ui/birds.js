@@ -15,6 +15,10 @@ export class Birds extends PIXI.Container {
     // Включаем сортировку детей по zIndex
     this.sortableChildren = true
     
+    // Отключаем взаимодействие с мышью - птицы должны быть видны, но не блокировать клики
+    this.eventMode = 'static'
+    this.interactive = false
+    
     this.init()
   }
 

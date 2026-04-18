@@ -18,6 +18,10 @@ export class Clouds extends PIXI.Container {
     // Включаем сортировку детей по zIndex
     this.sortableChildren = true
     
+    // Отключаем взаимодействие с мышью - облака должны быть видны, но не блокировать клики
+    this.eventMode = 'static'
+    this.interactive = false
+    
     this.generateCloudTextures(15)
     this.init()
   }
