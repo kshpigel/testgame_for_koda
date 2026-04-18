@@ -31,15 +31,16 @@ export class MapGenerator {
     // Промежуточные узлы - рандомные base карты
     for (let i = 0; i < numNodes - 1; i++) {
       const randomCard = this.randomBaseCard(baseCards)
-      const difficulty = this.calculateDifficulty(i, numNodes - 1, deckOrCode)
+      const { difficulty, health } = this.calculateDifficulty(i, numNodes - 1, deckOrCode)
       
       nodes.push({
         id: `node_${i}`,
         index: i,
         type: 'enemy',
         cardId: randomCard.type,
-        cardData: randomCard,
+        cardData: { ...randomCard, health }, // Добавляем health для отображения
         difficulty: difficulty,
+        health: health, // Сохраняем рассчитанное здоровье
         isBoss: false
       })
     }
@@ -47,13 +48,17 @@ export class MapGenerator {
     // Последний узел - босс из enemies.json
     const boss = this.selectBoss(portalId)
     if (boss) {
+      // Рассчитываем HP для босса
+      const { health: bossHealth } = this.calculateDifficulty(numNodes - 1, numNodes - 1, deckOrCode)
+      
       nodes.push({
         id: `node_${numNodes - 1}`,
         index: numNodes - 1,
         type: 'boss',
         enemyId: boss.type,
-        enemyData: boss,
+        enemyData: { ...boss, health: bossHealth }, // Добавляем рассчитанное HP
         difficulty: 'boss',
+        health: bossHealth,
         isBoss: true
       })
     }
@@ -86,7 +91,7 @@ export class MapGenerator {
    * Прогрессия: 0.8 → 1.0 → 1.2 → 1.5 → boss
    */
   calculateDifficulty(nodeIndex, totalNodes, deckOrCode) {
-    if (totalNodes <= 1) return 'medium'
+    if (totalNodes <= 1) return { difficulty: 'medium', health: 0 }
     
     const progress = nodeIndex / (totalNodes - 1)
     
@@ -94,16 +99,19 @@ export class MapGenerator {
     const powerMultiplier = 0.8 + progress * 1.2
     
     const deckPower = calculateDeckPower(deckOrCode)
-    const baseDamage = deckPower.damagePerStep
+    const baseDamage = deckPower.damagePerStep || 10
     
-    // Рассчитываем HP врага
+    // Рассчитываем HP врага: baseDamage * 5 ходов * multiplier
     const enemyHealth = Math.floor(baseDamage * 5 * powerMultiplier)
     
     // Определяем уровень сложности по HP
-    if (powerMultiplier >= 1.8) return 'boss'
-    if (powerMultiplier >= 1.4) return 'strong'
-    if (powerMultiplier >= 1.0) return 'medium'
-    return 'easy'
+    let difficulty
+    if (powerMultiplier >= 1.8) difficulty = 'boss'
+    else if (powerMultiplier >= 1.4) difficulty = 'strong'
+    else if (powerMultiplier >= 1.0) difficulty = 'medium'
+    else difficulty = 'easy'
+    
+    return { difficulty, health: enemyHealth }
   }
 
   /**

@@ -5,6 +5,7 @@
 const _config = {
   debug: false,  // Включить логи и debug рамки
   enemiesCount: 10,
+  mapNodes: 10,  // Количество узлов на карте
   getCards: [],   // Карты для тестирования (будут в начале колоды)
   lang: 'ru',      // Язык (ru, en, ...)
   
@@ -22,6 +23,8 @@ export const config = {
   set debug(v) { _config.debug = v },
   get enemiesCount() { return _config.enemiesCount },
   set enemiesCount(v) { _config.enemiesCount = v },
+  get mapNodes() { return _config.mapNodes },
+  set mapNodes(v) { _config.mapNodes = v },
   get getCards() { return _config.getCards },
   set getCards(v) { _config.getCards = v },
   get lang() { return _config.lang },
@@ -41,6 +44,7 @@ export function log(...args) {
 export async function loadConfig() {
   _config.debug = false // Дефолт
   _config.enemiesCount = 10
+  _config.mapNodes = 10
   _config.getCards = []
   _config.lang = 'ru'
   _config.rewards = {
@@ -58,6 +62,7 @@ export async function loadConfig() {
         const localConfig = await res.json()
         if (localConfig.debug !== undefined) _config.debug = localConfig.debug
         if (localConfig.enemiesCount !== undefined) _config.enemiesCount = localConfig.enemiesCount
+        if (localConfig.mapNodes !== undefined) _config.mapNodes = localConfig.mapNodes
         if (localConfig.getCards !== undefined) _config.getCards = localConfig.getCards
         if (localConfig.lang !== undefined) _config.lang = localConfig.lang
         if (localConfig.rewards) _config.rewards = { ..._config.rewards, ...localConfig.rewards }
