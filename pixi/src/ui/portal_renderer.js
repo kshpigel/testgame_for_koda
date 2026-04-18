@@ -221,8 +221,8 @@ export class PortalRenderer {
     }
 
     if (portalStatus === 'active') {
-      // Активный портал — эмитим событие на baseScreen (game.js слушает здесь)
-      this.baseScreen.emit('start_game', portalId)
+      // Активный портал — показываем диалог подтверждения
+      this.baseScreen.showPortalConfirmModal(portalId)
     }
   }
 }
