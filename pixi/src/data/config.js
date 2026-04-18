@@ -15,8 +15,10 @@ const _config = {
   
   // Стоимость входа в портал
   portalCost: 200,
+  // Стоимость активации премиум портала
+  premiumPortalActivationCost: 200,
   
-  // Награды за победу
+  // Настройки сложности врагов
   rewards: {
     baseGold: 25,       // Базовая награда за победу
     goldPerStep: 10,    // Золото за каждый оставшийся ход
@@ -38,6 +40,8 @@ export const config = {
   set enemyDifficultyMax(v) { _config.enemyDifficultyMax = v },
   get portalCost() { return _config.portalCost },
   set portalCost(v) { _config.portalCost = v },
+  get premiumPortalActivationCost() { return _config.premiumPortalActivationCost },
+  set premiumPortalActivationCost(v) { _config.premiumPortalActivationCost = v },
   get getCards() { return _config.getCards },
   set getCards(v) { _config.getCards = v },
   get lang() { return _config.lang },
@@ -63,6 +67,7 @@ export async function loadConfig() {
   _config.enemyDifficultyBase = 0.5
   _config.enemyDifficultyMax = 1.5
   _config.portalCost = 200
+  _config.premiumPortalActivationCost = 200
   _config.rewards = {
     baseGold: 25,
     goldPerStep: 10,
@@ -84,6 +89,7 @@ export async function loadConfig() {
         if (localConfig.getCards !== undefined) _config.getCards = localConfig.getCards
         if (localConfig.lang !== undefined) _config.lang = localConfig.lang
         if (localConfig.portalCost !== undefined) _config.portalCost = localConfig.portalCost
+        if (localConfig.premiumPortalActivationCost !== undefined) _config.premiumPortalActivationCost = localConfig.premiumPortalActivationCost
         if (localConfig.rewards) _config.rewards = { ..._config.rewards, ...localConfig.rewards }
         log('[Config] Loaded:', localConfig)
         log('[Config] getCards:', _config.getCards)

@@ -80,8 +80,13 @@ export class PortalRenderer {
       altar.portalId = portalData.id
       altar.zIndex = 20
 
-      // Активные алтари кликабельны
+      // Активные алтари кликабельны, locked алтари премиум портала тоже кликабельны
       if (altarStatus === 'active') {
+        altar.eventMode = 'static'
+        altar.cursor = 'pointer'
+        altar.on('pointerdown', () => this._onAltarClick(portalData))
+      } else if (altarStatus === 'locked' && portalData.type === 'premium') {
+        // Locked премиум алтарь кликабелен для активации
         altar.eventMode = 'static'
         altar.cursor = 'pointer'
         altar.on('pointerdown', () => this._onAltarClick(portalData))
@@ -193,18 +198,15 @@ export class PortalRenderer {
       return
     }
 
-    // Только активные порталы реагируют на клик
-    if (status !== 'active') {
-      log('[PortalRenderer] altar not active, ignoring click')
-      return
-    }
-
-    // Клик по алтарю - показать модалку подтверждения
-    altarContainer.eventMode = true
-    altarContainer.hitArea = new PIXI.Rectangle(0, 0, altarWidth, altarHeight)
-    altarContainer.on('pointertap', () => {
+    if (status === 'locked' && portalData.type === 'premium') {
+      // Locked премиум алтарь - показать модалку активации
+      this.baseScreen.activatePremiumPortal(portalData.id)
+    } else if (status === 'active') {
+      // Активный алтарь - показать диалог входа
       this.baseScreen.showPortalConfirmModal(portalData.id)
-    })
+    } else {
+      log('[PortalRenderer] altar not clickable, status:', status)
+    }
   }
 
   /**

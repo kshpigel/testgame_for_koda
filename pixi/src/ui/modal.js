@@ -119,11 +119,12 @@ export class Modal {
       const btnY = this.height / 2 - btnHeight / 2 - 15
       
       this.buttons.forEach((btnConfig, index) => {
+        const btnWidth = btnConfig.width || 100
         const btn = new Button(btnConfig.text, {
           width: btnWidth,
           height: btnHeight,
           color: btnConfig.color || colors.ui.button.continue,
-          fontSize: 18,
+          fontSize: btnConfig.fontSize || 18,
           app: this.app
         })
         btn.setX(startX + index * (btnWidth + gap))

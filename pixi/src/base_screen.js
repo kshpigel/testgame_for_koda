@@ -19,7 +19,6 @@ import { t } from './data/i18n.js'
 import { playerUI } from './ui/player_ui.js'
 import { portalManager } from './data/portal_manager.js'
 import { PortalRenderer } from './ui/portal_renderer.js'
-import { gamePrices } from './data/game_prices.js'
 
 const ASSETS = {
   bg: '/assets/img/base_bg.png',
@@ -266,6 +265,89 @@ export class BaseScreen extends EventEmitter {
     this.container.addChild(modal.container)
     modal.show() // Показываем модалку
     log('[BaseScreen] modal added and shown, container children:', this.container.children.length)
+  }
+
+  // Активировать премиум портал за кристаллы
+  activatePremiumPortal(portalId) {
+    const cost = config.premiumPortalActivationCost || 200
+    const playerCrystals = player.crystals || 0
+    
+    if (playerCrystals < cost) {
+      // Недостаточно кристаллов - модалка с заголовком "Активация портала"
+      const modal = new Modal(this.app, {
+        title: 'Активация портала',  // Тот же заголовок
+        height: 180,
+        buttons: [{ text: t('ui.ok'), color: colors.ui.button.reset, action: () => modal.destroy() }]
+      })
+      
+      const messageText = new PIXI.Text(`${t('portal.not_enough_crystals', { needed: cost, have: playerCrystals })}`, {
+        fontFamily: FONT,
+        fontSize: 18,
+        fill: colors.ui.text.primary || '#ffffff',
+        align: 'center',
+        wordWrap: true,
+        wordWrapWidth: 300
+      })
+      messageText.anchor.set(0.5)
+      messageText.x = 0
+      messageText.y = -30
+      modal.content.addChild(messageText)
+      
+      modal.container.zIndex = 200
+      this.container.addChild(modal.container)
+      modal.show()
+      return
+    }
+    
+    // Показываем модалку подтверждения с текстом и динамической высотой
+    const message = t('portal.activate_premium', { cost })
+    const modal = new Modal(this.app, {
+      title: 'Активация портала',
+      height: 200,
+      buttons: [
+        {
+          text: t('ui.cancel'),
+          width: 130,
+          color: colors.ui.button.reset,
+          fontSize: 16,
+          action: () => modal.destroy()
+        },
+        {
+          text: t('portal.activate'),
+          width: 130,
+          color: colors.ui.button.continue,
+          fontSize: 16,
+          action: () => {
+            // Списываем кристаллы и активируем портал
+            player.setCrystals(playerCrystals - cost)
+            player.save()
+            this.updateDeckInfo()
+            
+            // Меняем статус портала на active
+            portalManager.updatePortalStatus(portalId, 'active')
+            modal.destroy()
+          }
+        }
+      ]
+    })
+    
+    // Добавляем текст в модалку (по центру, учитывая смещение content.y = 30)
+    const messageText = new PIXI.Text(message, {
+      fontFamily: FONT,
+      fontSize: 18,
+      fill: colors.ui.text.primary || '#ffffff',
+      align: 'center',
+      wordWrap: true,
+      wordWrapWidth: 300
+    })
+    messageText.anchor.set(0.5)
+    messageText.x = 0
+    messageText.y = -30  // Компенсируем смещение content.y = 30
+    modal.content.addChild(messageText)
+    
+    modal.container.zIndex = 200
+    this.container.addChild(modal.container)
+    modal.show()
   }
 
   // Показать диалог подтверждения входа в портал
