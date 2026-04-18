@@ -220,25 +220,12 @@ export class PortalManager {
       return { success: false, error: 'Portal not found' }
     }
     
-    // Премиум порталы - за кристаллы
-    if (portal.type === 'premium') {
-      const cost = gamePrices.getPremiumPortalCost()
-      if (playerCrystals < cost) {
-        return { success: false, error: 'Not enough crystals', needed: cost, have: playerCrystals, currency: 'crystals' }
-      }
-      portal.status = 'active'
-      playerCrystals -= cost
-      log('[PortalManager] activated premium portal', id, 'for', cost, 'crystals')
-      return { success: true, cost, currency: 'crystals' }
-    }
-    
-    // Обычные порталы - за золото
+    // Все порталы (включая премиум) теперь за золото
     const cost = config.portalCost || 200
     if (playerGold < cost) {
       return { success: false, error: 'Not enough gold', needed: cost, have: playerGold, currency: 'gold' }
     }
     portal.status = 'active'
-    playerGold -= cost
     log('[PortalManager] activated portal', id, 'for', cost, 'gold')
     return { success: true, cost, currency: 'gold' }
   }
