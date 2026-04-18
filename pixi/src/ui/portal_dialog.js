@@ -14,8 +14,6 @@ export class PortalDialog {
   }
 
   async show(portalId, onConfirm, onCancel = null) {
-    const portal = portalManager.getPortal(portalId)
-    const isPremium = portal?.type === 'premium'
     const cost = config.portalCost || 200  // Все порталы за 200 золота
     const playerGold = player.gold || 0
     const currencyName = 'золота'
