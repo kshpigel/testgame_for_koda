@@ -79,15 +79,15 @@ export class PortalDialog {
     // Фон диалога
     const bg = new PIXI.Graphics()
     const screenWidth = this.app.screen.width
-    const y = this.app.screen.height - DIALOG_CONFIG.height
+    const dialogY = this.app.screen.height - DIALOG_CONFIG.height
 
     bg.beginFill(0xF5E7CF)
-    bg.drawRect(0, y, screenWidth, DIALOG_CONFIG.height)
+    bg.drawRect(0, dialogY, screenWidth, DIALOG_CONFIG.height)
     bg.endFill()
 
     bg.lineStyle(DIALOG_CONFIG.borderTopWidth, 0x8c1300)
-    bg.moveTo(0, y)
-    bg.lineTo(screenWidth, y)
+    bg.moveTo(0, dialogY)
+    bg.lineTo(screenWidth, dialogY)
 
     this.dialogContainer.addChild(bg)
 
@@ -101,46 +101,48 @@ export class PortalDialog {
       onClick: () => this.hide()
     })
     closeBtn.setX(screenWidth - DIALOG_CONFIG.closeButtonSize / 2 - 20)
-    closeBtn.setY(y + DIALOG_CONFIG.closeButtonSize / 2 + 10)
+    closeBtn.setY(dialogY + DIALOG_CONFIG.closeButtonSize / 2 + 10)
     this.dialogContainer.addChild(closeBtn)
 
     // Картинка героя слева
+    let heroSprite = null
     if (heroImage) {
-      const hero = new PIXI.Sprite(heroImage)
-      hero.anchor.set(0.5, 0.5)
+      heroSprite = new PIXI.Sprite(heroImage)
+      heroSprite.anchor.set(0.5, 0.5)
       const targetWidth = DIALOG_CONFIG.imageWidth
-      const scale = targetWidth / hero.texture.width
-      hero.scale.set(scale)
-      hero.x = DIALOG_CONFIG.marginLeft + targetWidth / 2
-      hero.y = y + DIALOG_CONFIG.height / 2
-      this.dialogContainer.addChild(hero)
+      const scale = targetWidth / heroSprite.texture.width
+      heroSprite.scale.set(scale)
+      heroSprite.x = DIALOG_CONFIG.marginLeft + targetWidth / 2
+      heroSprite.y = dialogY + DIALOG_CONFIG.height / 2
+      this.dialogContainer.addChild(heroSprite)
     }
 
-    // Контейнер для текста
+    // Контейнер для текста (без смещения по Y, вычисляем позже)
     this.textContainer = new PIXI.Container()
     this.textContainer.x = DIALOG_CONFIG.marginLeft + DIALOG_CONFIG.imageWidth + DIALOG_CONFIG.marginLeft
-    this.textContainer.y = y + DIALOG_CONFIG.marginTop
     this.dialogContainer.addChild(this.textContainer)
 
     // Текст
+    const textWidth = screenWidth - DIALOG_CONFIG.marginLeft * 3 - DIALOG_CONFIG.imageWidth - DIALOG_CONFIG.marginRight - 50
     const textObj = new PIXI.Text(text, {
       fontFamily: FONT,
-      fontSize: 20,
+      fontSize: DIALOG_CONFIG.fontSize,
       fill: '#333333',
       wordWrap: true,
-      wordWrapWidth: this.app.screen.width - DIALOG_CONFIG.marginLeft * 3 - DIALOG_CONFIG.imageWidth - DIALOG_CONFIG.marginRight - 50
+      wordWrapWidth: textWidth
     })
     textObj.x = 0
-    textObj.y = 0
+    textObj.y = DIALOG_CONFIG.marginTop
     this.textContainer.addChild(textObj)
 
     // Кнопки "Продолжить" и "Отмена"
-    const btnY = textObj.height + 30
+    const btnHeight = 45
+    const btnY = Math.max(textObj.height, 60) + 20
     const btnSpacing = 150
 
     const continueBtn = new Button(t('ui.continue'), {
       width: 140,
-      height: 45,
+      height: btnHeight,
       color: colors.ui.button.continue,
       fontSize: 18,
       app: this.app,
@@ -157,7 +159,7 @@ export class PortalDialog {
 
     const cancelBtn = new Button(t('ui.cancel'), {
       width: 140,
-      height: 45,
+      height: btnHeight,
       color: colors.ui.button.cancel,
       fontSize: 18,
       app: this.app,
@@ -172,9 +174,11 @@ export class PortalDialog {
     cancelBtn.y = btnY
     this.textContainer.addChild(cancelBtn)
 
-    // Центрируем кнопки по вертикали
-    const totalHeight = Math.max(textObj.height + btnY + 60, DIALOG_CONFIG.height - DIALOG_CONFIG.marginTop - DIALOG_CONFIG.marginBottom)
-    this.textContainer.y = y + (DIALOG_CONFIG.height - DIALOG_CONFIG.marginTop - DIALOG_CONFIG.marginBottom - totalHeight) / 2
+    // Центрируем текст и кнопки по вертикали
+    const contentHeight = Math.max(textObj.height + btnY + 40, btnY + btnHeight + 20)
+    const availableHeight = DIALOG_CONFIG.height - DIALOG_CONFIG.marginTop - DIALOG_CONFIG.marginBottom
+    const centerY = dialogY + DIALOG_CONFIG.marginTop + (availableHeight - contentHeight) / 2
+    this.textContainer.y = centerY
 
     this.container.addChild(this.dialogContainer)
   }
