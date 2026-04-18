@@ -11,5 +11,6 @@
       "goldPercent": 90,
       "crystalsPercent": 10
     }
-  }
+  },
+  "mapNodes": 10
 }

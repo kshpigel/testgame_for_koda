@@ -140,13 +140,16 @@ export class MapNode extends UINode {
   }
   
   renderName(cfg, spriteY) {
+    // Определяем имя: у врагов есть name, у карт - name или type
+    const displayName = this.enemy.name || (this.enemy.cardData?.name) || `Карта ${this.enemy.cardId || this.enemy.type}`
+    
     const nameStyle = new PIXI.TextStyle({
       fontFamily: FONT,
       fontSize: 14,
       fontWeight: 'bold',
       fill: this.isDefeated ? colors.enemy.platform.defeated : colors.ui.text.primary
     })
-    this.name = new PIXI.Text(this.enemy.name, nameStyle)
+    this.name = new PIXI.Text(displayName, nameStyle)
     this.name.anchor.set(0.5, 1)
     this.name.y = spriteY + cfg.name.offsetY
     this.addChild(this.name)
@@ -166,7 +169,13 @@ export class MapNode extends UINode {
       fontSize: 12,
       fill: '#ff6666'
     })
-    this.health = new PIXI.Text('~' + this.enemy.health, healthStyle)
+    
+    // Определяем здоровье: у врагов есть health, у карт - value
+    const healthValue = this.enemy.health !== undefined 
+      ? this.enemy.health 
+      : (this.enemy.cardData?.value || this.enemy.value || 0)
+    
+    this.health = new PIXI.Text('~' + healthValue, healthStyle)
     this.health.anchor.set(0.5)
     this.health.y = spriteY + cfg.health.text.offsetY
     this.addChild(this.health)

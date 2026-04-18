@@ -261,7 +261,14 @@ export class MapScreen extends EventEmitter {
       const displayData = isBoss ? node.enemyData : node.cardData
       const difficulty = node.difficulty || 'medium'
       
-      const mapNode = new MapNode(displayData, index, this.currentEnemyIndex, this.assets, this.app, { layer: 'gameObject' })
+      // Создаём объект для MapNode с правильными полями
+      const nodeForDisplay = {
+        ...displayData,
+        name: displayData.name || (isBoss ? displayData.name : displayData.name),
+        health: isBoss ? displayData.health : (displayData.value || 0)
+      }
+      
+      const mapNode = new MapNode(nodeForDisplay, index, this.currentEnemyIndex, this.assets, this.app, { layer: 'gameObject' })
       mapNode.isBoss = isBoss
       mapNode.setDifficulty(difficulty)
       mapNode.setPosition(x, y)
