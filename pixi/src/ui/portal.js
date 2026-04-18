@@ -134,7 +134,7 @@ export class Portal extends UINode {
     // Активные порталы кликабельны
     const isClickable = status === 'active'
     this.cursor = isClickable ? 'pointer' : 'default'
-    this.interactive = isClickable
+    this.eventMode = isClickable ? 'static' : 'none'
     
     // Обновляем brightness для неактивных порталов
     if (status === 'active') {

@@ -17,7 +17,7 @@ export class Birds extends PIXI.Container {
     
     // Отключаем взаимодействие с мышью - птицы должны быть видны, но не блокировать клики
     this.eventMode = 'static'
-    this.interactive = false
+    this.eventMode = 'none'
     
     this.init()
   }

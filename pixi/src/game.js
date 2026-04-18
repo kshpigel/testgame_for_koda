@@ -312,6 +312,16 @@ export class Game {
       
       // Сохраняем portalId
       mapScreen.portalId = portalId
+      
+      // Если это премиум портал - сбрасываем его в locked при входе на карту
+      // (портал был active после активации, теперь закрываем его)
+      if (portalId) {
+        const portalData = portalManager.getPortal(portalId)
+        if (portalData?.type === 'premium' && portalData.status === 'active') {
+          portalManager.updatePortalStatus(portalId, 'locked')
+          log('[Game] Premium portal', portalId, 'reset to locked on map entry')
+        }
+      }
     }
     
     this.currentScreen = mapScreen

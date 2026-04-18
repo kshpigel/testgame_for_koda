@@ -20,7 +20,7 @@ export class Clouds extends PIXI.Container {
     
     // Отключаем взаимодействие с мышью - облака должны быть видны, но не блокировать клики
     this.eventMode = 'static'
-    this.interactive = false
+    this.eventMode = 'none'
     
     this.generateCloudTextures(15)
     this.init()
