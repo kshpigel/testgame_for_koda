@@ -24,6 +24,8 @@ import { gameConfig } from './data/game_config.js'
 import { playerUI } from './ui/player_ui.js'
 import { Modal } from './ui/modal.js'
 import { t } from './data/i18n.js'
+import { MapGenerator } from './data/map_generator.js'
+import { cards as allCards } from './data/cards.js'
 
 // Главный фон
 const MAIN_BG = '/assets/img/bg_full.jpg'
@@ -63,6 +65,9 @@ export class Game {
     // Глобальный тикер для PortalManager (рост порталов в фоне)
     this._portalTicker = () => this.updatePortals()
     this.app.ticker.add(this._portalTicker)
+    
+    // MapGenerator для генерации карты с врагами
+    this.mapGenerator = new MapGenerator(allCards, { enemies: allEnemies })
     
     // Инициализация стартового экрана (без init - будет вызвано при показе)
     this.startScreen = new StartScreen(this.app, () => this.runLoading())
@@ -243,16 +248,27 @@ export class Game {
     this.hideCurrentScreen()
     soundManager.playMusic('mapBg')
     
-    // Инициализируем врагов с рандомными HP (каждый раз новые)
-    initEnemies()
+    // Получаем активную колоду игрока
+    const activeDeckId = deckManager.getActiveDeckId()
+    const playerDeck = deckManager.getDeck(activeDeckId)
     
-    // Переиспользуем существующую карту или создаём новую со случайной картой
+    // Генерируем узлы карты через MapGenerator
+    const numNodes = config.mapNodes || 5 // количество узлов из config
+    const generatedNodes = this.mapGenerator.generateMap(numNodes, playerDeck.cards, portalId)
+    
+    log('[Game] Generated map nodes:', generatedNodes.map(n => ({ 
+      id: n.id, 
+      type: n.type, 
+      cardId: n.cardId, 
+      enemyId: n.enemyId,
+      difficulty: n.difficulty 
+    })))
+    
+    // Переиспользуем существующую карту или создаём новую
     let mapScreen = this.screens['map']
     if (!mapScreen) {
       const randomMap = maps[Math.floor(Math.random() * maps.length)]
-      // Ограничиваем количество врагов для тестирования
-      const enemies = allEnemies.slice(0, config.enemiesCount || allEnemies.length)
-      mapScreen = new MapScreen(this.app, randomMap, enemies, this)
+      mapScreen = new MapScreen(this.app, randomMap, generatedNodes, this)
       mapScreen.on('enemy_click', (enemyData) => this.initBattle(enemyData))
       mapScreen.on('exit_to_base', () => {
         // При выходе добавляем портал в пройденные
@@ -272,6 +288,9 @@ export class Game {
         this.showBase()
       })
       this.screens['map'] = mapScreen
+    } else {
+      // Обновляем узлы карты для переиспользуемого экрана
+      mapScreen.updateNodes(generatedNodes)
     }
     
     // Сохраняем portalId — не перезаписываем если уже установлен
@@ -301,10 +320,13 @@ export class Game {
       return cardType ? { ...cardType } : { type: cardId, name: `Тип ${cardId}`, value: 0 }
     })
     
-    const battle = new Battle(this.app, cardObjects, card_types, enemyData, this, sleeve)
+    // enemyData может быть либо картой (cardData), либо врагом (enemyData)
+    const battleEnemyData = enemyData.isBoss ? enemyData.enemyData : enemyData.cardData
+    
+    const battle = new Battle(this.app, cardObjects, card_types, battleEnemyData, this, sleeve)
 
     // Показываем диалог врага перед боем
-    this.showEnemyDialog(enemyData)
+    this.showEnemyDialog(battleEnemyData)
     
     battle.on('end', () => {
       this.isBattleActive = false

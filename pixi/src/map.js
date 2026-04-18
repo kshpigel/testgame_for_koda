@@ -13,11 +13,11 @@ import { t } from './data/i18n.js'
 import { portalManager } from './data/portal_manager.js'
 
 export class MapScreen extends EventEmitter {
-  constructor(app, mapData, enemies, game) {
+  constructor(app, mapData, mapNodes, game) {
     super()
     this.app = app
     this.mapData = mapData
-    this.enemies = enemies
+    this.mapNodes = mapNodes // Сгенерированные узлы карты
     this.game = game
     this.container = new PIXI.Container()
     this.container.sortableChildren = true
@@ -27,7 +27,7 @@ export class MapScreen extends EventEmitter {
     
     this.cellSize = Math.min(app.screen.width, app.screen.height) / 20
     
-    this.portalId = null // ID портала, через который зашли на карту
+    this.portalId = null // ID портала, через который зашли в бой
     this.loadAssets()
   }
 
@@ -36,8 +36,16 @@ export class MapScreen extends EventEmitter {
     
     if (this.mapData.image) urls.add(this.mapData.image)
     
-    this.enemies.forEach((enemy, index) => {
-      if (enemy.image) urls.add(enemy.image)
+    // Загружаем ассеты для всех узлов карты
+    this.mapNodes.forEach((node, index) => {
+      if (node.isBoss && node.enemyData?.image) {
+        urls.add(node.enemyData.image)
+      } else if (!node.isBoss && node.cardData?.image) {
+        urls.add(node.cardData.image)
+      }
+      if (node.isBoss && node.enemyData?.image_bg) {
+        urls.add(node.enemyData.image_bg)
+      }
     })
     
     await PIXI.Assets.load(Array.from(urls))
@@ -47,9 +55,12 @@ export class MapScreen extends EventEmitter {
       this.assets.mapBg = { texture: PIXI.Assets.get(this.mapData.image) }
     }
     
-    this.enemies.forEach((enemy, index) => {
-      if (enemy.image) {
-        this.assets[`enemy_${index}`] = { texture: PIXI.Assets.get(enemy.image) }
+    // Сохраняем ассеты для каждого узла
+    this.mapNodes.forEach((node, index) => {
+      if (node.isBoss && node.enemyData?.image) {
+        this.assets[`enemy_${index}`] = { texture: PIXI.Assets.get(node.enemyData.image) }
+      } else if (!node.isBoss && node.cardData?.image) {
+        this.assets[`enemy_${index}`] = { texture: PIXI.Assets.get(node.cardData.image) }
       }
     })
     
@@ -73,6 +84,18 @@ export class MapScreen extends EventEmitter {
       this.container.alpha = 0
       this.fadeIn()
     }
+  }
+  
+  /**
+   * Обновляет узлы карты (для переиспользования экрана)
+   */
+  updateNodes(nodes) {
+    log('[MapScreen] updateNodes called with', nodes.length, 'nodes')
+    this.mapNodes = nodes
+    this.currentEnemyIndex = 0
+    // Перерисовываем карту
+    this.render()
+    this.afterRender()
   }
   
   afterRender() {
@@ -171,33 +194,36 @@ export class MapScreen extends EventEmitter {
     // Массив для анимации
     this.animatableEnemies = []
     
-    // Распределяем врагов по places
+    // Используем mapNodes вместо enemies
+    const nodes = this.mapNodes || []
+    const nodeCount = nodes.length
+    
+    if (nodeCount === 0) {
+      log('[MapScreen] No nodes to render')
+      return
+    }
+
+    // Распределяем узлы по places
     const places = this.mapData.places
-    const enemyCount = this.enemies.length
     const placeCount = places.length
     
-    // Первый враг - всегда place0, последний (босс) - всегда place9
-    // Остальные равномерно между ними с ±1 random
-    const step = (placeCount - 1) / (enemyCount - 1)
+    // Первый узел - place0, последний - place9
+    // Остальные равномерно между ними
+    const step = (placeCount - 1) / (nodeCount - 1)
 
     // Множество занятых мест
     const usedPlaces = new Set()
 
-    this.enemies.forEach((enemy, index) => {
+    nodes.forEach((node, index) => {
       let placeIndex
       
       if (index === 0) {
-        // Первый враг - place0
         placeIndex = 0
-      } else if (index === enemyCount - 1) {
-        // Последний враг (босс) - place9
+      } else if (index === nodeCount - 1) {
         placeIndex = placeCount - 1
       } else {
-        // Остальные равномерно с ±1 random, но без дубликатов
         const baseIndex = Math.floor(index * step)
-        
-        // Пробуем найти свободное место
-        const offsets = [0, -1, 1, -2, 2] // порядок: сначала без смещения, потом ±1, ±2
+        const offsets = [0, -1, 1, -2, 2]
         placeIndex = -1
         
         for (const offset of offsets) {
@@ -208,7 +234,6 @@ export class MapScreen extends EventEmitter {
           }
         }
         
-        // Если все заняты, берём любое свободное
         if (placeIndex === -1) {
           for (let i = 1; i < placeCount - 1; i++) {
             if (!usedPlaces.has(i)) {
@@ -219,7 +244,6 @@ export class MapScreen extends EventEmitter {
         }
       }
       
-      // Запоминаем занятое место
       usedPlaces.add(placeIndex)
       
       const cellId = places[placeIndex]
@@ -232,30 +256,29 @@ export class MapScreen extends EventEmitter {
       const x = startX + col * cellW + cellW / 2
       const y = startY + row * cellH + cellH / 2
 
-      // Создаём MapNode
-      const isBoss = index === this.enemies.length - 1
+      // Определяем данные для отображения
+      const isBoss = node.isBoss
+      const displayData = isBoss ? node.enemyData : node.cardData
+      const difficulty = node.difficulty || 'medium'
       
-      // Используем difficulty из enemies (уже рассчитан относительно HP)
-      const difficulty = enemy.difficulty || 'medium'
-      
-      const mapNode = new MapNode(enemy, index, this.currentEnemyIndex, this.assets, this.app, { layer: 'gameObject' })
+      const mapNode = new MapNode(displayData, index, this.currentEnemyIndex, this.assets, this.app, { layer: 'gameObject' })
       mapNode.isBoss = isBoss
       mapNode.setDifficulty(difficulty)
       mapNode.setPosition(x, y)
       
-      // Обработка клика
+      // Сохраняем полные данные узла для передачи в бой
+      mapNode.nodeData = node
+      
       mapNode.on('enemy_click', (enemyData) => {
-        this.emit('enemy_click', enemyData)
+        // Передаём полные данные узла (включая cardData или enemyData)
+        this.emit('enemy_click', node)
       })
       
-      // Добавляем в массив анимации
       this.animatableEnemies.push(mapNode)
-
       this.container.addChild(mapNode)
       this.enemySprites.push(mapNode)
     })
     
-    // Запускаем тикер для плавной анимации
     this.tickerCallback = () => this.updateEnemies()
     this.app.ticker.add(this.tickerCallback)
   }
@@ -336,9 +359,8 @@ export class MapScreen extends EventEmitter {
   }
   
   isLastEnemyDefeated() {
-    // Текущий индекс уже увеличен после победы
-    // Если мы победили врага с индексом enemies.length - 1 (последний)
-    return this.currentEnemyIndex >= this.enemies.length
+    const nodes = this.mapNodes || []
+    return this.currentEnemyIndex >= nodes.length
   }
 
   cleanup() {

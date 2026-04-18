@@ -2,9 +2,16 @@
 import enemiesData from '../../../public/assets/data/enemies.json' with { type: 'json' }
 import { calculateDeckPower } from '../deck_power.js'
 import { deckManager } from '../deck_manager.js'
+import { log } from '../config.js'
 
 // Экспортируем переменную enemies (заполняется при initEnemies)
 export let enemies = []
+
+// Загрузка данных врагов (возвращает данные для MapGenerator)
+export function loadEnemies() {
+  log('[enemies] loaded', enemiesData.enemies.length, 'enemies')
+  return { enemies: enemiesData.enemies }
+}
 
 // Инициализация врагов (вызывать ПОСЛЕ загрузки конфига)
 export function initEnemies() {

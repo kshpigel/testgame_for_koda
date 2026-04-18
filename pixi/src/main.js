@@ -7,6 +7,8 @@ import { config, loadConfig, log } from './data/config.js'
 import { loadTranslations, t } from './data/i18n.js'
 import { portalManager } from './data/portal_manager.js'
 import { gamePrices } from './data/game_prices.js'
+import { loadCards } from './data/cards.js'
+import { loadEnemies } from './data/enemies/index.js'
 
 let gameInstance = null
 
@@ -126,6 +128,11 @@ async function init() {
     // Загружаем звуки
     startScreen.setLoadingText(t('loading.sounds'))
     await soundManager.init()
+    
+    // Загружаем данные карт и врагов
+    startScreen.setLoadingText('Загрузка данных...')
+    await loadCards()
+    await loadEnemies()
     
     // Загружаем ассеты
     startScreen.setLoadingText('Загрузка графики...')
