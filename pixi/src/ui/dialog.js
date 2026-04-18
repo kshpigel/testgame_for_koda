@@ -173,14 +173,9 @@ export class Dialog {
     // Очищаем контейнер текста
     this.textContainer.removeChildren()
 
-    // Удаляем старые кнопки из dialogContainer (индекс от textContainer до конца)
-    const btnStartIndex = this.textContainer.index
-    if (this.dialogContainer.children.length > btnStartIndex + 1) {
-      const buttonsToRemove = this.dialogContainer.children.slice(btnStartIndex + 1)
-      buttonsToRemove.forEach(btn => {
-        this.dialogContainer.removeChild(btn)
-        btn.destroy()
-      })
+    // Очищаем старые кнопки из extraButtonsContainer
+    if (this.extraButtonsContainer) {
+      this.extraButtonsContainer.removeChildren()
     }
 
     let chunk = this.chunks[this.currentChunkIndex]
@@ -265,8 +260,9 @@ export class Dialog {
 
     // Добавляем дополнительные кнопки (например, для портала)
     if (this.extraButtons && this.extraButtons.length > 0 && this.extraButtonsContainer) {
-      const btnY = dialogHeight - 45 - 10
-      const btnX = DIALOG_CONFIG.marginLeft + DIALOG_CONFIG.imageWidth + DIALOG_CONFIG.marginLeft + 20
+      // Устанавливаем позицию контейнера кнопок внизу диалога
+      this.extraButtonsContainer.y = newY + dialogHeight - 45 - 10
+      this.extraButtonsContainer.x = DIALOG_CONFIG.marginLeft + DIALOG_CONFIG.imageWidth + DIALOG_CONFIG.marginLeft + 80
       
       this.extraButtons.forEach((btnConfig, index) => {
         const btn = new Button(btnConfig.text, {
@@ -282,8 +278,11 @@ export class Dialog {
             }
           }
         })
-        btn.x = btnX + index * 160
-        btn.y = btnY
+        // Устанавливаем визуальные координаты для правильной работы scale анимации
+        btn._visualX = index * 160
+        btn._visualY = 0
+        btn.x = index * 160 + btn.pivot.x
+        btn.y = 0 + btn.pivot.y
         this.extraButtonsContainer.addChild(btn)
       })
       buttonsHeight = 45 + 20
