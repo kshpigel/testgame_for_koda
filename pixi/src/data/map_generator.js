@@ -105,7 +105,11 @@ export class MapGenerator {
     const baseDamage = deckPower.damagePerStep || 10
     
     // Рассчитываем HP врага: baseDamage * 5 ходов * multiplier
-    const enemyHealth = Math.floor(baseDamage * 5 * powerMultiplier)
+    let enemyHealth = Math.floor(baseDamage * 5 * powerMultiplier)
+    
+    // Добавляем рандомный разброс ±10% (0.9 - 1.1)
+    const randomFactor = 0.9 + Math.random() * 0.2
+    enemyHealth = Math.floor(enemyHealth * randomFactor)
     
     // Определяем уровень сложности по HP
     let difficulty
