@@ -7,6 +7,8 @@ import { log } from './data/config.js'
 import { soundManager } from './audio/sound_manager.js'
 import { player } from './data/player.js'
 import { Modal } from './ui/modal.js'
+import { Dialog } from './ui/dialog.js'
+import { PortalDialog } from './ui/portal_dialog.js'
 import { Castle } from './ui/castle.js'
 import { Birds } from './ui/birds.js'
 import { Clouds } from './ui/clouds.js'
@@ -37,6 +39,7 @@ export class BaseScreen extends EventEmitter {
     this.assets = {}
     this._tickerCallback = null
     this.portalRenderer = null
+    this.portalDialog = null
   }
 
   async init(completedPortals = []) {
@@ -264,55 +267,42 @@ export class BaseScreen extends EventEmitter {
     log('[BaseScreen] modal added and shown, container children:', this.container.children.length)
   }
 
-  // Показать модалку подтверждения входа в портал
+  // Показать диалог подтверждения входа в портал
   showPortalConfirmModal(portalId) {
-    const portal = portalManager.getPortal(portalId)
-    const isPremium = portal?.type === 'premium'
-    const cost = isPremium ? gamePrices.getPremiumPortalCost() : (config.portalCost || 200)
-    const playerGold = player.gold || 0
-    const playerCrystals = player.crystals || 0
+    if (!this.portalDialog) {
+      this.portalDialog = new PortalDialog(this.app, this.container)
+    }
     
-    const title = isPremium ? t('portal.title_premium') : t('portal.title_random')
-    const currencyName = isPremium ? 'кристаллов' : 'золота'
-    const message = cost > 0 
-      ? t('portal.confirm_expense', { cost, currency: currencyName })
-      : t('portal.confirm_free')
-    
-    const buttons = [
-      { 
-        text: t('ui.continue'), 
-        action: () => {
-          const result = portalManager.activatePortal(portalId, playerGold, playerCrystals)
-          if (result.success) {
-            // Списываем валюту
-            if (result.currency === 'gold') {
-              player.gold -= result.cost
-            } else {
-              player.crystals -= result.cost
-            }
-            player.save()
-            this.updateDeckInfo()
-            // Запустить бой
-            this.emit('start_game', portalId)
-          } else {
-            const errModal = new Modal(this.app, {
-              title: 'Недостаточно средств',
-              message: t('portal.notEnough', { cost: result.needed, have: result.have }),
-              buttons: [{ text: t('ui.close'), action: () => errModal.destroy() }]
-            })
-            errModal.container.zIndex = 200
-            this.container.addChild(errModal.container)
-            errModal.show()
-          }
+    this.portalDialog.show(portalId, (id) => {
+      const portal = portalManager.getPortal(id)
+      const isPremium = portal?.type === 'premium'
+      const cost = isPremium ? gamePrices.getPremiumPortalCost() : (config.portalCost || 200)
+      const playerGold = player.gold || 0
+      const playerCrystals = player.crystals || 0
+      
+      const result = portalManager.activatePortal(id, playerGold, playerCrystals)
+      if (result.success) {
+        // Списываем валюту
+        if (result.currency === 'gold') {
+          player.gold -= result.cost
+        } else {
+          player.crystals -= result.cost
         }
-      },
-      { text: t('ui.cancel'), action: () => {} }
-    ]
-    
-    const modal = new Modal(this.app, { title, message, buttons })
-    modal.container.zIndex = 200
-    this.container.addChild(modal.container)
-    modal.show()
+        player.save()
+        this.updateDeckInfo()
+        // Запустить бой
+        this.emit('start_game', id)
+      } else {
+        const errModal = new Modal(this.app, {
+          title: 'Недостаточно средств',
+          message: t('portal.notEnough', { cost: result.needed, have: result.have }),
+          buttons: [{ text: t('ui.close'), action: () => errModal.destroy() }]
+        })
+        errModal.container.zIndex = 200
+        this.container.addChild(errModal.container)
+        errModal.show()
+      }
+    })
   }
 
   hide() {
