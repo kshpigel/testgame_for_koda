@@ -261,7 +261,8 @@ export class Game {
     const playerDeck = deckManager.getDeck(activeDeckId)
     
     // Генерируем узлы карты через MapGenerator
-    const numNodes = config.mapNodes || 5 // количество узлов из config
+    // Приоритет: mapNodes > enemiesCount (для обратной совместимости)
+    const numNodes = config.mapNodes || config.enemiesCount || 5
     const generatedNodes = this.mapGenerator.generateMap(numNodes, playerDeck.cards, portalId)
     
     log('[Game] Generated map nodes:', generatedNodes.map(n => ({ 
