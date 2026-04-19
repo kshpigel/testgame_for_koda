@@ -313,13 +313,13 @@ export class Game {
       // Сохраняем portalId
       mapScreen.portalId = portalId
       
-      // Если это премиум портал - сбрасываем его в locked при входе на карту
+      // Если портал активен - сбрасываем его в locked при входе на карту
       // (портал был active после активации, теперь закрываем его)
       if (portalId) {
         const portalData = portalManager.getPortal(portalId)
-        if (portalData?.type === 'premium' && portalData.status === 'active') {
+        if (portalData?.status === 'active') {
           portalManager.updatePortalStatus(portalId, 'locked')
-          log('[Game] Premium portal', portalId, 'reset to locked on map entry')
+          log('[Game] Portal', portalId, 'reset to locked on map entry (type:', portalData?.type, ')')
         }
       }
     }
@@ -411,6 +411,12 @@ export class Game {
       // Возврат на базу и удаление карты (как при победе над последним врагом)
       this.isBattleActive = false
       if (this.screens['map']) {
+        // Сбрасываем портал в locked при поражении
+        const portalId = this.screens['map'].portalId
+        if (portalId) {
+          portalManager.updatePortalStatus(portalId, 'locked')
+          log('[Game] Portal', portalId, 'reset to locked on defeat')
+        }
         this.screens['map'].cleanup()
         delete this.screens['map']
       }

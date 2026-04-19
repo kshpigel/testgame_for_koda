@@ -267,6 +267,11 @@ export class PortalManager {
       if (status === 'active') {
         portal.lastWinTime = null
       }
+      // Синхронизируем с GameState (источник истины)
+      gameState.setStatus(id, status)
+      if (status === 'active') {
+        gameState.setLastWinTime(id)
+      }
     }
   }
 

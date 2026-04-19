@@ -989,7 +989,7 @@ export class Battle extends EventEmitter {
     continueBtn.onClick = () => {
       this.defeatModal.hide()
       this.app.stage.removeChild(this.defeatModal.container)
-      this.emit('end')
+      this.emit('defeat')
     }
     this.defeatModal.addChild(continueBtn)
     
