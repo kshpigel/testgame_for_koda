@@ -416,6 +416,8 @@ export class Game {
         if (portalId) {
           portalManager.updatePortalStatus(portalId, 'locked')
           log('[Game] Portal', portalId, 'reset to locked on defeat')
+          // Запускаем следующий портал в очереди
+          portalManager.startNextPortalGrowth()
         }
         this.screens['map'].cleanup()
         delete this.screens['map']
