@@ -9,11 +9,12 @@ export class PortalManager {
     this.portalTypes = null
     this.altarTypes = null
     this.positions = null
-    // Время роста берётся из config (можно переопределить в local_config.json)
-    this.growthConfig = {
-      testMode: config.portalGrowthTimeMinutes < 1, // Тестовый режим если < 1 минута
-      growthTimeMinutes: config.portalGrowthTimeMinutes
-    }
+    // growthConfig удаляем — читаем config.portalGrowthTimeMinutes на лету
+  }
+
+  // Получить текущее время роста из config (обновляется после loadConfig)
+  getGrowthTimeMs() {
+    return config.portalGrowthTimeMinutes * 60 * 1000
   }
 
   async load() {
@@ -142,7 +143,7 @@ export class PortalManager {
     if (!portal || portal.status !== 'growing') return false
     
     const now = Date.now()
-    const growthTime = this.growthConfig.growthTimeMinutes * 60 * 1000
+    const growthTime = this.getGrowthTimeMs() // Читаем актуальное значение из config
     const growthStartTime = portal.growthStartTime || now
     
     const elapsed = now - growthStartTime
