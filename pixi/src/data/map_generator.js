@@ -89,34 +89,49 @@ export class MapGenerator {
 
   /**
    * Рассчитывает сложность врага на основе позиции и силы колоды
-   * Прогрессия: 0.5 → 1.5 (настраивается через local_config)
+   * Прогрессия: enemyDifficultyBase → enemyDifficultyMax (настраивается через config)
    */
   calculateDifficulty(nodeIndex, totalNodes, deckOrCode) {
     if (totalNodes <= 1) return { difficulty: 'medium', health: 0 }
     
     const progress = nodeIndex / (totalNodes - 1)
     
-    // Линейная прогрессия множителя силы: 0.5 → 1.5
+    const deckPower = calculateDeckPower(deckOrCode)
+    const totalDamage = deckPower.totalDamage || 0 // Урон за весь бой (4 хода)
+    
+    if (totalDamage === 0) return { difficulty: 'medium', health: 100 }
+    
+    // Множители сложности:
+    // easy = enemyDifficultyBase (враг слабее твоего урона за бой)
+    // medium/strong = промежуточные значения
+    // boss = enemyDifficultyMax (враг сильнее твоего урона за бой)
     const baseMultiplier = config.enemyDifficultyBase || 0.5
     const maxMultiplier = config.enemyDifficultyMax || 1.5
-    const powerMultiplier = baseMultiplier + progress * (maxMultiplier - baseMultiplier)
     
-    const deckPower = calculateDeckPower(deckOrCode)
-    const baseDamage = deckPower.damagePerStep || 10
+    // Прямое использование коэффициентов для easy/boss
+    let healthMultiplier
+    let difficulty
     
-    // Рассчитываем HP врага: baseDamage * 5 ходов * multiplier
-    let enemyHealth = Math.floor(baseDamage * 5 * powerMultiplier)
+    if (nodeIndex === totalNodes - 1) {
+      // Босс — максимальный коэффициент
+      healthMultiplier = maxMultiplier
+      difficulty = 'boss'
+    } else {
+      // Промежуточные враги — линейная прогрессия
+      healthMultiplier = baseMultiplier + progress * (maxMultiplier - baseMultiplier)
+      
+      // Определение сложности по прогрессу
+      if (healthMultiplier >= 1.3) difficulty = 'strong'
+      else if (healthMultiplier >= 0.9) difficulty = 'medium'
+      else difficulty = 'easy'
+    }
+    
+    // Здоровье = твой урон за бой × коэффициент
+    let enemyHealth = Math.floor(totalDamage * healthMultiplier)
     
     // Добавляем рандомный разброс ±10% (0.9 - 1.1)
     const randomFactor = 0.9 + Math.random() * 0.2
     enemyHealth = Math.floor(enemyHealth * randomFactor)
-    
-    // Определяем уровень сложности по HP
-    let difficulty
-    if (powerMultiplier >= 1.3) difficulty = 'boss'
-    else if (powerMultiplier >= 1.0) difficulty = 'strong'
-    else if (powerMultiplier >= 0.7) difficulty = 'medium'
-    else difficulty = 'easy'
     
     return { difficulty, health: enemyHealth }
   }

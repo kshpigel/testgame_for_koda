@@ -1,7 +1,8 @@
 import { getDeckByCode } from './deck.js'
 import { card_types } from './card_types/index.js'
 
-// Расчёт силы колоды с учётом баффов
+// Расчёт силы колоды (базовые значения карт, без баффов)
+// Баффы — это "козыри" игрока, баланс через enemyDifficultyBase/Max
 // Принимает либо массив карт, либо deckCode (для обратной совместимости)
 export function calculateDeckPower(deckOrCards) {
   let cards = []
@@ -22,34 +23,20 @@ export function calculateDeckPower(deckOrCards) {
   if (!cards || cards.length === 0) return 0
   
   // Сумма базовых значений карт
-  let totalBaseValue = 0
-  // Сумма веса баффов
-  let totalBuffWeight = 0
-  let cardCount = 0
-  
-  // Считаем уникальные типы карт в колоде для подсчёта баффов
-  const uniqueTypes = [...new Set(cards)]
+  let totalValue = 0
   
   cards.forEach(typeId => {
     const cardType = card_types.find(c => c.type === typeId)
     if (cardType) {
-      totalBaseValue += cardType.value
-      cardCount++
-      
-      // Добавляем вес баффа если есть (только для уникальных типов)
-      if (cardType.buff && cardType.buff.getWeight) {
-        const weight = cardType.buff.getWeight(cards, cardType)
-        totalBuffWeight += weight
-      }
+      totalValue += cardType.value
     }
   })
   
-  // console.log('Deck power:', { totalBaseValue, totalBuffWeight, cardCount })
-
+  const cardCount = cards.length
   if (cardCount === 0) return 0
   
-  // Среднее значение карты с учётом баффов
-  const avgCardValue = (totalBaseValue + totalBuffWeight) / cardCount
+  // Среднее значение карты
+  const avgCardValue = totalValue / cardCount
   
   // Сколько карт можно сыграть за ход (максимум 5)
   const cardsPerStep = 5
@@ -68,8 +55,8 @@ export function calculateDeckPower(deckOrCards) {
     damagePerStep,
     totalDamage,
     cardCount,
-    totalValue: totalBaseValue,
-    buffWeight: totalBuffWeight
+    totalValue,
+    buffWeight: 0  // пока без учёта баффов
   }
 }
 
