@@ -9,9 +9,10 @@ export class PortalManager {
     this.portalTypes = null
     this.altarTypes = null
     this.positions = null
+    // Время роста берётся из config (можно переопределить в local_config.json)
     this.growthConfig = {
-      testMode: true, // Включаем тестовый режим (10 сек)
-      growthTimeMinutes: 10 / 60 // 10 секунд в минутах (10/60 = 0.167)
+      testMode: config.portalGrowthTimeMinutes < 1, // Тестовый режим если < 1 минута
+      growthTimeMinutes: config.portalGrowthTimeMinutes
     }
   }
 

@@ -17,6 +17,8 @@ const _config = {
   portalCost: 200,
   // Стоимость активации премиум портала
   premiumPortalActivationCost: 200,
+  // Время роста портала в минутах (для тестов можно ставить меньше)
+  portalGrowthTimeMinutes: 120, // 120 минут (2 часа)
   
   // Настройки сложности врагов
   rewards: {
@@ -42,6 +44,8 @@ export const config = {
   set portalCost(v) { _config.portalCost = v },
   get premiumPortalActivationCost() { return _config.premiumPortalActivationCost },
   set premiumPortalActivationCost(v) { _config.premiumPortalActivationCost = v },
+  get portalGrowthTimeMinutes() { return _config.portalGrowthTimeMinutes },
+  set portalGrowthTimeMinutes(v) { _config.portalGrowthTimeMinutes = v },
   get getCards() { return _config.getCards },
   set getCards(v) { _config.getCards = v },
   get lang() { return _config.lang },
@@ -68,6 +72,7 @@ export async function loadConfig() {
   _config.enemyDifficultyMax = 1.5
   _config.portalCost = 200
   _config.premiumPortalActivationCost = 200
+  _config.portalGrowthTimeMinutes = 120 // 120 минут (2 часа)
   _config.rewards = {
     baseGold: 25,
     goldPerStep: 10,
@@ -90,6 +95,7 @@ export async function loadConfig() {
         if (localConfig.lang !== undefined) _config.lang = localConfig.lang
         if (localConfig.portalCost !== undefined) _config.portalCost = localConfig.portalCost
         if (localConfig.premiumPortalActivationCost !== undefined) _config.premiumPortalActivationCost = localConfig.premiumPortalActivationCost
+        if (localConfig.portalGrowthTimeMinutes !== undefined) _config.portalGrowthTimeMinutes = localConfig.portalGrowthTimeMinutes
         if (localConfig.rewards) _config.rewards = { ..._config.rewards, ...localConfig.rewards }
         log('[Config] Loaded:', localConfig)
         log('[Config] getCards:', _config.getCards)
