@@ -1,4 +1,5 @@
 import { calculateDeckPower, getRecommendedHealth } from './deck_power.js'
+import { getDeckByCode } from './deck.js'
 import { config } from './config.js'
 
 /**
@@ -97,7 +98,19 @@ export class MapGenerator {
     const progress = nodeIndex / (totalNodes - 1)
     
     const deckPower = calculateDeckPower(deckOrCode)
-    const totalDamage = deckPower.totalDamage || 0 // Урон за весь бой (4 хода)
+    
+    // Получаем количество ходов из колоды
+    let stepsPerBattle = 4
+    if (!Array.isArray(deckOrCode)) {
+      const deck = getDeckByCode(deckOrCode)
+      if (deck) {
+        stepsPerBattle = deck.steps || 4
+      }
+    }
+    
+    // Используем effectiveDamagePerStep (с баффами) вместо damagePerStep
+    const damagePerStep = deckPower.effectiveDamagePerStep || deckPower.damagePerStep
+    const totalDamage = damagePerStep * stepsPerBattle
     
     if (totalDamage === 0) return { difficulty: 'medium', health: 100 }
     
@@ -132,6 +145,18 @@ export class MapGenerator {
     // Добавляем рандомный разброс ±10% (0.9 - 1.1)
     const randomFactor = 0.9 + Math.random() * 0.2
     enemyHealth = Math.floor(enemyHealth * randomFactor)
+    
+    // Логируем для отладки (если debug включён)
+    if (config.debug && nodeIndex === 0) {
+      console.log('[MapGenerator] Deck power:', {
+        base: deckPower.damagePerStep,
+        buff: deckPower.buffWeight,
+        effective: damagePerStep,
+        total: totalDamage,
+        cardCount: deckPower.cardCount,
+        steps: stepsPerBattle
+      })
+    }
     
     return { difficulty, health: enemyHealth }
   }

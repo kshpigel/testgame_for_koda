@@ -13,8 +13,13 @@ export class DeckCount extends Buff {
     return [{ card: sel_card, value: deckCount, isSet: true }]
   }
 
-  getWeight(deck, cardType) {
+  getWeight(deck, cardType, stepsPerBattle = 4) {
     // Средний размер колоды ~40-50 карт
-    return 30 * 0.2
+    // Шанс выбрать эту карту = 8 / deck.length
+    const deckSize = deck.length
+    const selectProbability = 8 / deckSize
+    
+    // Ожидаемый урон = размер колоды × вероятность выбора
+    return 30 * selectProbability
   }
 }

@@ -1,8 +1,8 @@
 import { getDeckByCode } from './deck.js'
 import { card_types } from './card_types/index.js'
+import { createBuff } from './buffs/index.js'
 
-// Расчёт силы колоды (базовые значения карт, без баффов)
-// Баффы — это "козыри" игрока, баланс через enemyDifficultyBase/Max
+// Расчёт силы колоды (базовые значения карт + оценка баффов)
 // Принимает либо массив карт, либо deckCode (для обратной совместимости)
 export function calculateDeckPower(deckOrCards) {
   let cards = []
@@ -50,14 +50,45 @@ export function calculateDeckPower(deckOrCards) {
   // Общая сила = урон за ход * количество ходов
   const totalDamage = damagePerStep * totalSteps
   
+  // Рассчитываем вес баффов с учётом количества ходов
+  const buffWeight = calculateBuffWeight(cards, stepsPerBattle)
+  
+  // Эффективный урон за ход с учётом баффов
+  const effectiveDamagePerStep = damagePerStep + buffWeight
+  
   return {
     avgCardValue,
     damagePerStep,
     totalDamage,
+    buffWeight,
+    effectiveDamagePerStep,  // урон с учётом баффов
     cardCount,
-    totalValue,
-    buffWeight: 0  // пока без учёта баффов
+    totalValue
   }
+}
+
+// Расчёт общего веса баффов в колоде
+function calculateBuffWeight(deckCards, stepsPerBattle = 4) {
+  let totalBuffWeight = 0
+  
+  deckCards.forEach(cardId => {
+    const card = card_types.find(c => c.type === cardId)
+    if (card && card.buff) {
+      try {
+        // Вес баффа относительно всей колоды + количество попыток (ходов)
+        const weight = card.buff.getWeight(deckCards, card, stepsPerBattle)
+        if (typeof weight === 'number' && !isNaN(weight)) {
+          totalBuffWeight += weight
+        } else {
+          console.warn(`[Buff] Invalid weight for ${card.type}:`, weight)
+        }
+      } catch (err) {
+        console.error(`[Buff] Error calculating weight for ${card.type}:`, err)
+      }
+    }
+  })
+  
+  return totalBuffWeight
 }
 
 // Получить уровень врага по силе колоды

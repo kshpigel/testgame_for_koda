@@ -29,13 +29,13 @@ export class KeepSteps extends Buff {
     return 'keepSteps'
   }
 
-  getWeight(deck, cardType) {
-    // Считаем сколько таких карт в колоде
+  getWeight(deck, cardType, stepsPerBattle = 4) {
     const count = deck.filter(t => t === cardType.type).length
-    // Если есть enough карт, можно получить +1 ход
-    // Оцениваем как 1 ход = средний урон за ход
     if (count >= this.params.count) {
-      return 20 * 0.1 // Ожидаемый урон за доп ход
+      // Шанс собрать >= N карт этого типа в руке
+      const probabilityPerTurn = this.calculateProbability(deck.length, this.params.count)
+      // Ожидаемый урон за доп ход = средний урон за ход (20)
+      return 20 * probabilityPerTurn
     }
     return 0
   }

@@ -17,8 +17,14 @@ export class SelectedIfNotSelected extends Buff {
     return results
   }
 
-  getWeight(deck, cardType) {
-    // Бафф работает когда карта не выбрана, влияет на 2-4 другие карты
-    return this.params.value * 2 * 0.15
+  getWeight(deck, cardType, stepsPerBattle = 4) {
+    const deckSize = deck.length
+    const selfStayProbability = 1 - (8 / deckSize)  // шанс остаться в руке
+    const targetsProbability = 0.5  // эвристика: есть ли выбранные карты
+    
+    const totalProbability = selfStayProbability * targetsProbability
+    
+    // В среднем бафф влияет на 3 карты
+    return this.params.value * 3 * totalProbability
   }
 }

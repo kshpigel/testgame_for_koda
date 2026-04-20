@@ -26,13 +26,37 @@ export class FactionHp extends Buff {
     return results
   }
 
-  getWeight(deck, cardType) {
-    // Считаем сколько карт той же фракции в колоде (кроме себя)
+  getWeight(deck, cardType, stepsPerBattle = 4) {
     const factionCards = deck.filter(t => {
       const ct = card_types.find(c => c.type === t)
       return ct && ct.faction === this.params.faction && ct.type !== cardType.type
-    })
-    // Ожидаем что бафф сработает на 1-2 карты за ход
-    return this.params.value * Math.min(factionCards.length, 2) * 0.1
+    }).length
+
+    if (factionCards === 0) return 0
+
+    const deckSize = deck.length
+    if (deckSize === 0) return 0
+    
+    const selfProbability = 8 / deckSize
+    
+    // Шанс что хотя бы одна карта фракции попадёт в руку
+    const noTargetProbability = Math.pow(1 - 8/deckSize, Math.min(factionCards, 2))
+    const targetProbability = 1 - noTargetProbability
+    
+    const totalProbability = selfProbability * targetProbability
+    
+    // Ожидаемый урон = сила баффа × количество целей × вероятность
+    const result = this.params.value * Math.min(factionCards, 2) * totalProbability
+    
+    if (isNaN(result) || !isFinite(result)) {
+      console.error('[FactionHp.getWeight] NaN detected!', {
+        deckSize, factionCards, selfProbability, targetProbability,
+        expectedDamagePerTurn, stepsPerBattle, result,
+        cardType: cardType.type, params: this.params
+      })
+      return 0
+    }
+    
+    return result
   }
 }

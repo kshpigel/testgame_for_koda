@@ -20,11 +20,24 @@ export class Buff {
     return true
   }
 
+  // Расчёт вероятности срабатывания баффа
+  // handSize - размер руки (по умолчанию 8)
+  // cardsNeeded - сколько карт нужно для срабатывания
+  // deckSize - размер колоды
+  calculateProbability(deckSize, cardsNeeded, handSize = 8) {
+    // Упрощённая формула: шанс что все нужные карты попадут в руку
+    // P = (handSize / deckSize)^cardsNeeded
+    if (deckSize <= 0 || cardsNeeded <= 0) return 0
+    const prob = Math.pow(handSize / deckSize, cardsNeeded)
+    return Math.min(1, prob)
+  }
+
   // Рассчитать примерный вес баффа для симуляции
   // deck - массив typeId карт в колоде
   // cardType - тип текущей карты
-  // Возвращает ожидаемый бонус к урону
-  getWeight(deck, cardType) {
+  // stepsPerBattle - количество ходов в бою (для расчёта вероятности срабатывания)
+  // Возвращает ожидаемый бонус к урону (сила × количество × вероятность × попытки)
+  getWeight(deck, cardType, stepsPerBattle = 4) {
     return 0
   }
 }

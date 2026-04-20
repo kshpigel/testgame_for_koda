@@ -31,10 +31,17 @@ export class SelectedRandomIfNotSelected extends Buff {
     return results
   }
 
-  getWeight(deck, cardType) {
+  getWeight(deck, cardType, stepsPerBattle = 4) {
     // Среднее значение между min и max
     const avg = (this.params.min + this.params.max) / 2
-    // Влияет на 2-3 карты
-    return avg * 2 * 0.1
+    
+    const deckSize = deck.length
+    const selfStayProbability = 1 - (8 / deckSize)  // шанс остаться в руке
+    const targetsProbability = 0.5  // эвристика: есть ли выбранные карты
+    
+    const totalProbability = selfStayProbability * targetsProbability
+    
+    // В среднем бафф влияет на 3 карты
+    return avg * 3 * totalProbability
   }
 }

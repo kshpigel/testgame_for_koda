@@ -59,13 +59,14 @@ export class ExactTypeAndDiscard extends Buff {
     return 'discardFromDeck'
   }
 
-  getWeight(deck, cardType) {
-    // Проверяем достаточно ли карт в колоде
+  getWeight(deck, cardType, stepsPerBattle = 4) {
     const count = deck.filter(t => t === cardType.type).length
     if (count >= this.params.count) {
-      // Бафф +A на N карт
       const value = this.params.value + (this.params.firstTurnBonus || 0)
-      return value * this.params.count * 0.15
+      // Шанс собрать ровно N карт этого типа в руке (все N и только они)
+      const probabilityPerTurn = this.calculateProbability(deck.length, this.params.count)
+      // Ожидаемый урон за ход = сила × количество × вероятность
+      return value * this.params.count * probabilityPerTurn
     }
     return 0
   }
