@@ -10,8 +10,8 @@ const _config = {
   lang: 'ru',      // Язык (ru, en, ...)
   
   // Настройки сложности врагов
-  enemyDifficultyBase: 0.5,  // Начальный множитель силы
-  enemyDifficultyMax: 1.5,   // Конечный множитель силы (босс)
+  enemyDifficultyBase: 0.5,  // Начальный множитель силы (easy)
+  enemyDifficultyMax: 1.0,   // Множитель босса (на 20-30% сильнее последнего обычного врага)
   
   // Стоимость входа в портал
   portalCost: 200,
@@ -69,7 +69,7 @@ export async function loadConfig() {
   _config.getCards = []
   _config.lang = 'ru'
   _config.enemyDifficultyBase = 0.5
-  _config.enemyDifficultyMax = 1.5
+  _config.enemyDifficultyMax = 1.0
   _config.portalCost = 200
   _config.premiumPortalActivationCost = 200
   _config.portalGrowthTimeMinutes = 120 // 120 минут (2 часа)

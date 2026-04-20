@@ -33,7 +33,7 @@ export class MapGenerator {
     // Промежуточные узлы - рандомные base карты
     for (let i = 0; i < numNodes - 1; i++) {
       const randomCard = this.randomBaseCard(baseCards)
-      const { difficulty, health } = this.calculateDifficulty(i, numNodes - 1, deckOrCode)
+      const { difficulty, health } = this.calculateDifficulty(i, numNodes, deckOrCode)
       
       nodes.push({
         id: `node_${i}`,
@@ -51,7 +51,7 @@ export class MapGenerator {
     const boss = this.selectBoss(portalId)
     if (boss) {
       // Рассчитываем HP для босса
-      const { health: bossHealth } = this.calculateDifficulty(numNodes - 1, numNodes - 1, deckOrCode)
+      const { health: bossHealth } = this.calculateDifficulty(numNodes - 1, numNodes, deckOrCode)
       
       nodes.push({
         id: `node_${numNodes - 1}`,
@@ -115,35 +115,36 @@ export class MapGenerator {
     if (totalDamage === 0) return { difficulty: 'medium', health: 100 }
     
     // Множители сложности:
-    // easy = enemyDifficultyBase (враг слабее твоего урона за бой)
-    // medium/strong = промежуточные значения
-    // boss = enemyDifficultyMax (враг сильнее твоего урона за бой)
+    // Base: начальная сложность (easy)
+    // Max: финальная сложность (босс)
+    // Промежуточные враги: от Base до Max (плавная прогрессия)
     const baseMultiplier = config.enemyDifficultyBase || 0.5
-    const maxMultiplier = config.enemyDifficultyMax || 1.5
+    const maxMultiplier = config.enemyDifficultyMax || 1.0
     
-    // Прямое использование коэффициентов для easy/boss
     let healthMultiplier
     let difficulty
     
     if (nodeIndex === totalNodes - 1) {
-      // Босс — максимальный коэффициент
+      // Босс — максимальный коэффициент (Max)
       healthMultiplier = maxMultiplier
       difficulty = 'boss'
     } else {
-      // Промежуточные враги — линейная прогрессия
-      healthMultiplier = baseMultiplier + progress * (maxMultiplier - baseMultiplier)
+      // Промежуточные враги: от Base до ~0.8×Max (чтобы босс был сильнее на 20-30%)
+      const maxNormalMultiplier = maxMultiplier * 0.8  // последний обычный враг = 80% от босса
+      const normalizedProgress = totalNodes > 2 ? nodeIndex / (totalNodes - 2) : 0
+      healthMultiplier = baseMultiplier + normalizedProgress * (maxNormalMultiplier - baseMultiplier)
       
-      // Определение сложности по прогрессу
-      if (healthMultiplier >= 1.3) difficulty = 'strong'
-      else if (healthMultiplier >= 0.9) difficulty = 'medium'
+      // Определение сложности по значению множителя
+      if (healthMultiplier >= 0.8 * maxMultiplier) difficulty = 'hard'
+      else if (healthMultiplier >= 0.6 * maxMultiplier) difficulty = 'medium'
       else difficulty = 'easy'
     }
     
     // Здоровье = твой урон за бой × коэффициент
     let enemyHealth = Math.floor(totalDamage * healthMultiplier)
     
-    // Добавляем рандомный разброс ±10% (0.9 - 1.1)
-    const randomFactor = 0.9 + Math.random() * 0.2
+    // Добавляем рандомный разброс ±5% (0.95 - 1.05)
+    const randomFactor = 0.95 + Math.random() * 0.1
     enemyHealth = Math.floor(enemyHealth * randomFactor)
     
     // Логируем для отладки (если debug включён)
