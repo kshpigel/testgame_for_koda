@@ -50,6 +50,16 @@ export class ToastManager {
   show(message, type = 'green', duration = null) {
     const toast = this.createToast(message, type, duration || this.duration)
     if (!toast) return
+    
+    // Если очередь переполнена (более 10), удаляем самые старые
+    if (this.queue.length >= 10) {
+      const oldToast = this.queue.shift()
+      if (oldToast && oldToast.parent) {
+        oldToast.parent.removeChild(oldToast)
+        oldToast.destroy({ children: true })
+      }
+    }
+    
     this.queue.push(toast)
     this.processQueue()
   }
@@ -172,9 +182,10 @@ export class ToastManager {
       const targetX = screenWidth - toast.width - this.marginRight
       
       toast.x = screenWidth + 50
-      toast.y = (screenHeight / 2) - (toast.height / 2)
       toast.targetX = targetX
       toast.waitStart = Date.now()
+      
+      this.repositionToasts()
     }
   }
   
@@ -231,8 +242,14 @@ export class ToastManager {
   }
   
   repositionToasts() {
-    let y = this.marginTop
-    for (const toast of this.activeToasts) {
+    const nonAnimatingToasts = this.activeToasts.filter(t => !t.isAnimatingOut)
+    if (nonAnimatingToasts.length === 0) return
+    
+    const totalHeight = nonAnimatingToasts.reduce((sum, t) => sum + t.height + this.gap, 0) - this.gap
+    const startY = (this.app.screen.height / 2) - (totalHeight / 2)
+    
+    let y = startY
+    for (const toast of nonAnimatingToasts) {
       toast.y = y
       y += toast.height + this.gap
     }
