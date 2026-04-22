@@ -351,11 +351,6 @@ export class Game {
     soundManager.stopMusic()
     soundManager.playMusic('battleBg')
     
-    // Уведомление при начале боя
-    if (this.toastManager) {
-      this.toastManager.show('Бой начался!', 'red')
-    }
-    
     // Получаем колоду по коду игрока (из DeckManager)
     const playerDeck = deckManager.getDeck(deckManager.getActiveDeckId())
     const sleeve = collectionManager.getSleeve(playerDeck.sleeveId || 1)
@@ -465,6 +460,10 @@ export class Game {
       fontSize: 16,
       app: this.app,
       onClick: () => {
+        // Уведомление о побеге (красное)
+        if (this.toastManager) {
+          this.toastManager.show('Сбежал!', 'red')
+        }
         battle.cleanup()
         this.isBattleActive = false
         this.showMap()

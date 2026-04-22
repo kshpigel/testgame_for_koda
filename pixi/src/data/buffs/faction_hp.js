@@ -1,5 +1,6 @@
 import { Buff } from './buff.js'
 import { card_types } from '../card_types/index.js'
+import { t } from '../i18n.js'
 
 // 1. Увеличивает HP всем картам своей фракции, кроме себя, на +N
 // Параметры: faction (people, dwarves, neutral, magic), value (N)
@@ -24,6 +25,10 @@ export class FactionHp extends Buff {
     })
 
     return results
+  }
+
+  getNotificationMessage(sel_card, value) {
+    return t('cards.buffs.faction_hp', { value })
   }
 
   getWeight(deck, cardType, stepsPerBattle = 4) {

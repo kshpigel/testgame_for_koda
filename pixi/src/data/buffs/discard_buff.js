@@ -1,4 +1,5 @@
 import { Buff } from './buff.js'
+import { t } from '../i18n.js'
 
 // Бафф: при сбросе этой карты — бафает определённые карты
 // Параметры: faction, kind, id, value
@@ -35,5 +36,10 @@ export class DiscardBuff extends Buff {
     if (id) {
       battle.permanentBuffs[id] = (battle.permanentBuffs[id] || 0) + value
     }
+  }
+
+  getNotificationMessage(sel_card, value) {
+    const name = sel_card?.cardData?.name || 'Сброс'
+    return t('cards.buffs.discard_buff', { name, value })
   }
 }

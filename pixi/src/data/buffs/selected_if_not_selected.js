@@ -1,4 +1,5 @@
 import { Buff } from './buff.js'
+import { t } from '../i18n.js'
 
 // 2. Увеличивает HP всем выбранным картам, если сам есть в руке и не выбран
 // Параметры: value (N)
@@ -26,5 +27,9 @@ export class SelectedIfNotSelected extends Buff {
     
     // В среднем бафф влияет на 3 карты
     return this.params.value * 3 * totalProbability
+  }
+
+  getNotificationMessage(sel_card, value) {
+    return t('cards.buffs.selected_if_not_selected', { value })
   }
 }

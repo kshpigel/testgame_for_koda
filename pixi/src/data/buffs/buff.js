@@ -32,6 +32,12 @@ export class Buff {
     return Math.min(1, prob)
   }
 
+  // Получить сообщение для уведомления о срабатывании баффа
+  // Возвращает null если уведомление не нужно
+  getNotificationMessage(sel_card, value) {
+    return null // По умолчанию - без уведомления
+  }
+
   // Рассчитать примерный вес баффа для симуляции
   // deck - массив typeId карт в колоде
   // cardType - тип текущей карты

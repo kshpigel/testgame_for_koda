@@ -55,6 +55,9 @@
     "continue": "Продолжить",
     "to_base": "На базу",
     "points": "Очки",
+    "start": "Бой начался!",
+    "damage": "Урон: {value}",
+    "discarded": "Сброшено {count} карт",
     "stats": {
       "steps": "Ходов",
       "cards_played": "Сыграно карт",
@@ -91,7 +94,16 @@
     "value": "Сила",
     "in_deck": "В колоде",
     "mechanic": "Механика",
-    "no_mechanic": "Механика отсутствует"
+    "no_mechanic": "Механика отсутствует",
+    "buffs": {
+      "faction_hp": "Фракция: +{value} HP",
+      "keep_steps": "Сохранение ходов!",
+      "discard_buff": "{name}: +{value} permanent",
+      "selected_if_not_selected": "Поддержка: +{value}",
+      "selected_random_if_not_selected": "Благословение: +{value}",
+      "exact_type_and_discard": "{name}: +{value}!",
+      "deck_count": "Сила: {count} карт в колоде"
+    }
   },
   "loading": {
     "loading": "Загрузка...",

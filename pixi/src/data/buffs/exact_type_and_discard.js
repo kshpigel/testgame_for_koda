@@ -1,4 +1,5 @@
 import { Buff } from './buff.js'
+import { t } from '../i18n.js'
 import { log } from '../config.js'
 
 // 6. Если выбрано строго N карт этого типа и только они: бафф +A, остальные в колоде сбрасываются
@@ -57,6 +58,13 @@ export class ExactTypeAndDiscard extends Buff {
 
   getSpecialAction() {
     return 'discardFromDeck'
+  }
+
+  getNotificationMessage(sel_card, value) {
+    return t('cards.buffs.exact_type_and_discard', { 
+      name: sel_card?.cardData?.name || 'Лучник',
+      value 
+    })
   }
 
   getWeight(deck, cardType, stepsPerBattle = 4) {

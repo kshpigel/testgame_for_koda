@@ -1,4 +1,5 @@
 import { Buff } from './buff.js'
+import { t } from '../i18n.js'
 
 // 5. Если выбрано >= N карт этого типа и только они, ходы не тратятся
 // Параметры: count (N) - минимальное количество карт этого типа
@@ -27,6 +28,10 @@ export class KeepSteps extends Buff {
 
   getSpecialAction() {
     return 'keepSteps'
+  }
+
+  getNotificationMessage(sel_card, value) {
+    return t('cards.buffs.keep_steps')
   }
 
   getWeight(deck, cardType, stepsPerBattle = 4) {

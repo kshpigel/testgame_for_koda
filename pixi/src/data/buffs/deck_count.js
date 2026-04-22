@@ -1,4 +1,5 @@
 import { Buff } from './buff.js'
+import { t } from '../i18n.js'
 
 // 4. Если выбран, HP = количеству оставшихся в колоде карт
 // Без параметров
@@ -21,5 +22,9 @@ export class DeckCount extends Buff {
     
     // Ожидаемый урон = размер колоды × вероятность выбора
     return 30 * selectProbability
+  }
+
+  getNotificationMessage(sel_card, value) {
+    return t('cards.buffs.deck_count', { count: value })
   }
 }

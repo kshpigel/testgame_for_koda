@@ -18,6 +18,7 @@ import { BattleUI } from './ui/battle_ui.js'
 import { CardAnimator } from './ui/card_animator.js'
 import { BattleEffects } from './ui/battle_effects.js'
 import { t } from './data/i18n.js'
+import { toastManager } from './ui/toast_manager.js'
 
 // Импорт ассетов
 import { cardStyles, getCardStyle } from './data/card_styles.js'
@@ -405,8 +406,18 @@ export class Battle extends EventEmitter {
         const results = cardType.buff.apply(card, this.selectedCards, this.cards, this)
         
         // Применяем результаты баффа
+        let notified = false
         results.forEach(({ card: targetCard, value, isSet }) => {
           targetCard.addBuff(card.id, card.cardData.type, value, isSet)
+          
+          // Уведомление о баффе (фиолетовое) - только для первой карты и если бафф хочет уведомить
+          if (!notified && toastManager && cardType.buff.getNotificationMessage) {
+            const message = cardType.buff.getNotificationMessage(card, value)
+            if (message) {
+              toastManager.show(message, 'purple')
+              notified = true
+            }
+          }
         })
         
         // Проверяем специальные баффы (KeepSteps, ExactTypeAndDiscard)
@@ -492,11 +503,20 @@ export class Battle extends EventEmitter {
       log(`[Battle.playCards] После хода: damageDealt=${battleStats.damageDealt}, steps=${battleStats.stepsPlayed}`)
     } else {
       log(`[Battle.playCards] KeepSteps активен - ход не тратится, но урон засчитан: damageDealt=${battleStats.damageDealt}`)
+      // Уведомление о пропуске хода
+      if (toastManager) {
+        toastManager.show('Пропуск хода!', 'purple')
+      }
     }
     
     soundManager.play('attack')
     if (this.battleEffects) {
       this.battleEffects.showDamage(summ)
+    }
+    
+    // Уведомление об уроне (зелёное)
+    if (toastManager && summ > 0) {
+      toastManager.show(t('battle.damage', { value: summ }), 'green')
     }
     
     setTimeout(() => {
@@ -526,6 +546,7 @@ export class Battle extends EventEmitter {
     this.priestBuffs = {}
     
     const cardsToRemove = [...this.selectedCards]
+    const discardedCount = cardsToRemove.length
     let removedCount = 0
     
     cardsToRemove.forEach((card, index) => {
@@ -539,8 +560,13 @@ export class Battle extends EventEmitter {
             this.container.removeChild(card)
             removedCount++
             
-            // Когда все карты улетели - добираем новые
+            // Когда все карты улетели — добираем новые
             if (removedCount === cardsToRemove.length) {
+              // Уведомление о сбросе карт (красное)
+              if (toastManager && discardedCount > 0) {
+                toastManager.show(t('battle.discarded', { count: discardedCount }), 'red')
+              }
+              
               const cardsNeeded = 8 - this.cards.length
               if (cardsNeeded > 0) {
                 this.dealCards(cardsNeeded)
@@ -559,9 +585,10 @@ export class Battle extends EventEmitter {
   resetCards() {
     if (this.cntReset <= 0 || this.selectedCards.length === 0 || this.isBlocked) return
     
+    const discardedCount = this.selectedCards.length
     this.cntReset--
     // Трекинг: засчитываем сброс
-    battleStats.cardsDiscarded += this.selectedCards.length
+    battleStats.cardsDiscarded += discardedCount
     this.priestBuffs = {}
     
     const cardsToRemove = [...this.selectedCards]
@@ -579,6 +606,11 @@ export class Battle extends EventEmitter {
             removedCount++
             
             if (removedCount === cardsToRemove.length) {
+              // Уведомление о сбросе (красное)
+              if (toastManager && discardedCount > 0) {
+                toastManager.show(t('battle.discarded', { count: discardedCount }), 'red')
+              }
+              
               const cardsNeeded = 8 - this.cards.length
               if (cardsNeeded > 0) {
                 this.dealCards(cardsNeeded)
@@ -650,6 +682,11 @@ export class Battle extends EventEmitter {
   }
 
   showVictory() {
+    // Уведомление о победе (фиолетовое)
+    if (toastManager) {
+      toastManager.show(t('battle.victory'), 'purple')
+    }
+    
     // Обновляем UI перед показом модалки (чтобы счётчики были актуальны)
     if (this.battleUI) {
       this.battleUI.updateSteps(this.cntSteps)
@@ -868,6 +905,11 @@ export class Battle extends EventEmitter {
   }
 
   showDefeat() {
+    // Уведомление о поражении (красное)
+    if (toastManager) {
+      toastManager.show(t('battle.defeat'), 'red')
+    }
+    
     // Сохраняем текущее HP врага ПЕРЕД расчётом (для статистики)
     const finalEnemyHealth = this.enemyHealth
     

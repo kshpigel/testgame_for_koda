@@ -1,4 +1,5 @@
 import { Buff } from './buff.js'
+import { t } from '../i18n.js'
 
 // 3. Увеличивает HP всем выбранным картам в случайном порядке, если сам есть в руке и не выбран
 // Параметры: min, max
@@ -43,5 +44,9 @@ export class SelectedRandomIfNotSelected extends Buff {
     
     // В среднем бафф влияет на 3 карты
     return avg * 3 * totalProbability
+  }
+
+  getNotificationMessage(sel_card, value) {
+    return t('cards.buffs.selected_random_if_not_selected', { value })
   }
 }

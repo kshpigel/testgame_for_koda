@@ -14,7 +14,7 @@ export class ToastManager {
       parentContainer.sortableChildren = true
     }
     
-    this.maxVisible = options.maxVisible || 3
+    this.maxVisible = options.maxVisible || 5
     this.duration = options.duration || 3000
     this.marginTop = options.marginTop || 0
     this.marginRight = 0
@@ -57,6 +57,15 @@ export class ToastManager {
       if (oldToast && oldToast.parent) {
         oldToast.parent.removeChild(oldToast)
         oldToast.destroy({ children: true })
+      }
+    }
+    
+    // Если активные тоасты переполнены — удаляем самые старые из активных
+    while (this.activeToasts.length >= this.maxVisible) {
+      const oldest = this.activeToasts.shift()
+      if (oldest && oldest.parent) {
+        oldest.parent.removeChild(oldest)
+        oldest.destroy({ children: true })
       }
     }
     

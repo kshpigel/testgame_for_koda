@@ -1,6 +1,7 @@
 // Реестр дебаффов и специальных баффов — подписка на события battle
 import { apply as weakenSelected } from './weaken_selected.js'
 import { apply as blockBuff } from './block_buff.js'
+import { t } from '../i18n.js'
 
 // Маппинг типов дебаффов на функции
 const debuffHandlers = {
@@ -59,5 +60,15 @@ export function registerDebuffs(battle) {
 
     // Применяем бафф
     cardType.buff.onDiscard(discardedCard, allCards, battle)
+    
+    // Уведомление о срабатывании Берсерка
+    const { toastManager } = require('../ui/toast_manager.js')
+    if (toastManager && cardType.buff.getNotificationMessage) {
+      const value = cardType.buff.params?.value || 0
+      const message = cardType.buff.getNotificationMessage(discardedCard, value)
+      if (message) {
+        toastManager.show(message, 'purple')
+      }
+    }
   })
 }
