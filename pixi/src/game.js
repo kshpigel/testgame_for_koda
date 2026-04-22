@@ -20,6 +20,7 @@ import { soundManager } from './audio/sound_manager.js'
 import { battleStats } from './data/battle_stats.js'
 import { Button } from './ui/button.js'
 import { Dialog } from './ui/dialog.js'
+import { toastManager, initToastManager } from './ui/toast_manager.js'
 import { gameConfig } from './data/game_config.js'
 import { playerUI } from './ui/player_ui.js'
 import { Modal } from './ui/modal.js'
@@ -33,7 +34,8 @@ const MAIN_BG = '/assets/img/bg_full.jpg'
 export class Game {
   constructor(app) {
     this.app = app
-    this.app.stage.sortableChildren = true
+    this.app.stage.sortableChildren = true // ВАЖНО для работы zIndex всех контейнеров
+    this.app.stage.sortChildren()
     
     this.screens = {}
     this.currentScreen = null
@@ -51,14 +53,15 @@ export class Game {
     this.app.stage.addChild(this.screenContainer)
 
     this.messageContainer = new PIXI.Container()
-    this.messageContainer.zIndex = Z.UI
+    this.messageContainer.zIndex = 10000
+    this.messageContainer.sortableChildren = true
     this.app.stage.addChild(this.messageContainer)
     
     // Контейнер для debug (поверх всех экранов)
     this.debugContainer = new PIXI.Container()
     this.debugContainer.zIndex = Z.DEBUG
     this.app.stage.addChild(this.debugContainer)
-
+    
     // Диалог (глобальный)
     this.dialog = new Dialog(this.app, this.app.stage)
     
@@ -238,6 +241,12 @@ export class Game {
     log('[Game] Calling baseScreen.init with:', [...this.completedPortals])
     await baseScreen.init(this.completedPortals || [])
     
+    // Создаём ToastManager ПОСЛЕ BaseScreen (чтобы он был выше на stage)
+    if (!this.toastManager) {
+      this.toastManager = initToastManager(this.app, this.app.stage)
+      this.app.stage.sortChildren()
+    }
+    
     // Обновляем информацию о колоде после init (чтобы перезаписать данные из render)
     baseScreen.updateDeckInfo()
     
@@ -255,6 +264,11 @@ export class Game {
     Z.reset()
     this.hideCurrentScreen()
     soundManager.playMusic('mapBg')
+    
+    // Уведомление при входе на карту
+    if (this.toastManager) {
+      this.toastManager.show('Карта открыта!', 'purple')
+    }
     
     // Переиспользуем существующую карту или создаём новую
     let mapScreen = this.screens['map']
@@ -336,6 +350,11 @@ export class Game {
     soundManager.play('battleStart')
     soundManager.stopMusic()
     soundManager.playMusic('battleBg')
+    
+    // Уведомление при начале боя
+    if (this.toastManager) {
+      this.toastManager.show('Бой начался!', 'red')
+    }
     
     // Получаем колоду по коду игрока (из DeckManager)
     const playerDeck = deckManager.getDeck(deckManager.getActiveDeckId())

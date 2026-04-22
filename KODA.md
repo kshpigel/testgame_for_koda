@@ -110,6 +110,11 @@ this.container.addChild(this.enemyDisplay)
 - Исправлен баг: облака и птицы блокировали клики по порталам (добавлен eventMode = 'static', interactive = false)
 - Реализован сброс премиум портала в locked при входе на карту
 - Исправлены PixiJS deprecation warnings: interactive → eventMode
+- **ToastManager - система всплывающих уведомлений:**
+  - `src/ui/toast_manager.js` — уведомления справа сверху с анимацией выезда
+  - Типы: green (info), red (ошибка), purple (спец.)
+  - Очередь до 3 уведомлений, автоудаление через 3 сек, закрытие по клику
+  - Интегрирован в `BaseScreen` — приветственное сообщение "Добро пожаловать!"
 
 ---
 

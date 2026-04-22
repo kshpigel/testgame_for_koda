@@ -38,7 +38,8 @@
   "base": {
     "deck_not_selected": "Колода не выбрана",
     "deck_ready": "Карт: {count}",
-    "deck_not_ready": "Мало карт ({count})"
+    "deck_not_ready": "Мало карт ({count})",
+    "welcome": "Добро пожаловать!"
   },
   "battle": {
     "victory": "ПОБЕДА!",

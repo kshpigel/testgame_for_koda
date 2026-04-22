@@ -28,6 +28,7 @@ const ASSETS = {
 
 import { Z } from './data/z_index.js'
 import { gameState } from './data/game_state.js'
+import { toastManager } from './ui/toast_manager.js'
 
 export class BaseScreen extends EventEmitter {
   constructor(app, cardTypes = []) {
@@ -68,7 +69,12 @@ export class BaseScreen extends EventEmitter {
     this.app.stage.addChild(this.container)
     this.app.stage.sortChildren()
     this.container.alpha = 0
-    this.fadeIn()
+    this.fadeIn(() => {
+      // Приветственное уведомление ПОСЛЕ fadeIn
+      if (toastManager) {
+        toastManager.show(t('base.welcome') || 'Добро пожаловать!', 'green')
+      }
+    })
   }
 
   async loadAssets() {
@@ -228,7 +234,7 @@ export class BaseScreen extends EventEmitter {
   // Учитываем что Portal имеет pivot по центру (160px / 2 = 80px смещение)
   getPortalPositions(){return[{id:"portal_1",x:.863,y:.511},{id:"portal_2",x:.25,y:.25},{id:"portal_3",x:.25,y:.8},{id:"portal_4",x:.906,y:.112},{id:"portal_5",x:.625,y:.833},{id:"portal_6",x:.594,y:.278}]}
 
-  fadeIn() {
+  fadeIn(callback = null) {
     // Останавливаем музыку карты и запускаем музыку базы
     soundManager.stopMusic()
     soundManager.playMusic('baseBg')
@@ -237,11 +243,13 @@ export class BaseScreen extends EventEmitter {
       this.container.alpha += 0.05
       if (this.container.alpha < 1) {
         requestAnimationFrame(animate)
+      } else {
+        this.container.alpha = 1
+        if (callback) callback()
       }
     }
     animate()
     
-    // Сохраняем ссылку на функцию для корректного удаления
     this._tickerCallback = () => this.update()
     this.app.ticker.add(this._tickerCallback)
   }
