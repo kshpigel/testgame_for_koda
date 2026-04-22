@@ -1,38 +1,27 @@
 import * as PIXI from 'pixi.js'
-import { EventEmitter } from 'events'
 import { colors } from '../data/colors.js'
 import { FONT } from '../data/fonts.js'
 
-/**
- * Менеджер всплывающих уведомлений (Toast Notifications)
- * Выводит уведомления справа сверху с анимацией выезда
- * 
- * Использование:
- * toastManager.show('Сообщение', 'green')
- * toastManager.show('Ошибка!', 'red')
- * toastManager.show('Спец. награда', 'purple')
- */
 export class ToastManager {
   constructor(app, parentContainer, options = {}) {
     this.app = app
     this.container = new PIXI.Container()
     this.container.zIndex = options.zIndex || 999998
     this.container.sortableChildren = true
-    // Убрали eventMode = 'none' — теперь дети (кнопки) могут получать клики
     parentContainer.addChild(this.container)
     
-    console.log('[ToastManager] created, parentContainer:', parentContainer, 'zIndex:', this.container.zIndex)
+    if (parentContainer && !parentContainer.sortableChildren) {
+      parentContainer.sortableChildren = true
+    }
     
-    // Конфигурация
     this.maxVisible = options.maxVisible || 3
     this.duration = options.duration || 3000
     this.marginTop = options.marginTop || 20
-    this.marginRight = 0 // Убран отступ справа
+    this.marginRight = 0
     this.gap = options.gap || 10
     this.maxWidth = options.maxWidth || 300
-    this.paddingTop = 10 // Отступ сверху для крестика (10px)
+    this.paddingTop = 10
     
-    // Конфигурация типов уведомлений - все цвета из colors.js с fallback
     this.types = {
       green: {
         bg: colors.card?.background?.selected || 0x4a7c4a,
@@ -54,58 +43,36 @@ export class ToastManager {
     this.queue = []
     this.activeToasts = []
     
-    // Тикер для анимаций
     this._tickerCallback = (ticker) => this.update(ticker)
     this.app.ticker.add(this._tickerCallback)
+    console.log('[ToastManager] created, ticker added')
   }
   
-  // Получить ширину экрана (используем renderer.screen для точности)
-  getScreenWidth() {
-    return this.app.screen.width
-  }
-  
-  /**
-   * Показать уведомление
-   * @param {string} message - текст сообщения
-   * @param {string} type - 'green' | 'red' | 'purple'
-   * @param {number} duration - время показа в мс (переопределяет дефолт)
-   */
   show(message, type = 'green', duration = null) {
-    console.log('[ToastManager.show] message:', message, 'type:', type)
     const toast = this.createToast(message, type, duration || this.duration)
-    if (!toast) {
-      console.error('[ToastManager.show] toast creation failed!')
-      return
-    }
+    if (!toast) return
     this.queue.push(toast)
     this.processQueue()
   }
   
   createToast(message, type, duration) {
-    if (!this.types || !this.types.green) {
-      console.error('[ToastManager.createToast] this.types not initialized!')
-      return null
-    }
-    const config = this.types[type] || this.types.green
-    console.log('[ToastManager.createToast] config:', config, 'FONT:', FONT)
+    if (!this.types || !this.types.green) return null
     
-    // Контейнер уведомления
+    const config = this.types[type] || this.types.green
     const toast = new PIXI.Container()
-    // Убрали eventMode - клики обрабатываются детьми (closeBtn и текст)
+    
     toast.cursor = 'pointer'
     toast.type = type
     toast.duration = duration
-    toast.elapsed = 0
     toast.isRemoving = false
+    toast.isAnimatingIn = true
+    toast.isAnimatingOut = false
     toast.scale.set(1)
     toast.pivot.set(0, 0)
     
-    // Кнопка закрытия (X) - БЕЗ фона, с обработчиком закрытия
-    const closeBtn = this.createCloseButton(() => this.removeToast(toast))
+    const closeBtn = this.createCloseButton(toast)
     toast.closeBtn = closeBtn
-    console.log('[ToastManager.createToast] closeBtn created, height:', closeBtn?.height)
     
-    // Текст (font-size: 14px)
     const text = new PIXI.Text(message, {
       fontFamily: FONT || 'Arial',
       fontSize: 14,
@@ -114,9 +81,7 @@ export class ToastManager {
       wordWrapWidth: this.maxWidth - 50
     })
     toast.text = text
-    console.log('[ToastManager.createToast] text created, text:', text, 'text.width:', text?.width)
     
-    // Размеры (padding: 5px 15px)
     const textWidth = text.width || 100
     const textHeight = text.height || 20
     const paddingX = 15
@@ -124,18 +89,17 @@ export class ToastManager {
     const closeBtnWidth = 12
     const closeBtnHeight = closeBtn.height || 12
     const closeBtnX = paddingX
-    const textX = closeBtnX + closeBtnWidth + 5 // X + ширина кнопки + отступ
+    const textX = closeBtnX + closeBtnWidth + 5
     const totalWidth = Math.min(textX + textWidth + paddingX, this.maxWidth)
     const totalHeight = Math.max(Math.max(textHeight, closeBtnHeight + this.paddingTop) + paddingY, 30)
     
     toast.width = totalWidth
     toast.height = totalHeight
     
-    // Фон с border-radius: 15px 0 0 15px (только левые углы)
     const bg = new PIXI.Graphics()
-    const r = 15 // радиус для левого верхнего и левого нижнего
+    const r = 15
     
-    bg.beginFill(config.bg) // фон = цвет бордера
+    bg.beginFill(config.bg)
     bg.moveTo(r, 0)
     bg.lineTo(totalWidth, 0)
     bg.lineTo(totalWidth, totalHeight)
@@ -147,38 +111,31 @@ export class ToastManager {
     
     toast.addChild(bg, closeBtn, text)
     
-    // Позиция кнопки X
     closeBtn.x = closeBtnX
-    // closeBtn.y уже установлен в createCloseButton (this.paddingTop = 10)
-    
-    // Позиция текста (после кнопки X)
+    closeBtn.y = this.paddingTop
     text.x = textX
     text.y = paddingY
     
-    // Начальная позиция (справа, за экраном)
     toast.x = this.app.screen.width + 50
     toast.y = this.marginTop
     
-    // Закрытие по клику на всё уведомление
-    toast.on('pointerdown', () => {
-      if (!toast.isRemoving) {
-        this.removeToast(toast)
+    toast.on('pointerdown', function(e) {
+      e.stopPropagation()
+      if (!this.isRemoving && this._manager) {
+        this._manager.removeToast(this)
       }
     })
+    toast._manager = this
     
-    console.log('[ToastManager.createToast] toast created successfully, returning')
     return toast
   }
   
-  createCloseButton(onClick) {
+  createCloseButton(toast) {
     const btn = new PIXI.Container()
     btn.eventMode = 'static'
     btn.cursor = 'pointer'
-    
-    // HitArea для кнопки (прямоугольник 12x12)
     btn.hitArea = new PIXI.Rectangle(0, 0, 12, 12)
     
-    // Рисуем X через Graphics
     const size = 12
     const xGraphics = new PIXI.Graphics()
     xGraphics.eventMode = 'static'
@@ -192,88 +149,86 @@ export class ToastManager {
     btn.addChild(xGraphics)
     btn.width = size
     btn.height = size
-    btn.y = this.paddingTop
     
-    // Обработчик на контейнер
     btn.on('pointerdown', (e) => {
-      console.log('[ToastManager] Крестик клик!')
       e.stopPropagation()
-      if (onClick) onClick()
+      console.log('[ToastManager] Крестик клик!')
+      if (toast && !toast.isRemoving) {
+        this.removeToast(toast)
+      }
     })
     
     return btn
   }
   
   processQueue() {
-    if (this.queue.length === 0) {
-      console.log('[ToastManager.processQueue] queue empty')
-      return
-    }
+    if (this.queue.length === 0) return
     
     if (this.activeToasts.length < this.maxVisible) {
       const toast = this.queue.shift()
       this.activeToasts.push(toast)
       this.container.addChild(toast)
       
-      // Принудительная перерисовка
-      this.app.renderer.render(this.app.stage)
-      
-      // Правильная позиция: справа, прижато к краю
       const screenWidth = this.app.screen.width
       const targetX = screenWidth - toast.width - this.marginRight
-      console.log('[ToastManager.processQueue] added toast, active:', this.activeToasts.length, 'toast.width:', toast.width, 'screen.width:', screenWidth, 'targetX:', targetX)
-      
-      toast.x = targetX
+      toast.x = screenWidth + 50
       toast.y = this.marginTop + (this.activeToasts.length - 1) * (toast.height + this.gap)
-      
-      // Принудительная перерисовка после позиционирования
-      this.app.renderer.render(this.app.stage)
-      
-      // Начать таймер удаления
+      toast.targetX = targetX
       toast.waitStart = Date.now()
       
-      // Автоматическое удаление через duration
-      setTimeout(() => this.removeToast(toast), toast.duration || this.duration)
-    } else {
-      console.log('[ToastManager.processQueue] max visible reached, waiting')
+      console.log('[ToastManager] toast added, count:', this.activeToasts.length)
     }
   }
   
   removeToast(toast) {
-    if (!toast || toast.isRemoving) return
+    if (!toast || toast.isRemoving) {
+      console.log('[ToastManager.removeToast] skipped')
+      return
+    }
+    console.log('[ToastManager.removeToast] called')
     toast.isRemoving = true
-    
-    console.log('[ToastManager.removeToast] removing toast')
-    
-    // Удаляем из activeToasts
+    toast.isAnimatingOut = true
+  }
+  
+  destroyToast(toast) {
     const index = this.activeToasts.indexOf(toast)
-    if (index > -1) {
-      this.activeToasts.splice(index, 1)
-    }
-    
-    // Удаляем из контейнера
-    if (toast.parent) {
-      toast.parent.removeChild(toast)
-    }
-    
-    // Очищаем обработчики
-    toast.removeAllListeners()
+    if (index > -1) this.activeToasts.splice(index, 1)
+    if (toast.parent) toast.parent.removeChild(toast)
+    toast.destroy({ children: true })
   }
   
   update(ticker) {
+    const dt = (ticker?.delta || 1) / 60
     const now = Date.now()
     
     for (let i = this.activeToasts.length - 1; i >= 0; i--) {
       const toast = this.activeToasts[i]
+      if (!toast) continue
       
-      // Ожидание перед удалением
-      if (toast.waitStart) {
+      if (toast.waitStart && !toast.isRemoving) {
         const elapsed = now - toast.waitStart
-        if (elapsed >= toast.duration && !toast.isRemoving) {
-          toast.isRemoving = true
-          // Мгновенное удаление
-          toast.destroy({ children: true })
-          this.activeToasts.splice(i, 1)
+        if (elapsed >= toast.duration) {
+          this.removeToast(toast)
+        }
+      }
+      
+      if (toast.isAnimatingIn && toast.targetX) {
+        const dx = toast.targetX - toast.x
+        if (Math.abs(dx) > 1) {
+          toast.x += dx * 0.15
+        } else {
+          toast.x = toast.targetX
+          toast.isAnimatingIn = false
+        }
+      }
+      
+      if (toast.isAnimatingOut) {
+        const toastWidth = toast.width || 100
+        const slideSpeed = 500 * dt
+        toast.x += slideSpeed
+        
+        if (toast.x > this.app.screen.width + 50) {
+          this.destroyToast(toast)
           this.repositionToasts()
           this.processQueue()
         }
@@ -289,27 +244,13 @@ export class ToastManager {
     }
   }
   
-  /**
-   * Остановить автоудаление для конкретного уведомления (по клику)
-   */
-  pauseToast(toast) {
-    toast.elapsed = toast.duration + 1 // Превысить лимит
-  }
-  
-  /**
-   * Очистить все уведомления
-   */
   clear() {
     for (const toast of this.activeToasts) {
       toast.destroy({ children: true })
     }
     this.activeToasts = []
-    this.queue = []
   }
   
-  /**
-   * Удалить при скрытии экрана
-   */
   destroy() {
     this.clear()
     if (this._tickerCallback) {
@@ -319,7 +260,6 @@ export class ToastManager {
   }
 }
 
-// Глобальный экземпляр (создаётся в game.js)
 export let toastManager = null
 
 export function initToastManager(app, parentContainer) {
