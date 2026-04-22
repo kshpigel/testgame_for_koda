@@ -16,7 +16,7 @@ export class ToastManager {
     
     this.maxVisible = options.maxVisible || 3
     this.duration = options.duration || 3000
-    this.marginTop = options.marginTop || 20
+    this.marginTop = options.marginTop || 0
     this.marginRight = 0
     this.gap = options.gap || 10
     this.maxWidth = options.maxWidth || 300
@@ -34,8 +34,8 @@ export class ToastManager {
         text: colors.card?.border?.white || 0xF5E7CF
       },
       purple: {
-        bg: colors.card?.circle?.selected?.center || 0xEE40D7,
-        border: colors.card?.circle?.selected?.edge || 0x3B0C32,
+        bg: colors.card?.circle?.debuff?.center || 0x8a2791,
+        border: colors.card?.circle?.debuff?.edge || 0x3B0C32,
         text: colors.card?.border?.white || 0xF5E7CF
       }
     }
@@ -45,7 +45,6 @@ export class ToastManager {
     
     this._tickerCallback = (ticker) => this.update(ticker)
     this.app.ticker.add(this._tickerCallback)
-    console.log('[ToastManager] created, ticker added')
   }
   
   show(message, type = 'green', duration = null) {
@@ -152,7 +151,6 @@ export class ToastManager {
     
     btn.on('pointerdown', (e) => {
       e.stopPropagation()
-      console.log('[ToastManager] Крестик клик!')
       if (toast && !toast.isRemoving) {
         this.removeToast(toast)
       }
@@ -170,22 +168,18 @@ export class ToastManager {
       this.container.addChild(toast)
       
       const screenWidth = this.app.screen.width
+      const screenHeight = this.app.screen.height
       const targetX = screenWidth - toast.width - this.marginRight
+      
       toast.x = screenWidth + 50
-      toast.y = this.marginTop + (this.activeToasts.length - 1) * (toast.height + this.gap)
+      toast.y = (screenHeight / 2) - (toast.height / 2)
       toast.targetX = targetX
       toast.waitStart = Date.now()
-      
-      console.log('[ToastManager] toast added, count:', this.activeToasts.length)
     }
   }
   
   removeToast(toast) {
-    if (!toast || toast.isRemoving) {
-      console.log('[ToastManager.removeToast] skipped')
-      return
-    }
-    console.log('[ToastManager.removeToast] called')
+    if (!toast || toast.isRemoving) return
     toast.isRemoving = true
     toast.isAnimatingOut = true
   }
