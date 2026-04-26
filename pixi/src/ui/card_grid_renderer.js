@@ -141,7 +141,25 @@ export class CardGridRenderer {
       }))
     } else if (this.cards[0] && this.cards[0].type !== undefined && this.cards[0].count !== undefined) {
       // Уже правильный формат {type, count, ...}
-      cardDataList = [...this.cards]
+      // Если это уже отфильтрованный список (как из showDeckMenu), используем как есть
+      // Дополняем cardTypes только если нужно (для получения bio, mechanic и т.д.)
+      const counts = {}
+      this.cards.forEach(card => {
+        counts[card.type] = card.count
+      })
+      
+      // Если cardTypes передан и он совпадает с входными данными по количеству — используем входные
+      // Иначе дополняем данными из cardTypes (для bio, mechanic, style и т.д.)
+      if (this.cardTypes && this.cardTypes.length > 0 && this.cardTypes.length !== this.cards.length) {
+        // cardTypes длиннее — значит это список всех типов, берём только те, что в этом.cards
+        cardDataList = this.cards.map(card => {
+          const cardType = this.cardTypes.find(ct => String(ct.type) === String(card.type))
+          return cardType ? { ...cardType, count: card.count } : card
+        })
+      } else {
+        // Используем как есть
+        cardDataList = [...this.cards]
+      }
     } else if (this.cards[0] && this.cards[0].type !== undefined) {
       // Массив объектов карт - считаем count
       const counts = {}

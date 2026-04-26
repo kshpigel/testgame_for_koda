@@ -1138,22 +1138,38 @@ export class Battle extends EventEmitter {
       bgColor: colors.ui.panel.bg
     })
     
-    // Подсчёт количества каждого типа карты которые ОСТАЛИСЬ В КОЛОДЕ
+    // Подсчёт количества каждого типа карты, которые ОСТАЛИСЬ В КОЛОДЕ
     const cardCounts = {}
     
-    // Считаем карты в текущей колоде (остаток)
+    // Считаем карты в текущей колоде (оставшиеся, не разданные)
     this.currentDeck.forEach(card => {
       const type = card.type
       cardCounts[type] = (cardCounts[type] || 0) + 1
     })
     
-    // Формируем массив {type, count, ...cardData} для всех типов карт
-    // count = сколько карт этого типа ещё в игре (не использовано)
-    const cardDataList = this.cardTypes.map(cardType => ({
-      type: cardType.type,
-      count: cardCounts[cardType.type] || 0,
-      ...cardType
-    }))
+    // Получаем ВСЕ типы карт из ИСХОДНОЙ колоды (this.deck)
+    const deckCardTypes = [...new Set(this.deck.map(card => String(card.type)))]
+    
+    log('[Battle] showDeckMenu: deckCardTypes:', deckCardTypes)
+    log('[Battle] showDeckMenu: this.cardTypes.length:', this.cardTypes.length)
+    
+    // Формируем массив только для типов карт, которые есть в исходной колоде
+    const cardDataList = this.cardTypes
+      .filter(cardType => {
+        const matches = deckCardTypes.includes(String(cardType.type))
+        if (!matches) {
+          log('[Battle] showDeckMenu: Filtering out:', cardType.type)
+        }
+        return matches
+      })
+      .map(cardType => ({
+        type: cardType.type,
+        count: cardCounts[cardType.type] || 0,
+        ...cardType
+      }))
+      .sort((a, b) => (b.value || 0) - (a.value || 0))
+    
+    log('[Battle] showDeckMenu: cardDataList.length:', cardDataList.length)
     
     // Статистика
     const statsText = new PIXI.Text(

@@ -42,6 +42,15 @@ export class DeckMenu {
   }
   
   renderContent(content) {
+    // Очищаем предыдущий контент (если был)
+    while (content.children.length > 0) {
+      const child = content.children[0]
+      content.removeChild(child)
+      if (child.destroy) {
+        child.destroy({ children: true })
+      }
+    }
+    
     // Подсчёт количества каждого типа карты
     const cardCounts = {}
     this.currentDeck.forEach(card => {
@@ -61,14 +70,11 @@ export class DeckMenu {
     const spacingX = 10
     const spacingY = 8
     
-    // Показываем ВСЕ типы карт (даже с count=0), сортируем по силе (value) по убыванию
+    // Показываем ТОЛЬКО типы карт, которые есть в колоде (count > 0), сортируем по силе (value) по убыванию
     const allCardTypes = [...this.cardTypes].sort((a, b) => (b.value || 0) - (a.value || 0))
+    const visibleCardTypes = allCardTypes.filter(cardType => (cardCounts[cardType.type] || 0) > 0)
     
-    // Grayscale фильтр для карт с count=0
-    const grayFilter = new ColorMatrixFilter()
-    grayFilter.grayscale(0.5)
-    
-    allCardTypes.forEach((cardType, i) => {
+    visibleCardTypes.forEach((cardType, i) => {
       const col = i % cols
       const row = Math.floor(i / cols)
       
@@ -85,11 +91,6 @@ export class DeckMenu {
       
       card.x = startX + col * (cardW * cardScale + spacingX) + cardW * cardScale / 2
       card.y = startY + row * (cardH * cardScale + spacingY) + cardH * cardScale / 2
-      
-      // Если карт этого типа нет - grayscale 50%
-      if (count === 0) {
-        card.filters = [grayFilter]
-      }
       
       // Обработчик клика - открыть детальное окно
       card.eventMode = 'static'
