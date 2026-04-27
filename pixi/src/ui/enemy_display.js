@@ -3,9 +3,11 @@ import { FONT } from '../data/fonts.js'
 import { colors } from '../data/colors.js'
 import { UINode } from './ui_node.js'
 import { TextNode } from './text_node.js'
+import { VideoEnemy } from './video_enemy.js'
+import { log } from '../data/config.js'
 
 export class EnemyDisplay extends UINode {
-  constructor(app, enemyData, assets) {
+  constructor(app, enemyData, assets, isBattle = false) {
     super({
       width: 300,
       height: 350,
@@ -14,6 +16,8 @@ export class EnemyDisplay extends UINode {
     
     this.enemyData = enemyData
     this.assets = assets
+    this.isBattle = isBattle
+    this.videoEnemy = null
     
     this.create()
     this.updateDebug()
@@ -25,19 +29,38 @@ export class EnemyDisplay extends UINode {
     const nameY = -30
     const healthY = 60
     
-    // Изображение врага
-    const enemyMaxHeight = 286
-    if (this.assets && this.assets.enemy && this.assets.enemy.texture) {
+    // Логика выбора изображения:
+    // В БОЮ (isBattle = true) + есть animation → используем WebM
+    // В КАРТЕ/ДИАЛОГЕ (isBattle = false) или нет animation → используем PNG
+    const useAnimation = this.isBattle && this.enemyData.animation
+    
+    if (useAnimation) {
+      // Используем анимацию (WebM) для боя
+      log('Creating video enemy (battle):', this.enemyData.animation)
+      this.videoEnemy = new VideoEnemy(this._app, {
+        videoPath: this.enemyData.animation,
+        width: 300,
+        height: 280
+      })
+      // VideoEnemy центрирован (anchor 0.5, 0.5), сдвигаем на половину размеров влево/вверх
+      // Чтобы центр VideoEnemy совпал с нужной точкой
+      this.videoEnemy.x = 150 - 150  // 150 - половина ширины (300/2)
+      this.videoEnemy.y = enemyY + 50 - 140  // 50 - половина высоты (280/2)
+      log('VideoEnemy added, x:', this.videoEnemy.x, 'y:', this.videoEnemy.y)
+      this.addChild(this.videoEnemy)
+    } else if (this.assets && this.assets.enemy && this.assets.enemy.texture) {
+      // Статичное изображение из загруженных ассетов
       const enemySprite = new PIXI.Sprite(this.assets.enemy.texture)
       enemySprite.anchor.set(0.5, 1)
-      const scale = Math.min(1, enemyMaxHeight / enemySprite.texture.height)
+      const scale = Math.min(1, 286 / enemySprite.texture.height)
       enemySprite.scale.set(scale)
       enemySprite.y = enemyY + 50
       this.addChild(enemySprite)
     } else if (this.enemyData.image) {
+      // Статичное изображение по пути (PNG)
       const enemySprite = PIXI.Sprite.from(this.enemyData.image)
       enemySprite.anchor.set(0.5, 1)
-      const scale = Math.min(1, enemyMaxHeight / enemySprite.texture.height)
+      const scale = Math.min(1, 286 / enemySprite.texture.height)
       enemySprite.scale.set(scale)
       enemySprite.y = enemyY + 50
       this.addChild(enemySprite)
@@ -118,5 +141,16 @@ export class EnemyDisplay extends UINode {
       this.attackText.visible = false
       this.attackBg.visible = false
     }
+  }
+
+  /**
+   * Освобождает ресурсы (особенно видео)
+   */
+  dispose() {
+    if (this.videoEnemy) {
+      this.videoEnemy.dispose()
+      this.videoEnemy = null
+    }
+    super.dispose()
   }
 }
