@@ -1,4 +1,5 @@
 import * as PIXI from 'pixi.js'
+import { BlurFilter } from 'pixi.js'
 import { FONT } from '../data/fonts.js'
 import { colors } from '../data/colors.js'
 import { soundManager } from '../audio/sound_manager.js'
@@ -9,29 +10,61 @@ export class BattleEffects {
     this.app = app
     this.container = container
     this.assets = assets
+    this.enemyDisplay = null
+  }
+  
+  setEnemyDisplay(enemy) {
+    this.enemyDisplay = enemy
   }
   
   showDamage(damage, onComplete) {
-    // Затемнение
+    // Анимация удара - красная вспышка экрана
     const overlay = new PIXI.Graphics()
-    overlay.beginFill(colors.ui.text.damage, 0.3)
+    overlay.beginFill(colors.ui.text.damage, 0.6)
     overlay.drawRect(0, 0, this.app.screen.width, this.app.screen.height)
     overlay.endFill()
     this.container.addChild(overlay)
     
-    let alpha = 0.3
+    let alpha = 0.6
     const fadeOverlay = () => {
-      alpha -= 0.05
+      alpha -= 0.03
       overlay.alpha = alpha
       if (alpha > 0) {
         requestAnimationFrame(fadeOverlay)
       } else {
         this.container.removeChild(overlay)
         overlay.destroy()
+        this.showDamageText(damage, onComplete)
       }
     }
+    fadeOverlay()
     
-    // Текст урона
+    // Тряска врага
+    if (this.enemyDisplay) {
+      const enemy = this.enemyDisplay
+      const originalX = enemy.x
+      const originalY = enemy.y
+      
+      let shakeTime = 0
+      const shakeDuration = 20
+      const shakeAmount = 6
+      
+      const shake = () => {
+        if (shakeTime < shakeDuration) {
+          enemy.x = originalX + (Math.random() - 0.5) * shakeAmount
+          enemy.y = originalY + (Math.random() - 0.5) * shakeAmount
+          shakeTime++
+          requestAnimationFrame(shake)
+        } else {
+          enemy.x = originalX
+          enemy.y = originalY
+        }
+      }
+      shake()
+    }
+  }
+  
+  showDamageText(damage, onComplete) {
     const damageText = new PIXI.Text(`-${damage}`, {
       fontFamily: FONT,
       fontSize: 48,
@@ -43,9 +76,9 @@ export class BattleEffects {
     damageText.anchor.set(0.5)
     damageText.x = this.app.screen.width / 2
     damageText.y = 200
+    damageText.zIndex = 2000
     this.container.addChild(damageText)
     
-    // Анимация текста
     let y = 200
     let textAlpha = 1
     const animateText = () => {
@@ -58,7 +91,6 @@ export class BattleEffects {
       } else {
         this.container.removeChild(damageText)
         damageText.destroy()
-        fadeOverlay()
         if (onComplete) onComplete()
       }
     }

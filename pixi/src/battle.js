@@ -175,6 +175,12 @@ export class Battle extends EventEmitter {
     this.handRenderer = new HandRenderer(this.app, this.cards, this.assets, this.cardTypes)
     this.cardAnimator = new CardAnimator(this.app, this.container)
     this.battleEffects = new BattleEffects(this.app, this.container, this.assets)
+    
+    // Передаем врага в BattleEffects (если уже создан)
+    if (this.enemyDisplay) {
+      this.battleEffects.setEnemyDisplay(this.enemyDisplay)
+    }
+    
     this.app.stage.addChild(this.container)
     this.app.stage.sortChildren() // Пересортировать после добавления
     this.container.alpha = 0
@@ -635,61 +641,6 @@ export class Battle extends EventEmitter {
     this.activeCards = 0
   }
 
-  showDamage(amount) {
-    // Анимация удара - красная вспышка
-    const hitEffect = new PIXI.Graphics()
-    hitEffect.beginFill(colors.ui.text.damage, 0.3)
-    hitEffect.drawRect(0, 0, this.app.screen.width, this.app.screen.height)
-    hitEffect.endFill()
-    this.container.addChild(hitEffect)
-    
-    let hitAlpha = 0.3
-    const fadeHit = () => {
-      hitAlpha -= 0.05
-      hitEffect.alpha = hitAlpha
-      if (hitAlpha > 0) {
-        requestAnimationFrame(fadeHit)
-      } else {
-        this.container.removeChild(hitEffect)
-        hitEffect.destroy()
-      }
-    }
-    fadeHit()
-    
-    // Текст урона
-    const style = new PIXI.TextStyle({
-      fontFamily: FONT,
-      fontSize: 48,
-      fontWeight: 'bold',
-      fill: '#ff4444',
-      stroke: '#000000',
-      strokeThickness: 4
-    })
-    
-    const text = new PIXI.Text(`-${amount}`, style)
-    text.anchor.set(0.5)
-    text.x = this.app.screen.width / 2
-    text.y = 200
-    this.container.addChild(text)
-    
-    let alpha = 1
-    let y = 200
-    const animate = () => {
-      alpha -= 0.02
-      y -= 2
-      text.alpha = alpha
-      text.y = y
-      
-      if (alpha > 0) {
-        requestAnimationFrame(animate)
-      } else {
-        this.container.removeChild(text)
-        text.destroy()
-      }
-    }
-    animate()
-  }
-
   showVictory() {
     // Уведомление о победе (фиолетовое)
     if (toastManager) {
@@ -1090,6 +1041,7 @@ export class Battle extends EventEmitter {
     this.enemyDisplay.zIndex = 1000
     this.container.sortableChildren = true // Включаем сортировку для zIndex
     this.container.addChild(this.enemyDisplay)
+    
     this.updateEnemyHealthDisplay()
   }
 
