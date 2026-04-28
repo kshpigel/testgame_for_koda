@@ -426,6 +426,13 @@ export class Battle extends EventEmitter {
             const action = cardType.buff.getSpecialAction()
             if (action === 'keepSteps') {
               this.keepStepsActive = true
+              // Показываем уведомление о специальном баффе
+              if (toastManager && cardType.buff.getNotificationMessage) {
+                const message = cardType.buff.getNotificationMessage(card)
+                if (message) {
+                  toastManager.show(message, 'purple')
+                }
+              }
             }
             // discardFromDeck вызывается после хода, а не при выборе
           }

@@ -618,35 +618,32 @@ export class Card extends PIXI.Container {
     // Увеличиваем счётчик кадров
     this.frameCount++
     
-    // Анимация тени (пульсация при баффe)
+    // Анимация glow (пульсация при баффe)
     if (this.buffValue > 0 && this.shadow) {
       this.shadow.visible = true
-      // Минимум 0.5, максимум 0.8
-      this.shadow.alpha = 0.65 + Math.sin(this.frameCount * 0.025) * 0.15
       
-      // Рисуем тень
+      // Рисуем тень больше карты
       this.shadow.clear()
-      this.shadow.beginFill(0xEE40D7, this.shadow.alpha * 0.6)
+      const glowAlpha = 0.7 + Math.sin(this.frameCount * 0.025) * 0.2
+      this.shadow.beginFill(0x8B5CF6, glowAlpha)
       this.shadow.drawRoundedRect(
-        -this.cardWidth/2 + 5,
-        -this.cardHeight/2 + 10,
-        this.cardWidth,
-        this.cardHeight,
-        CARD_CONFIG.cornerRadius
+        -this.cardWidth/2 - 10,
+        -this.cardHeight/2 - 10,
+        this.cardWidth + 20,
+        this.cardHeight + 20,
+        CARD_CONFIG.cornerRadius + 5
       )
       this.shadow.endFill()
       
-      // Применяем blur фильтр
-      if (!this.shadow.filters || this.shadow.filters.length === 0) {
-        const blurFilter = new BlurFilter(50)
-        blurFilter.quality = 4
-        this.shadow.filters = [blurFilter]
+      // Blur фильтр — создаём один раз
+      if (!this.blurFilter) {
+        this.blurFilter = new BlurFilter(15)
+        this.blurFilter.quality = 2
+        this.shadow.filters = [this.blurFilter]
       }
+      
     } else if (this.shadow) {
       this.shadow.visible = false
-      if (this.shadow.filters) {
-        this.shadow.filters = []
-      }
     }
     
     // Плавная анимация scale
