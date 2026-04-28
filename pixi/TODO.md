@@ -124,3 +124,7 @@
 - Portal: scale по центру
 - DeckMenu: переписан на Modal
 - Modal: showCloseButton опция
+- Адаптивный ресайз через CSS transform (сохраняет пропорции 1600×900)
+- PWA: Service Worker, manifest.json, meta-теги для полноэкранного режима на мобильных
+  - [ ] Тестирование PWA на телефоне (добавление на главный экран)
+  - [ ] Замена заглушек иконок на реальные (icon-192.png, icon-512.png)

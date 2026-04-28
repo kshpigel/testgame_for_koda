@@ -10,6 +10,15 @@ import { gamePrices } from './data/game_prices.js'
 import { loadCards } from './data/cards.js'
 import { loadEnemies } from './data/enemies/index.js'
 
+// Регистрация Service Worker для PWA
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => log('[SW] Registered:', reg.scope))
+      .catch(err => log('[SW] Registration failed:', err))
+  })
+}
+
 let gameInstance = null
 
 // Константы дизайна
@@ -31,53 +40,26 @@ async function loadFont() {
   }
 }
 
-// Адаптивный ресайз с центрированием и макс. шириной
+// Адаптивный ресайз через CSS transform
 function setupResize(app) {
-  const container = document.getElementById('game-container')
-  
   function updateSize() {
     const winW = window.innerWidth
     const winH = window.innerHeight
     
-    // Максимальная ширина 1600
-    const maxWidth = Math.min(winW, 1600)
-    const maxHeight = Math.min(winH, 900)
+    // Масштаб: сохраняем пропорции 1600x900
+    const scale = Math.min(winW / GAME_WIDTH, winH / GAME_HEIGHT)
     
-    // Соотношение сторон
-    const targetAspect = GAME_WIDTH / GAME_HEIGHT
-    const winAspect = maxWidth / maxHeight
-    
-    let scale, renderW, renderH
-    
-    if (winAspect > targetAspect) {
-      // Экран шире - ограничиваем по высоте
-      scale = maxHeight / GAME_HEIGHT
-      renderH = GAME_HEIGHT
-      renderW = GAME_WIDTH
-    } else {
-      // Экран уже - ограничиваем по ширине
-      scale = maxWidth / GAME_WIDTH
-      renderH = GAME_HEIGHT
-      renderW = GAME_WIDTH
-    }
-    
-    // Применяем масштаб и центрируем
-    app.view.style.position = 'absolute'
+    // Растягиваем canvas через CSS
+    app.view.style.position = 'fixed'
     app.view.style.left = '50%'
     app.view.style.top = '50%'
-    app.view.style.transform = `translate(-50%, -50%) scale(${scale})`
     app.view.style.transformOrigin = 'center center'
+    app.view.style.transform = `translate(-50%, -50%) scale(${scale})`
     
     // Сохраняем scale для UI элементов
     app.gameScale = scale
     
-    // Обновляем размер рендерера (всегда 1600x900)
-    app.renderer.resize(GAME_WIDTH, GAME_HEIGHT)
-    
-    // Уведомляем игру
-    if (gameInstance) {
-      gameInstance.resize(GAME_WIDTH, GAME_HEIGHT, scale)
-    }
+    log('[main] Resize:', winW, 'x', winH, 'scale:', scale.toFixed(3))
   }
   
   window.addEventListener('resize', updateSize)
