@@ -432,21 +432,12 @@ export class Card extends PIXI.Container {
 
   setBuff(value) {
     this.buffValue = value
-    if (value > 0) {
-      this.buffText.text = `+${value}`
-    } else {
-      this.buffText.text = ''
-    }
-    // Обновляем цвет кружка с учётом permanent баффа
-    if (this.permanentBuffValue > 0) {
-      this.valueCircle.setBuffedStyle()
-    } else if (this.debuffValue < 0) {
-      this.valueCircle.setState('red')
-    } else if (value > 0) {
-      this.valueCircle.setBuffedStyle()
-    } else {
-      this.valueCircle.setNormalStyle()
-    }
+    // this.buffText.text = `+${value}` // Убрано - есть уведомления
+    // if (value > 0) {
+    //   this.buffText.text = `+${value}`
+    // } else {
+    //   this.buffText.text = ''
+    // }
   }
 
   clearBuffs() {
@@ -507,14 +498,14 @@ export class Card extends PIXI.Container {
     })
     this.debuffValue = total
 
-    // Обновляем текст дебаффа
-    if (this.debuffText) {
-      if (this.debuffValue < 0) {
-        this.debuffText.text = `${this.debuffValue}`
-      } else {
-        this.debuffText.text = ''
-      }
-    }
+    // Обновляем текст дебаффа (убрано - есть уведомления)
+    // if (this.debuffText) {
+    //   if (this.debuffValue < 0) {
+    //     this.debuffText.text = `${this.debuffValue}`
+    //   } else {
+    //     this.debuffText.text = ''
+    //   }
+    // }
 
     // Обновляем цвет кружка с учётом permanent баффа
     if (this.valueCircle) {
@@ -576,11 +567,12 @@ export class Card extends PIXI.Container {
     // Если есть isSet бафф - используем его значение
     this.buffValue = hasSetBuff ? setValue : total
     
-    if (this.buffValue > 0) {
-      this.buffText.text = `+${this.buffValue}`
-    } else {
-      this.buffText.text = ''
-    }
+    // this.buffText.text = `+${this.buffValue}` // Убрано - есть уведомления
+    // if (this.buffValue > 0) {
+    //   this.buffText.text = `+${this.buffValue}`
+    // } else {
+    //   this.buffText.text = ''
+    // }
     
     // Обновляем цвет кружка с учётом permanent баффа
     if (this.permanentBuffValue > 0) {
@@ -593,6 +585,7 @@ export class Card extends PIXI.Container {
       this.valueCircle.setNormalStyle()
     }
     
+    // this.buffText.text = `+${this.buffValue}` // Убрано - есть уведомления
     this.updateValue()
   }
 
