@@ -23,8 +23,10 @@ export class DeckMenu {
     this.modal = new Modal(app, {
       title: t('castle.deck'),
       width: app.screen.width * 0.5,
-      height: 500
+      height: app.screen.height * 0.6,
+      bgColor: colors.ui.panel.bg
     })
+    this.modal.container.zIndex = 150 // Колода между врагом и картами
   }
   
   show() {

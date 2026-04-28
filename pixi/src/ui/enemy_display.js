@@ -42,17 +42,16 @@ export class EnemyDisplay extends UINode {
         width: 300,
         height: 280
       })
-      // VideoEnemy центрирован (anchor 0.5, 0.5), сдвигаем на половину размеров влево/вверх
-      // Чтобы центр VideoEnemy совпал с нужной точкой
-      this.videoEnemy.x = 150 - 150  // 150 - половина ширины (300/2)
-      this.videoEnemy.y = enemyY + 50 - 140  // 50 - половина высоты (280/2)
+      this.videoEnemy.scale.set(1.2) // Увеличиваем только видео на 20%
+      this.videoEnemy.x = 150 - 150
+      this.videoEnemy.y = enemyY + 50 - 140
       log('VideoEnemy added, x:', this.videoEnemy.x, 'y:', this.videoEnemy.y)
       this.addChild(this.videoEnemy)
     } else if (this.assets && this.assets.enemy && this.assets.enemy.texture) {
       // Статичное изображение из загруженных ассетов
       const enemySprite = new PIXI.Sprite(this.assets.enemy.texture)
       enemySprite.anchor.set(0.5, 1)
-      const scale = Math.min(1, 286 / enemySprite.texture.height)
+      const scale = Math.min(1, 286 / enemySprite.texture.height) * 1.2 // Увеличиваем на 20%
       enemySprite.scale.set(scale)
       enemySprite.y = enemyY + 50
       this.addChild(enemySprite)
@@ -60,7 +59,7 @@ export class EnemyDisplay extends UINode {
       // Статичное изображение по пути (PNG)
       const enemySprite = PIXI.Sprite.from(this.enemyData.image)
       enemySprite.anchor.set(0.5, 1)
-      const scale = Math.min(1, 286 / enemySprite.texture.height)
+      const scale = Math.min(1, 286 / enemySprite.texture.height) * 1.2 // Увеличиваем на 20%
       enemySprite.scale.set(scale)
       enemySprite.y = enemyY + 50
       this.addChild(enemySprite)

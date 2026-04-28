@@ -252,6 +252,7 @@ export class Battle extends EventEmitter {
       height: CARD_CONFIG.height,
       style: cardStyle
     })
+    card.zIndex = 200 // Карты над врагом
     
     // Загружаем фоновое изображение (image_bg)
     if (this.assets && this.assets[`card_bg_${cardData.type}`]) {
@@ -1034,12 +1035,11 @@ export class Battle extends EventEmitter {
   }
 
   renderEnemy() {
-    // Используем EnemyDisplay (UINode) — в бою передаём isBattle = true для анимации
     this.enemyDisplay = new EnemyDisplay(this.app, this.enemyData, this.assets, true)
     this.enemyDisplay.setX(this.app.screen.width / 2)
-    this.enemyDisplay.setY(280)
-    this.enemyDisplay.zIndex = 1000
-    this.container.sortableChildren = true // Включаем сортировку для zIndex
+    this.enemyDisplay.setY(330)
+    this.enemyDisplay.zIndex = 100 // Враг под картами
+    this.container.sortableChildren = true
     this.container.addChild(this.enemyDisplay)
     
     this.updateEnemyHealthDisplay()
