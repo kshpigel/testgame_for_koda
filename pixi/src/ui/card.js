@@ -618,8 +618,8 @@ export class Card extends PIXI.Container {
     // Увеличиваем счётчик кадров
     this.frameCount++
     
-    // Анимация тени (пульсация при выборе)
-    if (this.isSelected && this.shadow) {
+    // Анимация тени (пульсация при баффe)
+    if (this.buffValue > 0 && this.shadow) {
       this.shadow.visible = true
       // Минимум 0.5, максимум 0.8
       this.shadow.alpha = 0.65 + Math.sin(this.frameCount * 0.025) * 0.15
