@@ -35,6 +35,7 @@ export class Card extends PIXI.Container {
     this.cardData = cardData
     this.isSelected = false
     this.isDisabled = false
+    this.isBuffed = false // Карта имеет активный бафф (включая специальные)
     this.buffValue = 0
     this.buffs = {} // { [buffId]: { type, value } }
     this.debuffValue = 0
@@ -452,6 +453,7 @@ export class Card extends PIXI.Container {
     this.buffs = {}
     this.buffValue = 0
     this.buffText.text = ''
+    this.isBuffed = false // Сбрасываем флаг баффа
     // Сохраняем цвет кружка если есть permanent бафф
     if (this.permanentBuffValue > 0) {
       this.valueCircle.setBuffedStyle()
@@ -545,14 +547,9 @@ export class Card extends PIXI.Container {
     return Object.values(this.buffs).filter(b => b.type === type)
   }
 
-  addBuff(buffId, type, value, isSet = false) {
-    if (isSet) {
-      // Очищаем все баффы и устанавливаем новое значение (базовое игнорируется)
-      this.buffs = {}
-      this.buffs[buffId] = { type, value, isSet: true }
-    } else {
-      this.buffs[buffId] = { type, value }
-    }
+  addBuff(buffId, sourceType, value, isSet = false) {
+    this.buffs[buffId] = { type: sourceType, value, isSet }
+    this.isBuffed = true // Карта имеет активный бафф
     this.updateBuffDisplay()
   }
 
@@ -619,7 +616,7 @@ export class Card extends PIXI.Container {
     this.frameCount++
     
     // Анимация glow (пульсация при баффe)
-    if (this.buffValue > 0 && this.shadow) {
+    if (this.isBuffed && this.shadow) {
       this.shadow.visible = true
       
       // Рисуем тень больше карты

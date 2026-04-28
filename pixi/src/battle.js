@@ -426,6 +426,8 @@ export class Battle extends EventEmitter {
             const action = cardType.buff.getSpecialAction()
             if (action === 'keepSteps') {
               this.keepStepsActive = true
+              // Помечаем все выбранные карты как баффнутые
+              this.selectedCards.forEach(c => c.isBuffed = true)
               // Показываем уведомление о специальном баффе
               if (toastManager && cardType.buff.getNotificationMessage) {
                 const message = cardType.buff.getNotificationMessage(card)
